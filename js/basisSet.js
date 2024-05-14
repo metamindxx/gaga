@@ -1,5 +1,4 @@
 // basis lists & operations
-//test
 /*********************
 ** basisSet
 *********************/
