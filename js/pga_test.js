@@ -27,6 +27,11 @@ var pb = pgaBasis(scene)
 
 bs.multiVector('1e_123').render()
 
+var a = bs.multiVector('-1e_0 + .5e_1').render({color: 0xff0000})
+var b = bs.multiVector('-1e_0 + .5e_3').smul(-1).render({color: 0x00ff00})
+var line = b.gp( a.inverse() ).selectGrade(2).render({color: 0x00ffff})
+
+/*
 //var a = bs.multiVector(' -1e_0 + 1e_1').normalize().strLog('a: ').render({color: 0xff0000})
 //var b = bs.multiVector(' -1e_0 + 1e_2').normalize().smul(1).strLog('b: ').render({color: 0x00ff00})
 var a = bs.multiVector(' 1e_0 + 2e_3').dual().normalize().strLog('a: ').render({color: 0xff0000})
@@ -36,7 +41,7 @@ var rotor = rotorSq.rotorSqrt().strLog('rotor 1: ')
 //--------------------------------------------------
 rotor = rotor.selectGrade(2).strLog('rotor 2: ').render({color: 0x0000ff})
 var x = bs.multiVector(' 1e_0 + 1e_1').strLog('x: ').render({color: 0xFF2D00})
-var y = bs.multiVector(' 1e_0 + 1e_2 ').strLog('y: ').render({color: 0x0CFF00})
+var y = bs.multiVector(' 1e_0 + 1e_2 ').smul(-1).strLog('y: ').render({color: 0x0CFF00})
 var z = bs.multiVector(' 1e_0 + 1e_3').strLog('z: ').render({color: 0x0015FF})
 var xDual = x.dual().strLog('xDual: ').render({color: 0xFF2D00})
 var yDual = y.dual().strLog('yDual: ').render({color: 0x0CFF00})

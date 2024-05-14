@@ -97,9 +97,9 @@ var pgaBasis = function(scene) {
 				,	ey = - mv.basisSVal('e_13')
 				,	ez =   mv.basisSVal('e_12')
 				var mag = Math.pow(ex*ex + ey*ey + ez*ez, 1/2)
-				ex = ex/mag
-				ey = ey/mag
-				ez = ez/mag
+				ex = -ex/mag
+				ey = -ey/mag
+				ez = -ez/mag
 
 				// i for infinite - moment of line
 				var ix = mv.basisSVal('e_01') / mag
