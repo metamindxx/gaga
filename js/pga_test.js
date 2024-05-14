@@ -24,12 +24,36 @@ cemo.addVectorToScene([[0, 0, 0],[0, 0, 1]], mtrlBlue, scene)
 var pb = pgaBasis(scene)
 
 
-
+//Rendering the origin
 bs.multiVector('1e_123').render()
 
-var a = bs.multiVector('-1e_0 + .5e_1').render({color: 0xff0000})
-var b = bs.multiVector('-1e_0 + .5e_3').smul(-1).render({color: 0x00ff00})
-var line = b.gp( a.inverse() ).selectGrade(2).render({color: 0x00ffff})
+//=====================================================================================//
+
+var a = bs.multiVector('-2e_0 + 1e_1 + 1e_2').render({color: 0xff0000})
+var b = bs.multiVector('-1e_0 - 1e_3').render({color: 0x0000ff})
+var line = b.gp(a).selectGrade(2).normalize().render({color: 0x00fAAf})
+var rotor = line.exp(Math.PI/1000).strLog('rotor: ')
+//var aRot1 = rotor.gp(a.gp(rotor.reverse())).selectGrade(1).strLog('aRot1: ').render()
+//var aRot2 = rotor.gp(aRot1.gp(rotor.reverse())).selectGrade(1).strLog('aRot2: ').render()
+//var aRot3 = rotor.gp(aRot2.gp(rotor.reverse())).selectGrade(1).strLog('aRot3: ').render()
+//var aRot4 = rotor.gp(aRot3.gp(rotor.reverse())).selectGrade(1).strLog('aRot4: ').render()
+var point = bs.multiVector('1e_0 + 1e_1 + 2e_2 + 3e_3').dual().strLog('point: ').render(0x00ff)
+//This function only rotates planes
+function rotate1(mv) {
+	for(let i=0; i<1000; ++i){
+		var mvRot = rotor.gp(mv.gp(rotor.reverse())).selectGrade(1).strLog('aRot', i,' :').render()
+		mv = mvRot.copy()
+	}
+}
+//This function only rotates points
+function rotate2(mv) {
+	for(let i=0; i<1000; ++i){
+		var mvRot = rotor.gp(mv.gp(rotor.reverse())).selectGrade(3).strLog('aRot', i,' :').render()
+		mv = mvRot.copy()
+	}
+}
+rotate1(a) 
+rotate2(point)
 
 /*
 //var a = bs.multiVector(' -1e_0 + 1e_1').normalize().strLog('a: ').render({color: 0xff0000})
@@ -113,7 +137,7 @@ Wrotor = Wrotor.normalize().strLog('p1 -> p2: ')
 
 */
 
-
+//=====================================================================================//
 
 var bannerDiv = document.getElementById('banner_div')
 bannerDiv.style.fontFamily = 'Courier New, Courier'
