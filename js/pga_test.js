@@ -49,6 +49,8 @@ var sumXYZdual = sumXYZ.dual().render({color: 0xadfd})
 //Below's not rendering? I might just be ignorant and it's not meant to render (MEC)
 //var xDdotyDot = xDual.join(yDual).strLog('xDdotyDot: ').render({color: 0x00000})
 
+var line = x.gp(y).selectGrade(2).render()
+
 var rotor2Sq = bs.multiVector(' 1e_12').strLog('rotor2Sq: ')
 var rotor2 = rotor2Sq.rotorSqrt().strLog('afterSqrt: ').selectGrade(2).normalize().strLog('rotor2: ')
 var partRotor2 = rotor2.exp(Math.PI).strLog('partRotor2: ')
