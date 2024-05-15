@@ -29,13 +29,43 @@ bs.multiVector('1e_123').render()
 
 //=====================================================================================//
 
-var p1 = bs.multiVector('1e_0 + 2e_1 + 1e_3').dual().strLog('p1: ').render({color: 0xff0000})
-var p2 = bs.multiVector('-3e_0 + 1e_2').dual().strLog('p2: ').render({color: 0x0000ff})
-//var p1 = bs.multiVector('-1e_0 + 1e_3').dual().strLog('p1: ').render({color: 0xff0000})
-//var p2 = bs.multiVector('-1e_0 + 1e_2').dual().strLog('p2: ').render({color: 0x0000ff})
-var p1Dual = p1.dual().strLog('p1Dual: ').render({color: 0xff0000})
-var p2Dual = p2.dual().strLog('p2Dual: ').render({color: 0x0000ff})
-var join12 = p1.join(p2).strLog('join2: ').render()
+var p1 = bs.multiVector('1e_0 + 1e_1 + 2e_2').dual().strLog('p1: ').render({color: 0xff0000})
+var p2 = bs.multiVector('1e_0 + 2e_2 + 3e_3').dual().strLog('p2: ').render({color: 0x0000ff})
+var p3 = bs.multiVector('1e_0 + 3e_3 + 1e_1').dual().strLog('p3: ').render({color: 0x00ff00})
+var join12 = p1.join(p2).strLog('join12: ').render()
+var join23 = p2.join(p3).strLog('join23: ').render()
+var join31 = p3.join(p1).strLog('join31: ').render()
+var join231 = p1.join(join23).strLog('join231: ').render()
+
+var B = bs.multiVector('1e_12 - 3e_13').normalize().strLog('B: ').render()
+var R = B.exp(Math.PI/100).strLog('R: ')
+/*
+var rotOfp1 = R.gp(p1.gp(R.reverse())).selectGrade(3).strLog('rotOfp1: ').render({color: 0xFF0000})
+var rotOfp2 = sqrtB.gp(p2.gp(sqrtB.reverse())).selectGrade(3).strLog('rotOfp1: ').render({color: 0x0000ff})
+var rotOfp3 = sqrtB.gp(p3.gp(sqrtB.reverse())).selectGrade(3).strLog('rotOfp1: ').render({color: 0x00ff00})
+
+var join12Rot = rotOfp1.join(rotOfp2).strLog('join12: ').render()
+var join23Rot = rotOfp2.join(rotOfp3).strLog('join23: ').render()
+var join31Rot = rotOfp3.join(rotOfp1).strLog('join31: ').render()
+*/
+
+
+function rotateAll(mv1,mv2,mv3,clr1,clr2,clr3,) {
+	for(let i=0; i<100; ++i){
+		var mvRot1 = R.gp(mv1.gp(R.reverse())).selectGrade(3).strLog('mvRot1', i,' :').render({color: clr1})
+		var mvRot2 = R.gp(mv2.gp(R.reverse())).selectGrade(3).strLog('mvRot2', i,' :').render({color: clr2})
+		var mvRot3 = R.gp(mv3.gp(R.reverse())).selectGrade(3).strLog('mvRot3', i,' :').render({color: clr3})
+		mv1 = mvRot1.copy()
+		mv2 = mvRot2.copy()
+		mv3 = mvRot3.copy()
+		var join12Rot = mv1.join(mv2).strLog('join12: ', i,' :').render()
+		var join23Rot = mv2.join(mv3).strLog('join23: ', i,' :').render()
+		var join31Rot = mv3.join(mv1).strLog('join31: ', i,' :').render()
+		var joinPlane = join12Rot.join(mv3).strLog('joinPlane: ', i,' :').render({color: 0xAAA})
+	}
+}
+
+rotateAll(p1,p2,p3,0xFF0000,0x0000ff,0x00ff00)
 
 //=====================================================================================//
 
