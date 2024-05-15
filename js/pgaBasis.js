@@ -196,7 +196,7 @@ var pgaBasis = function(scene) {
 	bs.setDual(bs.e13, bs.e02, -1)
 	bs.setDual(bs.e23, bs.e01, 1)
 
-	bs.setDual(bs.e012, bs.e3, 1)
+	bs.setDual(bs.e012, bs.e3, -1)
 	bs.setDual(bs.e013, bs.e2, 1)
 	bs.setDual(bs.e023, bs.e1, -1)
 	bs.setDual(bs.e123, bs.e0, 1)
