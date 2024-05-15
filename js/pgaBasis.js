@@ -97,9 +97,9 @@ var pgaBasis = function(scene) {
 				,	ey = - mv.basisSVal('e_13')
 				,	ez =   mv.basisSVal('e_12')
 				var mag = Math.pow(ex*ex + ey*ey + ez*ez, 1/2)
-				ex = -ex/mag
-				ey = -ey/mag
-				ez = -ez/mag
+				ex = ex/mag
+				ey = ey/mag
+				ez = ez/mag
 
 				// i for infinite - moment of line
 				var ix = mv.basisSVal('e_01') / mag
@@ -109,9 +109,9 @@ var pgaBasis = function(scene) {
 				// take the cross product (shh!) to rotate the moment line around the direction line.
 				// the moment line is the correct length and now lies in the plane of the moment's rotation perp to the direction
 				// ie, this is the translation
-				var crossX = - ey*iz + iy*ez
-				,	crossY = - ez*ix + iz*ex
-				,	crossZ = - ex*iy + ix*ey
+				var crossX =  ey*iz - iy*ez
+				,	crossY =  ez*ix - iz*ex
+				,	crossZ =  ex*iy - ix*ey
 
 				cemo.addVectorToScene([[crossX, crossY, crossZ],[crossX + ex, crossY + ey, crossZ + ez]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
 
