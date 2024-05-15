@@ -29,11 +29,13 @@ bs.multiVector('1e_123').render()
 
 //=====================================================================================//
 
-var p1 = bs.multiVector('-1e_0 + 1e_3').dual().strLog('p1: ').render({color: 0xff0000})
-var p2 = bs.multiVector('-1e_0 + 1e_2').dual().strLog('p2: ').render({color: 0x0000ff})
+var p1 = bs.multiVector('1e_0 + 2e_1 + 1e_3').dual().strLog('p1: ').render({color: 0xff0000})
+var p2 = bs.multiVector('-3e_0 + 1e_2').dual().strLog('p2: ').render({color: 0x0000ff})
+//var p1 = bs.multiVector('-1e_0 + 1e_3').dual().strLog('p1: ').render({color: 0xff0000})
+//var p2 = bs.multiVector('-1e_0 + 1e_2').dual().strLog('p2: ').render({color: 0x0000ff})
 var p1Dual = p1.dual().strLog('p1Dual: ').render({color: 0xff0000})
 var p2Dual = p2.dual().strLog('p2Dual: ').render({color: 0x0000ff})
-var join12 = p1.join(p2).selectGrade(2).strLog('join2: ').render()
+var join12 = p1.join(p2).strLog('join2: ').render()
 
 //=====================================================================================//
 

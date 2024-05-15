@@ -626,7 +626,7 @@ var basisSet = function (p,q,r) {
 		}
 		mv.join = function(b) {
 			// a V b = !( !a * !b )
-			var res = (this.dual().gp(b.dual())).unDual()
+			var res = (this.dual().op(b.dual())).unDual()
 			res.components = [this,b]
 			return res
 		}

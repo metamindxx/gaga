@@ -46,6 +46,17 @@ var pgaBasis = function(scene) {
 			return mvResult
 		}*/
 
+	, 	pointXYZ: function(mv) {
+				// z,y,x,1 == d[11], d[12], d[13], d[14]
+				var ex = - mv.basisSVal('e_023')
+				,	ey =   mv.basisSVal('e_013')
+				,	ez = - mv.basisSVal('e_012')
+				var i0 =   mv.basisSVal('e_123')
+
+				//i0 = Math.pow(ex*ex + ey*ey + ez*ez, 0.5)
+				return {x: ex/i0, y: ey/i0, z: ez/i0}
+		}
+
 	,	renderMV: function (mv, options) {
 			// set some defaults
 			if (options) { Object.keys(options).forEach(k=> mv.opt[k] = options[k]) }
@@ -92,36 +103,41 @@ var pgaBasis = function(scene) {
 
 			} else if (mv.grade() == 2) {
 				//** render line
-				// e for euclidian - direction of line
-				var ex =   mv.basisSVal('e_23')
-				,	ey = - mv.basisSVal('e_13')
-				,	ez =   mv.basisSVal('e_12')
-				var mag = Math.pow(ex*ex + ey*ey + ez*ez, 1/2)
-				ex = ex/mag
-				ey = ey/mag
-				ez = ez/mag
+				if (mv.components) {
+					var p0 = mv.components[0]
+					var xyz0 = this.pointXYZ(p0)
+					var p1 = mv.components[1]
+					var xyz1 = this.pointXYZ(p1)
+					cemo.addVectorToScene([[xyz0.x, xyz0.y, xyz0.z],[xyz1.x, xyz1.y, xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
+				} else {
+					// e for euclidian - direction of line
+					var ex =   mv.basisSVal('e_23')
+					,	ey = - mv.basisSVal('e_13')
+					,	ez =   mv.basisSVal('e_12')
+					var mag = Math.pow(ex*ex + ey*ey + ez*ez, 1/2)
+					ex = ex/mag
+					ey = ey/mag
+					ez = ez/mag
 
-				// i for infinite - moment of line
-				var ix = mv.basisSVal('e_01') / mag
-				,	iy = mv.basisSVal('e_02') / mag
-				,	iz = mv.basisSVal('e_03') / mag
+					// i for infinite - moment of line
+					var ix = mv.basisSVal('e_01') / mag
+					,	iy = mv.basisSVal('e_02') / mag
+					,	iz = mv.basisSVal('e_03') / mag
 
-				// take the cross product (shh!) to rotate the moment line around the direction line.
-				// the moment line is the correct length and now lies in the plane of the moment's rotation perp to the direction
-				// ie, this is the translation
-				var crossX =  ey*iz - iy*ez
-				,	crossY =  ez*ix - iz*ex
-				,	crossZ =  ex*iy - ix*ey
+					// take the cross product (shh!) to rotate the moment line around the direction line.
+					// the moment line is the correct length and now lies in the plane of the moment's rotation perp to the direction
+					// ie, this is the translation
+					var crossX =  ey*iz - iy*ez
+					,	crossY =  ez*ix - iz*ex
+					,	crossZ =  ex*iy - ix*ey
 
-				cemo.addVectorToScene([[crossX, crossY, crossZ],[crossX + ex, crossY + ey, crossZ + ez]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
-
+					cemo.addVectorToScene([[crossX, crossY, crossZ],[crossX + ex, crossY + ey, crossZ + ez]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
+				}
 			} else if (mv.grade() == 3) {
 				if (!mv.opt.size) { mv.opt.size = .1 }
 
 				// z,y,x,1 == d[11], d[12], d[13], d[14]
-				var ex = - mv.basisSVal('e_023')
-				,	ey =   mv.basisSVal('e_013')
-				,	ez = - mv.basisSVal('e_012')
+				var xyz = this.pointXYZ(mv)
 				var i0 =   mv.basisSVal('e_123')
 
 				// outside
@@ -149,10 +165,10 @@ var pgaBasis = function(scene) {
 					ey = ey/i0
 					ez = ez/i0
 					i0 = 1
-					cemo.addVectorToScene([[ex, ey, ez],[2*ex, 2*ey, 2*ez]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
+					cemo.addVectorToScene([[xyz.x, xyz.y, xyz.z],[2*xyz.x, 2*xyz.y, 2*xyz.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
 				}
 
-				group.position.set(ex/i0, ey/i0, ez/i0)
+				group.position.set(xyz.x, xyz.y, xyz.z)
 			}
 
 
