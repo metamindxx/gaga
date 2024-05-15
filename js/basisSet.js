@@ -627,9 +627,16 @@ var basisSet = function (p,q,r) {
 		mv.join = function(b) {
 			// a V b = !( !a * !b )
 			var res = (this.dual().op(b.dual())).unDual()
+			if (this.gradeStored == 3 && b.gradeStored == 3) {
 			res.components = [this,b]
-			return res
+		} else if (this.gradeStored == 2 && b.gradeStored == 3 && this.components) {  //For joinline L in: (L V p)
+			res.components = [this.components[0],this.components[1],b]
+		} else if (this.gradeStored == 3 && b.gradeStored == 2 && b.components) {  //For joinline L in: (p V L)
+			res.components = [this,b.components[0],b.components[1]]
 		}
+		console.log('res.components:', res.components)
+		return res
+	}
 
 
 //--------------

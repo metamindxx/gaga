@@ -35,20 +35,13 @@ var p3 = bs.multiVector('1e_0 + 3e_3 + 1e_1').dual().strLog('p3: ').render({colo
 var join12 = p1.join(p2).strLog('join12: ').render()
 var join23 = p2.join(p3).strLog('join23: ').render()
 var join31 = p3.join(p1).strLog('join31: ').render()
-var join231 = p1.join(join23).strLog('join231: ').render()
+var join123 = p1.join(join23).strLog('join123: ').render({color: 0xAA00DD})
 
+//=====================================================================================//
+
+/*
 var B = bs.multiVector('1e_12 - 3e_13').normalize().strLog('B: ').render()
 var R = B.exp(Math.PI/100).strLog('R: ')
-/*
-var rotOfp1 = R.gp(p1.gp(R.reverse())).selectGrade(3).strLog('rotOfp1: ').render({color: 0xFF0000})
-var rotOfp2 = sqrtB.gp(p2.gp(sqrtB.reverse())).selectGrade(3).strLog('rotOfp1: ').render({color: 0x0000ff})
-var rotOfp3 = sqrtB.gp(p3.gp(sqrtB.reverse())).selectGrade(3).strLog('rotOfp1: ').render({color: 0x00ff00})
-
-var join12Rot = rotOfp1.join(rotOfp2).strLog('join12: ').render()
-var join23Rot = rotOfp2.join(rotOfp3).strLog('join23: ').render()
-var join31Rot = rotOfp3.join(rotOfp1).strLog('join31: ').render()
-*/
-
 
 function rotateAll(mv1,mv2,mv3,clr1,clr2,clr3,) {
 	for(let i=0; i<100; ++i){
@@ -64,10 +57,9 @@ function rotateAll(mv1,mv2,mv3,clr1,clr2,clr3,) {
 		var joinPlane = join12Rot.join(mv3).strLog('joinPlane: ', i,' :').render({color: 0xAAA})
 	}
 }
-
 rotateAll(p1,p2,p3,0xFF0000,0x0000ff,0x00ff00)
+*/
 
-//=====================================================================================//
 
 var bannerDiv = document.getElementById('banner_div')
 bannerDiv.style.fontFamily = 'Courier New, Courier'

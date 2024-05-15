@@ -65,40 +65,65 @@ var pgaBasis = function(scene) {
 			// what type of object
 			if (mv.grade() == 1) {
 				if (!mv.opt.size) { mv.opt.size = .5 }
+				if (mv.components) {
+					var p0 = mv.components[0]
+					var xyz0 = this.pointXYZ(p0)
+					var p1 = mv.components[1]
+					var xyz1 = this.pointXYZ(p1)
+					var p2 = mv.components[2]
+					var xyz2 = this.pointXYZ(p2)
+					//cemo.addVectorToScene([[xyz0.x, xyz0.y, xyz0.z],[xyz1.x, xyz1.y, xyz1.z],[xyz2.x, xyz2.y, xyz2.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
+					// This works for displaying the backside of the triangle formed when joining a line to a point
+					// Pretty sure this isn't the best way to go about it
+					const a = new THREE.Vector3(xyz0.x, xyz0.y, xyz0.z)
+					const b = new THREE.Vector3(xyz1.x, xyz1.y, xyz1.z)
+					const c = new THREE.Vector3(xyz2.x, xyz2.y, xyz2.z)
+					var geom = new THREE.Geometry()
+					var triangle = new THREE.Triangle(a,b,c)
+					var normal = triangle.getNormal()
+					geom.vertices.push(triangle.a)
+					geom.vertices.push(triangle.b)
+					geom.vertices.push(triangle.c)
+					geom.faces.push(new THREE.Face3(0, 1, 2, normal))
+					var mesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({ color: mv.opt.color }))
+					scene.add(mesh)
+				
+				} else {
+					//** render plane
+					var nx = mv.basisSVal('e_1')
+					var ny = mv.basisSVal('e_2')
+					var nz = mv.basisSVal('e_3')
+					var nd = mv.basisSVal('e_0')
+					var mag = Math.pow(nx*nx + ny*ny + nz*nz, 1/2)
 
-				//** render plane
-				var nx = mv.basisSVal('e_1')
-				var ny = mv.basisSVal('e_2')
-				var nz = mv.basisSVal('e_3')
-				var nd = mv.basisSVal('e_0')
-				var mag = Math.pow(nx*nx + ny*ny + nz*nz, 1/2)
+					// normalize
+					nx = nx/mag
+					ny = ny/mag
+					nz = nz/mag
+					nd = -nd/mag
 
-				// normalize
-				nx = nx/mag
-				ny = ny/mag
-				nz = nz/mag
-				nd = -nd/mag
+					// front
+					var gCircFront = new THREE.CircleGeometry( mv.opt.size, 32 );
+					var mFront = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.4, emissive: 0x111111, side: THREE.DoubleSide} );
+					var mshCircFront = new THREE.Mesh( gCircFront, mFront );
+					// back
+					var gCircBack = new THREE.CircleGeometry( mv.opt.size * .8, 32 );
+					var mBack = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111, side: THREE.BackSide} );
+					//var mBack = new THREE.MeshStandardMaterial( {color: mv.opt.color, wireframe: true} )
+					var mshCircBack = new THREE.Mesh( gCircBack, mBack );
+					mshCircBack.position.set(0,0,-.001)
 
-				// front
-				var gCircFront = new THREE.CircleGeometry( mv.opt.size, 32 );
-				var mFront = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.4, emissive: 0x111111, side: THREE.DoubleSide} );
-				var mshCircFront = new THREE.Mesh( gCircFront, mFront );
-				// back
-				var gCircBack = new THREE.CircleGeometry( mv.opt.size * .8, 32 );
-				var mBack = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111, side: THREE.BackSide} );
-				//var mBack = new THREE.MeshStandardMaterial( {color: mv.opt.color, wireframe: true} )
-				var mshCircBack = new THREE.Mesh( gCircBack, mBack );
-				mshCircBack.position.set(0,0,-.001)
+					var group = new THREE.Group();
+					group.add( mshCircFront );
+					group.add( mshCircBack );
 
-				var group = new THREE.Group();
-				group.add( mshCircFront );
-				group.add( mshCircBack );
-
-				// need to translate first since it uses object coordinates...
-				// group.translateOnAxis(theAxis, nd)
-				group.lookAt(new THREE.Vector3(nx, ny, nz))
-				group.position.set(nx*nd, ny*nd, nz*nd)
-				scene.add( group );
+					// need to translate first since it uses object coordinates...
+					// group.translateOnAxis(theAxis, nd)
+					group.lookAt(new THREE.Vector3(nx, ny, nz))
+					group.position.set(nx*nd, ny*nd, nz*nd)
+					scene.add( group );
+				}
+				
 
 
 			} else if (mv.grade() == 2) {
