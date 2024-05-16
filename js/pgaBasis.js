@@ -75,6 +75,9 @@ var pgaBasis = function(scene) {
 					//cemo.addVectorToScene([[xyz0.x, xyz0.y, xyz0.z],[xyz1.x, xyz1.y, xyz1.z],[xyz2.x, xyz2.y, xyz2.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
 					// This works for displaying the backside of the triangle formed when joining a line to a point
 					// Pretty sure this isn't the best way to go about it
+
+					
+
 					const a = new THREE.Vector3(xyz0.x, xyz0.y, xyz0.z)
 					const b = new THREE.Vector3(xyz1.x, xyz1.y, xyz1.z)
 					const c = new THREE.Vector3(xyz2.x, xyz2.y, xyz2.z)
@@ -85,8 +88,9 @@ var pgaBasis = function(scene) {
 					geom.vertices.push(triangle.b)
 					geom.vertices.push(triangle.c)
 					geom.faces.push(new THREE.Face3(0, 1, 2, normal))
-					var mesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({ color: mv.opt.color, emissive: 0x111111, side: THREE.DoubleSide}))
-					scene.add(mesh)
+					var backMesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({color: mv.opt.color, side: THREE.BackSide}))
+					var frontMesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({color: 0xddaaff, side: THREE.FrontSide}))
+					scene.add(frontMesh, backMesh)
 				
 				} else {
 					//** render plane
