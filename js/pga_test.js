@@ -29,6 +29,9 @@ bs.multiVector('1e_123').render()
 
 //=====================================================================================//
 
+//		Note: still need to fix .smul() for joinlines and joinplanes (still doesn't invert point order)
+
+
 var p1 = bs.multiVector('1e_0 + 1e_1 + 2e_2').dual().strLog('p1: ').render({color: 0xff0000})
 var p2 = bs.multiVector('1e_0 + 2e_2 + 3e_3').dual().strLog('p2: ').render({color: 0x0000ff})
 var p3 = bs.multiVector('1e_0 + 3e_3 + 1e_1').dual().strLog('p3: ').render({color: 0x00ff00})
