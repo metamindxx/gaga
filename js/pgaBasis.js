@@ -88,8 +88,8 @@ var pgaBasis = function(scene) {
 					geom.vertices.push(triangle.b)
 					geom.vertices.push(triangle.c)
 					geom.faces.push(new THREE.Face3(0, 1, 2, normal))
-					var backMesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({color: mv.opt.color, side: THREE.BackSide}))
-					var frontMesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({color: 0xddaaff, side: THREE.FrontSide}))
+					var frontMesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({color: mv.opt.color, side: THREE.FrontSide}))
+					var backMesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({color: 0xddaaff, side: THREE.BackSide}))
 					scene.add(frontMesh, backMesh)
 				
 				} else {
@@ -247,10 +247,10 @@ var pgaBasis = function(scene) {
 	bs.setDual(bs.e13, bs.e02, -1)
 	bs.setDual(bs.e23, bs.e01, 1)
 
-	bs.setDual(bs.e012, bs.e3, -1)
-	bs.setDual(bs.e013, bs.e2, 1)
-	bs.setDual(bs.e023, bs.e1, -1)
-	bs.setDual(bs.e123, bs.e0, 1)
+	bs.setDual(bs.e012, bs.e3, 1)
+	bs.setDual(bs.e013, bs.e2, -1)
+	bs.setDual(bs.e023, bs.e1, 1)
+	bs.setDual(bs.e123, bs.e0, -1)
 
 	bs.setDual(bs.e0123, bs.e, 1)
 

@@ -563,15 +563,27 @@ var basisSet = function (p,q,r) {
 			for (var i=0; i< mv.blades.length; ++i) {
 				mv.blades[i].mul *= mul
 			}
+			if (this.components) {
+				for (var i=0; i<this.components.length; ++i) {	
+					mv.components.push(this.components[i].smul(mul))
+				}
+			}
+
 			return mv
 		}
 		mv.copy = function () {
 			var mv = this
 			var mvResult = bs.multiVector('')
-			var	bladeResult
+			if (mv.components) {
+				mvResult.components = []
+				for (var i=0; i<mv.components.length; ++i) {	
+					mvResult.components.push(mv.components[i].copy())
+				}
+			}
 			for (var i=0; i< mv.blades.length; ++i) {
 				mvResult.pushBlade(mv.blades[i].copy())
 			}
+				
 			return mvResult
 		}
 		mv.dual = function () {

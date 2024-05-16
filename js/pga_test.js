@@ -37,8 +37,23 @@ var join23 = p2.join(p3).strLog('join23: ').render()
 var join31 = p3.join(p1).strLog('join31: ').render()
 var join123 = p1.join(join23).strLog('join123: ').render({color: 0xAA00DD})
 
+var joinTest = bs.multiVector('-12.00e_0 +6.00e_1 +3.00e_2 +2.00e_3').strLog('joinTest: ').render()
+
 var B = bs.multiVector('1e_12 - 3e_13').normalize().strLog('B: ').render()
 var R = B.exp(Math.PI/4).strLog('R: ')
+
+var x = bs.multiVector('1e_0 + 1e_1').dual().strLog('x: ').render()
+var y = bs.multiVector('1e_0 + 1e_2').dual().strLog('y: ').render()
+var z = bs.multiVector('1e_0 + 1e_3').dual().strLog('z: ').render()
+
+var xVy = x.join(y).strLog('xVy: ').render()
+var yVz = y.join(z).render()
+var zVx = z.join(x).render()
+var xVyVz = xVy.join(z).strLog('xVyVz: ').render()
+
+//var plane1 = bs.multiVector('+1.00e_0 -1.00e_1 -1.00e_2 -1.00e_3').strLog('plane: ').render() //What ganja.js renders as identical to plane2.
+var plane2 = bs.multiVector('-1.00e_0 +1.00e_1 +1.00e_2 +1.00e_3').strLog('plane: ').render()
+
 
 join123 = join123.move(R).render({color: 0x0000ff, renderComponents: true})
 //join123 = join123.move(R).render()
