@@ -37,6 +37,13 @@ var join23 = p2.join(p3).strLog('join23: ').render()
 var join31 = p3.join(p1).strLog('join31: ').render()
 var join123 = p1.join(join23).strLog('join123: ').render({color: 0xAA00DD})
 
+var B = bs.multiVector('1e_12 - 3e_13').normalize().strLog('B: ').render()
+var R = B.exp(Math.PI/4).strLog('R: ')
+
+join123 = join123.move(R).render({color: 0x0000ff, renderComponents: true})
+//join123 = join123.move(R).render()
+//join123 = join123.move(R).render()
+
 //=====================================================================================//
 
 /*

@@ -627,16 +627,44 @@ var basisSet = function (p,q,r) {
 		mv.join = function(b) {
 			// a V b = !( !a * !b )
 			var res = (this.dual().op(b.dual())).unDual()
-			if (this.gradeStored == 3 && b.gradeStored == 3) {
-			res.components = [this,b]
-		} else if (this.gradeStored == 2 && b.gradeStored == 3 && this.components) {  //For joinline L in: (L V p)
-			res.components = [this.components[0],this.components[1],b]
-		} else if (this.gradeStored == 3 && b.gradeStored == 2 && b.components) {  //For joinline L in: (p V L)
-			res.components = [this,b.components[0],b.components[1]]
+			res.components = []
+			res.copyComponents(this)
+			res.copyComponents(b)
+
+//			console.log('res.components:', res.components)
+			return res
 		}
-		console.log('res.components:', res.components)
-		return res
-	}
+
+		mv.copyComponents = function(b) {
+			if (b.components) {
+				for (var i=0; i<b.components.length; ++i) {
+					this.components.push(b.components[i])
+				}
+			} else {
+				this.components.push(b)
+			}
+		}
+
+		mv.move = function(rotor) {
+			var rotorInverse = rotor.inverse()
+
+			// move the parent object
+			var resMV = rotor.gp(this.gp(rotorInverse)).selectGrade(this.grade())
+			if (this.opt) { Object.keys(this.opt).forEach(k=> resMV.opt[k] = this.opt[k]) }
+
+			// move the components
+			if (this.components) {
+				var comp, newComp
+				resMV.components = []
+				for (var i=0; i<this.components.length; ++i) {
+					comp = this.components[i]
+					newComp = rotor.gp(comp.gp(rotorInverse)).selectGrade(comp.grade())
+					resMV.components.push(newComp)
+					if (comp.opt) { Object.keys(comp.opt).forEach(k=> newComp.opt[k] = comp.opt[k]) }
+				}
+			}
+			return resMV
+		}
 
 
 //--------------

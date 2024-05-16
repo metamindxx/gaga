@@ -85,7 +85,7 @@ var pgaBasis = function(scene) {
 					geom.vertices.push(triangle.b)
 					geom.vertices.push(triangle.c)
 					geom.faces.push(new THREE.Face3(0, 1, 2, normal))
-					var mesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({ color: mv.opt.color }))
+					var mesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({ color: mv.opt.color, emissive: 0x111111, side: THREE.DoubleSide}))
 					scene.add(mesh)
 				
 				} else {
@@ -196,6 +196,12 @@ var pgaBasis = function(scene) {
 				group.position.set(xyz.x, xyz.y, xyz.z)
 			}
 
+			if (options && options.renderComponents && mv.components) {
+				var comp
+				for (var i=0; i<mv.components.length; ++i) {
+					mv.components[i].render()// options)
+				}
+			}
 
 
 		}
