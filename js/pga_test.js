@@ -36,6 +36,10 @@ var p1 = bs.multiVector('1e_0 + 1e_1 + 2e_2').dual().strLog('p1: ').render({colo
 var p2 = bs.multiVector('1e_0 + 1e_2 + 2e_3').dual().strLog('p2: ').render({color: 0x00ff00})
 var join = p1.join(p2).strLog('join: ').render()
 
+var a = bs.multiVector('1e_0 + 1e_1 + 2e_2 + 1e_3').dual().strLog('a: ').render({color: 0xdd00ff})
+
+var JoinAp2 = a.join(p2).strLog('JoinAp2: ').render()
+var JoinAp2p1 = JoinAp2.join(p1).strLog('JoinAp2p1: ').render()
 
 var biv = bs.multiVector(' 1e_12 + 1e_23 - 1e_13').normalize().render()
 
@@ -88,7 +92,9 @@ infoDiv.innerHTML = bs.cayleyHtml({order: bladeOrder})
 **************************/
 
 var animationCounter = 0
-var movedP1 = p1.copy()
+var movedA = a.copy()
+var movedJoinAp2 = JoinAp2.copy()
+var movedJoinAp2p1 = JoinAp2p1.copy()
 //var movedJoin = join.copy()
 function animate() {
 
@@ -97,14 +103,15 @@ function animate() {
 	animationCounter += .01
 	
 	if (animationCounter < 10) {
-		p1.move(biv.exp(animationCounter), movedP1) //If you set movedP1 = to the left here, it moves well but renders too much
-		//join.move(biv.exp(animationCounter), movedJoin)
-		movedP1.render()
-	  	//movedJoin.render()
-	//var rot = biv.exp(Math.PI/10*animationCounter).gp(p1.gp(biv.exp(Math.PI/10*animationCounter).reverse())).selectGrade(3).render()
-	//var x = p1
+		a.move(join.exp(animationCounter), movedA)
+		//JoinAp2.move(join.exp(animationCounter), movedJoinAp2)
+		//JoinAp2p1.move(join.exp(animationCounter), movedJoinAp2p1)
+		
+		movedA.render()
+		//movedJoinAp2.render()   // To demonstrate that joinlines will rotate with move().
+		//movedJoinAp2p1.render() // To demonstrate that joinplanes will rotate with move().
+	  	
 	}
-//	p1 = p1.move(biv.exp(.01)).render()
 
 
 	cemoCam.renderer.render( scene, camera )

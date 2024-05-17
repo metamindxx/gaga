@@ -521,7 +521,7 @@ var basisSet = function (p,q,r) {
 			var nPow = n.copy()
 			var res = n.copy().sadd(1)
 
-			var numTerms = 111
+			var numTerms = 22
 			console.log(numTerms)
 			for (i=2; i<numTerms; ++i) {
 				nPow = nPow.gp(n).smul(1/i)
