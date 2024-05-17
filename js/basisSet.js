@@ -589,6 +589,10 @@ var basisSet = function (p,q,r) {
 
 		// copy the mv data, but don't touch anything else (eg mesh etc)
 		mv.updateCopy = function (copyFrom) {
+			// clear the old blade info
+			this.blades = []
+			this.bladeIdx = []
+			
 			if (copyFrom.components) {
 				this.components = []
 				for (var i=0; i<copyFrom.components.length; ++i) {	

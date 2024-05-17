@@ -40,7 +40,7 @@ var join = p1.join(p2).strLog('join: ').render()
 var biv = bs.multiVector(' 1e_12 + 1e_23 - 1e_13').normalize().render()
 
 var R = biv.exp(Math.PI/100)
-
+/*
 function rotateAll(point) {
 	let t = 0
 	var target = point.copy()
@@ -52,7 +52,7 @@ function rotateAll(point) {
 		++t
 	}
 }
-rotateAll(p1,R)
+rotateAll(p1,R)*/
 
 //=====================================================================================//
 
