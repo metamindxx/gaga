@@ -671,7 +671,7 @@ var basisSet = function (p,q,r) {
 		}
 
 		mv.move = function(rotor, target) {
-			var rotorInverse = rotor.inverse()
+			var rotorInverse = rotor.reverse()
 
 			// move the parent object
 			var resMV = rotor.gp(this.gp(rotorInverse)).selectGrade(this.grade())

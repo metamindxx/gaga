@@ -39,6 +39,20 @@ var join = p1.join(p2).strLog('join: ').render()
 
 var biv = bs.multiVector(' 1e_12 + 1e_23 - 1e_13').normalize().render()
 
+var R = biv.exp(Math.PI/100)
+
+function rotateAll(point) {
+	let t = 0
+	var target = point.copy()
+	for(let i=0; i<100; ++i){
+		point.move(biv.exp(t*Math.PI/100), target) //If you set target = to the left here, it moves well but renders too much
+		var targ = target.copy()
+		targ.render()
+		//point = movedPoint.copy()
+		++t
+	}
+}
+rotateAll(p1,R)
 
 //=====================================================================================//
 
@@ -82,11 +96,13 @@ function animate() {
 	requestAnimationFrame( animate )
 	animationCounter += .01
 	
-	if (animationCounter < 100) {
-		p1.move(biv.exp(animationCounter), movedP1)
-	//	join.move(biv.exp(animationCounter), movedJoin)
+	if (animationCounter < 10) {
+		p1.move(biv.exp(animationCounter), movedP1) //If you set movedP1 = to the left here, it moves well but renders too much
+		//join.move(biv.exp(animationCounter), movedJoin)
 		movedP1.render()
-	//  movedJoin.render()
+	  	//movedJoin.render()
+	//var rot = biv.exp(Math.PI/10*animationCounter).gp(p1.gp(biv.exp(Math.PI/10*animationCounter).reverse())).selectGrade(3).render()
+	//var x = p1
 	}
 //	p1 = p1.move(biv.exp(.01)).render()
 
