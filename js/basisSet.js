@@ -515,7 +515,6 @@ var basisSet = function (p,q,r) {
 
 		// exp(alpha * mv.normalized) = 1 + alpha * mv/1 + alpha^2 * mv^2/2! + alpha^3 * mv^3/3!
 		mv.exp = function(alpha) {
-			// this.alg
 			alpha = (alpha % (Math.PI * 2)) - Math.PI
 			var n = this.smul(alpha)
 			var nPow = n.copy()
@@ -530,6 +529,45 @@ var basisSet = function (p,q,r) {
 
 			return res
 		}
+
+		// enki's exponential
+		mv.eexp = function(alpha) {
+			alpha = (alpha % (Math.PI * 2)) - Math.PI
+
+			// (e01, e02, e03, e12, e31, e23)
+			var B = [this.bVal('e_01') * alpha
+					,this.bVal('e_02') * alpha
+					,this.bVal('e_03') * alpha
+					,this.bVal('e_12') * alpha
+					,this.bVal('e_13') * alpha * -1
+					,this.bVal('e_23') * alpha
+				]
+			var l =(B[3]*B[3] + B[4]*B[4] + B[5]*B[5])
+
+			var mvResult = bs.multiVector('')
+			if (l == 0) {
+				mvResult.pushBlade(bs.newBlade(1,    bs.e) )
+				mvResult.pushBlade(bs.newBlade(B[0], bs.e01) )
+				mvResult.pushBlade(bs.newBlade(B[1], bs.e02) )
+				mvResult.pushBlade(bs.newBlade(B[2], bs.e03) )
+				return mvResult
+			}
+			var m = B[0]*B[5] + B[1]*B[4] + B[2]*B[3]
+			,	a = Math.sqrt(l)
+			,	c = Math.cos(a)
+			,	s = Math.sin(a) / a
+			,	t = m / l * (c-s)
+
+			mvResult.pushBlade(bs.newBlade(c, bs.e) )
+			mvResult.pushBlade(bs.newBlade(s*B[0] + t*B[5], bs.e01) )
+			mvResult.pushBlade(bs.newBlade(s*B[1] + t*B[4], bs.e02) )
+			mvResult.pushBlade(bs.newBlade(s*B[2] + t*B[3], bs.e03) )
+			mvResult.pushBlade(bs.newBlade(s*B[3], bs.e12) )
+			mvResult.pushBlade(bs.newBlade(s*B[4]*-1, bs.e13) )
+			mvResult.pushBlade(bs.newBlade(s*B[5], bs.e23) )
+			mvResult.pushBlade(bs.newBlade(m*s, bs.e0123) )
+			return mvResult
+	}
 
 		mv.add = function (mv2) {
 			var mvResult = this.copy()

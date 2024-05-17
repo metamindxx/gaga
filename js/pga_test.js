@@ -96,8 +96,8 @@ function animate() {
 	requestAnimationFrame( animate )
 	animationCounter += .01
 	
-	if (animationCounter < 10) {
-		p1.move(biv.exp(animationCounter), movedP1) //If you set movedP1 = to the left here, it moves well but renders too much
+	if (animationCounter < 110) {
+		p1.move(biv.eexp(animationCounter), movedP1) //If you set movedP1 = to the left here, it moves well but renders too much
 		//join.move(biv.exp(animationCounter), movedJoin)
 		movedP1.render()
 	  	//movedJoin.render()
