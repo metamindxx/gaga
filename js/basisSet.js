@@ -516,12 +516,12 @@ var basisSet = function (p,q,r) {
 		// exp(alpha * mv.normalized) = 1 + alpha * mv/1 + alpha^2 * mv^2/2! + alpha^3 * mv^3/3!
 		mv.exp = function(alpha) {
 			// this.alg
-			//alpha = (alpha % (Math.PI * 2)) - Math.PI
+			alpha = (alpha % (Math.PI * 2)) - Math.PI
 			var n = this.smul(alpha)
 			var nPow = n.copy()
 			var res = n.copy().sadd(1)
 
-			var numTerms = 11
+			var numTerms = 111
 			console.log(numTerms)
 			for (i=2; i<numTerms; ++i) {
 				nPow = nPow.gp(n).smul(1/i)
@@ -585,6 +585,19 @@ var basisSet = function (p,q,r) {
 			}
 				
 			return mvResult
+		}
+
+		// copy the mv data, but don't touch anything else (eg mesh etc)
+		mv.updateCopy = function (copyFrom) {
+			if (copyFrom.components) {
+				this.components = []
+				for (var i=0; i<copyFrom.components.length; ++i) {	
+					this.components.push(copyFrom.components[i].copy())
+				}
+			}
+			for (var i=0; i< copyFrom.blades.length; ++i) {
+				this.pushBlade(copyFrom.blades[i].copy())
+			}
 		}
 		mv.dual = function () {
 			var mv = this
@@ -657,7 +670,7 @@ var basisSet = function (p,q,r) {
 			}
 		}
 
-		mv.move = function(rotor) {
+		mv.move = function(rotor, target) {
 			var rotorInverse = rotor.inverse()
 
 			// move the parent object
@@ -675,6 +688,11 @@ var basisSet = function (p,q,r) {
 					if (comp.opt) { Object.keys(comp.opt).forEach(k=> newComp.opt[k] = comp.opt[k]) }
 				}
 			}
+
+			if (target) {
+				target.updateCopy(resMV)
+			}
+
 			return resMV
 		}
 

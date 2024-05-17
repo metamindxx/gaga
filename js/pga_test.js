@@ -33,57 +33,10 @@ bs.multiVector('1e_123').render()
 
 
 var p1 = bs.multiVector('1e_0 + 1e_1 + 2e_2').dual().strLog('p1: ').render({color: 0xff0000})
-var p2 = bs.multiVector('1e_0 + 2e_2 + 3e_3').dual().strLog('p2: ').render({color: 0x0000ff})
-var p3 = bs.multiVector('1e_0 + 3e_3 + 1e_1').dual().strLog('p3: ').render({color: 0x00ff00})
-var join12 = p1.join(p2).strLog('join12: ').render()
-var join23 = p2.join(p3).strLog('join23: ').render()
-var join31 = p3.join(p1).strLog('join31: ').render()
-var join123 = p1.join(join23).strLog('join123: ').render({color: 0xAA00DD})
 
-var joinTest = bs.multiVector('-12.00e_0 +6.00e_1 +3.00e_2 +2.00e_3').strLog('joinTest: ').render()
-
-var B = bs.multiVector('1e_12 - 3e_13').normalize().strLog('B: ').render()
-var R = B.exp(Math.PI/4).strLog('R: ')
-
-var x = bs.multiVector('1e_0 + 1e_1').dual().strLog('x: ').render()
-var y = bs.multiVector('1e_0 + 1e_2').dual().strLog('y: ').render()
-var z = bs.multiVector('1e_0 + 1e_3').dual().strLog('z: ').render()
-
-var xVy = x.join(y).strLog('xVy: ').render()
-var yVz = y.join(z).render()
-var zVx = z.join(x).render()
-var xVyVz = xVy.join(z).strLog('xVyVz: ').render()
-
-//var plane1 = bs.multiVector('+1.00e_0 -1.00e_1 -1.00e_2 -1.00e_3').strLog('plane: ').render() //What ganja.js renders as identical to plane2.
-var plane2 = bs.multiVector('-1.00e_0 +1.00e_1 +1.00e_2 +1.00e_3').strLog('plane: ').render()
+var biv = bs.multiVector('1e_12').normalize().render()
 
 
-join123 = join123.move(R).render({color: 0x0000ff, renderComponents: true})
-//join123 = join123.move(R).render()
-//join123 = join123.move(R).render()
-
-//=====================================================================================//
-
-/*
-var B = bs.multiVector('1e_12 - 3e_13').normalize().strLog('B: ').render()
-var R = B.exp(Math.PI/100).strLog('R: ')
-
-function rotateAll(mv1,mv2,mv3,clr1,clr2,clr3,) {
-	for(let i=0; i<100; ++i){
-		var mvRot1 = R.gp(mv1.gp(R.reverse())).selectGrade(3).strLog('mvRot1', i,' :').render({color: clr1})
-		var mvRot2 = R.gp(mv2.gp(R.reverse())).selectGrade(3).strLog('mvRot2', i,' :').render({color: clr2})
-		var mvRot3 = R.gp(mv3.gp(R.reverse())).selectGrade(3).strLog('mvRot3', i,' :').render({color: clr3})
-		mv1 = mvRot1.copy()
-		mv2 = mvRot2.copy()
-		mv3 = mvRot3.copy()
-		var join12Rot = mv1.join(mv2).strLog('join12: ', i,' :').render()
-		var join23Rot = mv2.join(mv3).strLog('join23: ', i,' :').render()
-		var join31Rot = mv3.join(mv1).strLog('join31: ', i,' :').render()
-		var joinPlane = join12Rot.join(mv3).strLog('joinPlane: ', i,' :').render({color: 0xAAA})
-	}
-}
-rotateAll(p1,p2,p3,0xFF0000,0x0000ff,0x00ff00)
-*/
 
 
 var bannerDiv = document.getElementById('banner_div')
@@ -118,9 +71,21 @@ infoDiv.innerHTML = bs.cayleyHtml({order: bladeOrder})
 **************************/
 
 var animationCounter = 0
+var movedP1 = p1.copy()
 function animate() {
+
+
 	requestAnimationFrame( animate )
 	animationCounter += .01
+	
+//	if (animationCounter < 1) {
+		p1.move(biv.exp(animationCounter), movedP1)
+		movedP1.render()
+//	}
+//	p1 = p1.move(biv.exp(.01)).render()
+
+
 	cemoCam.renderer.render( scene, camera )
+
 }
 animate()

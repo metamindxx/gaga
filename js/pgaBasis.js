@@ -166,27 +166,30 @@ var pgaBasis = function(scene) {
 			} else if (mv.grade() == 3) {
 				if (!mv.opt.size) { mv.opt.size = .1 }
 
+				// outside
+				if (mv.geomOut == null) {
+					mv.geomOut = new THREE.SphereGeometry(mv.opt.size, 9, 9)
+					mv.matOut = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111} )
+					mv.meshOut = new THREE.Mesh ( mv.geomOut, mv.matOut )
+
+					// inside
+					var insideSize = (1 + (Math.sign(i0) * -0.1) ) * mv.opt.size  // +- 10% of outside size
+					//var insideSize = 1.2 * mv.opt.size  // +- 20% of outside size
+					mv.geomIn = new THREE.SphereGeometry(insideSize, 5, 5)
+					mv.matIn = new THREE.MeshStandardMaterial( {color: mv.opt.color, wireframe: true} )
+					mv.meshIn = new THREE.Mesh ( mv.geomIn, mv.matIn )
+
+					mv.renderGroup = new THREE.Group();
+					mv.renderGroup.add( mv.meshOut );
+					mv.renderGroup.add( mv.meshIn );
+					scene.add( mv.renderGroup )
+				}
+
 				// z,y,x,1 == d[11], d[12], d[13], d[14]
 				var xyz = this.pointXYZ(mv)
 				var i0 =   mv.basisSVal('e_123')
 
-				// outside
-				var gSphOut = new THREE.SphereGeometry(mv.opt.size, 9, 9)
-				,	mOut = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111} )
-				,	mshSphOut = new THREE.Mesh ( gSphOut, mOut )
-
-				// inside
-				var insideSize = (1 + (Math.sign(i0) * -0.1) ) * mv.opt.size  // +- 10% of outside size
-				//var insideSize = 1.2 * mv.opt.size  // +- 20% of outside size
-				var gSphIn = new THREE.SphereGeometry(insideSize, 5, 5)
-				,	mIn = new THREE.MeshStandardMaterial( {color: mv.opt.color, wireframe: true} )
-				,	mshSphIn = new THREE.Mesh ( gSphIn, mIn )
-
-				var group = new THREE.Group();
-				group.add( mshSphOut );
-				group.add( mshSphIn );
-				scene.add( group )
-
+				
 				// is ideal point?
 				if (Math.abs(i0) < .001) {
 					// put the point a distance of 1 away from the origin and put an arrow pointing to infinity
@@ -198,7 +201,7 @@ var pgaBasis = function(scene) {
 					cemo.addVectorToScene([[xyz.x, xyz.y, xyz.z],[2*xyz.x, 2*xyz.y, 2*xyz.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
 				}
 
-				group.position.set(xyz.x, xyz.y, xyz.z)
+				mv.renderGroup.position.set(xyz.x, xyz.y, xyz.z)
 			}
 
 			if (options && options.renderComponents && mv.components) {
