@@ -34,7 +34,7 @@ bs.multiVector('1e_123').render()
 
 var p1 = bs.multiVector('1e_0 + 1e_1 + 2e_2').dual().strLog('p1: ').render({color: 0xff0000})
 
-var biv = bs.multiVector('1e_12').normalize().render()
+var biv = bs.multiVector(' 1e_23').normalize().render()
 
 
 
@@ -71,7 +71,7 @@ infoDiv.innerHTML = bs.cayleyHtml({order: bladeOrder})
 **************************/
 
 var animationCounter = 0
-var movedP1 = p1.copy()
+//var movedP1 = p1.copy()
 function animate() {
 
 
@@ -79,8 +79,8 @@ function animate() {
 	animationCounter += .01
 	
 //	if (animationCounter < 1) {
-		p1.move(biv.exp(animationCounter), movedP1)
-		movedP1.render()
+	//	p1.move(biv.exp(animationCounter), movedP1)
+	//	movedP1.render()
 //	}
 //	p1 = p1.move(biv.exp(.01)).render()
 
