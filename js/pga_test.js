@@ -33,11 +33,14 @@ bs.multiVector('1e_123').render()
 
 
 var p1 = bs.multiVector('1e_0 + 1e_1 + 2e_2').dual().strLog('p1: ').render({color: 0xff0000})
+var p2 = bs.multiVector('1e_0 + 1e_2 + 2e_3').dual().strLog('p2: ').render({color: 0x00ff00})
+var join = p1.join(p2).strLog('join: ').render()
 
-var biv = bs.multiVector(' 1e_23').normalize().render()
+
+var biv = bs.multiVector(' 1e_12 + 1e_23 - 1e_13').normalize().render()
 
 
-
+//=====================================================================================//
 
 var bannerDiv = document.getElementById('banner_div')
 bannerDiv.style.fontFamily = 'Courier New, Courier'
@@ -71,17 +74,20 @@ infoDiv.innerHTML = bs.cayleyHtml({order: bladeOrder})
 **************************/
 
 var animationCounter = 0
-//var movedP1 = p1.copy()
+var movedP1 = p1.copy()
+//var movedJoin = join.copy()
 function animate() {
 
 
 	requestAnimationFrame( animate )
 	animationCounter += .01
 	
-//	if (animationCounter < 1) {
-	//	p1.move(biv.exp(animationCounter), movedP1)
-	//	movedP1.render()
-//	}
+	if (animationCounter < 100) {
+		p1.move(biv.exp(animationCounter), movedP1)
+	//	join.move(biv.exp(animationCounter), movedJoin)
+		movedP1.render()
+	//  movedJoin.render()
+	}
 //	p1 = p1.move(biv.exp(.01)).render()
 
 

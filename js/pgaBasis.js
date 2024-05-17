@@ -166,6 +166,10 @@ var pgaBasis = function(scene) {
 			} else if (mv.grade() == 3) {
 				if (!mv.opt.size) { mv.opt.size = .1 }
 
+				// z,y,x,1 == d[11], d[12], d[13], d[14]
+				var xyz = this.pointXYZ(mv)
+				var i0 =   mv.basisSVal('e_123')
+				
 				// outside
 				if (mv.geomOut == null) {
 					mv.geomOut = new THREE.SphereGeometry(mv.opt.size, 9, 9)
@@ -184,10 +188,6 @@ var pgaBasis = function(scene) {
 					mv.renderGroup.add( mv.meshIn );
 					scene.add( mv.renderGroup )
 				}
-
-				// z,y,x,1 == d[11], d[12], d[13], d[14]
-				var xyz = this.pointXYZ(mv)
-				var i0 =   mv.basisSVal('e_123')
 
 				
 				// is ideal point?
