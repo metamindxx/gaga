@@ -92,26 +92,14 @@ infoDiv.innerHTML = bs.cayleyHtml({order: bladeOrder})
 **************************/
 
 var animationCounter = 0
-var movedA = a.copy()
-var movedJoinAp2 = JoinAp2.copy()
-var movedJoinAp2p1 = JoinAp2p1.copy()
-//var movedJoin = join.copy()
+var movedP1 = a.copy()
+
 function animate() {
 
 
 	requestAnimationFrame( animate )
 	animationCounter += .01
 	
-	if (animationCounter < 10) {
-		a.move(join.exp(animationCounter), movedA)
-		//JoinAp2.move(join.exp(animationCounter), movedJoinAp2)
-		//JoinAp2p1.move(join.exp(animationCounter), movedJoinAp2p1)
-		
-		movedA.render()
-		//movedJoinAp2.render()   // To demonstrate that joinlines will rotate with move().
-		//movedJoinAp2p1.render() // To demonstrate that joinplanes will rotate with move().
-	  	
-	}
 	if (animationCounter < 110) {
 		p1.move(biv.eexp(animationCounter), movedP1) //If you set movedP1 = to the left here, it moves well but renders too much
 		//join.move(biv.exp(animationCounter), movedJoin)
