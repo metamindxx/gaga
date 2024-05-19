@@ -23,6 +23,11 @@ cemo.addVectorToScene([[0, 0, 0],[0, 0, 1]], mtrlBlue, scene)
 
 var pb = pgaBasis(scene)
 
+const loader = new THREE.TextureLoader();
+var dottyMaterial = new THREE.MeshLambertMaterial({map: loader.load("/textures/dots_256.png"), alphaTest: 0.5, side: THREE.BackSide})
+
+
+
 
 //Rendering the origin
 bs.multiVector('1e_123').render()
@@ -39,7 +44,7 @@ var join = p1.join(p2).strLog('join: ').render()
 var a = bs.multiVector('1e_0 + 1e_1 + 2e_2 + 1e_3').dual().strLog('a: ').render({color: 0xdd00ff})
 
 var JoinAp2 = a.join(p2).strLog('JoinAp2: ').render()
-var JoinAp2p1 = JoinAp2.join(p1).strLog('JoinAp2p1: ').render()
+var JoinAp2p1 = JoinAp2.join(p1).strLog('JoinAp2p1: ').render({color: 0xff0000})
 
 var biv = bs.multiVector(' 1e_12 + 1e_23 - 1e_13').normalize().render()
 
@@ -90,26 +95,19 @@ infoDiv.innerHTML = bs.cayleyHtml({order: bladeOrder})
 /**************************
 **	animate
 **************************/
-
 var animationCounter = 0
-var movedP1 = a.copy()
+var movedP1 = p1.copy()
+movedP1.opt.color = 0xff0000
 
 function animate() {
-
 
 	requestAnimationFrame( animate )
 	animationCounter += .01
 	
 	if (animationCounter < 110) {
-		p1.move(biv.eexp(animationCounter), movedP1) //If you set movedP1 = to the left here, it moves well but renders too much
-		//join.move(biv.exp(animationCounter), movedJoin)
+		p1.move(biv.eexp(animationCounter*5), movedP1)
 		movedP1.render()
-	  	//movedJoin.render()
-	//var rot = biv.exp(Math.PI/10*animationCounter).gp(p1.gp(biv.exp(Math.PI/10*animationCounter).reverse())).selectGrade(3).render()
-	//var x = p1
 	}
-//	p1 = p1.move(biv.exp(.01)).render()
-
 
 	cemoCam.renderer.render( scene, camera )
 

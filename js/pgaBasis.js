@@ -66,33 +66,32 @@ var pgaBasis = function(scene) {
 			if (mv.grade() == 1) {
 				if (!mv.opt.size) { mv.opt.size = .5 }
 				if (mv.components) {
-					var p0 = mv.components[0]
-					var xyz0 = this.pointXYZ(p0)
-					var p1 = mv.components[1]
-					var xyz1 = this.pointXYZ(p1)
-					var p2 = mv.components[2]
-					var xyz2 = this.pointXYZ(p2)
-					//cemo.addVectorToScene([[xyz0.x, xyz0.y, xyz0.z],[xyz1.x, xyz1.y, xyz1.z],[xyz2.x, xyz2.y, xyz2.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
-					// This works for displaying the backside of the triangle formed when joining a line to a point
-					// Pretty sure this isn't the best way to go about it
+					var xyz0 = this.pointXYZ(mv.components[0])
+					var xyz1 = this.pointXYZ(mv.components[1])
+					var xyz2 = this.pointXYZ(mv.components[2])
 
+					var pts = new Array();
+
+					// coordinates of triangle
+					pts[0] = new THREE.Vector3(xyz0.x, xyz0.y, xyz0.z);
+					pts[1] = new THREE.Vector3(xyz1.x, xyz1.y, xyz1.z);
+					pts[2] = new THREE.Vector3(xyz2.x, xyz2.y, xyz2.z);
 					
-
-					const a = new THREE.Vector3(xyz0.x, xyz0.y, xyz0.z)
-					const b = new THREE.Vector3(xyz1.x, xyz1.y, xyz1.z)
-					const c = new THREE.Vector3(xyz2.x, xyz2.y, xyz2.z)
-					var geom = new THREE.Geometry()
-					var triangle = new THREE.Triangle(a,b,c)
-					var normal = new THREE.Vector3()
-					triangle.getNormal(normal)
-					geom.vertices.push(triangle.a)
-					geom.vertices.push(triangle.b)
-					geom.vertices.push(triangle.c)
-					geom.faces.push(new THREE.Face3(0, 1, 2, normal))
+					// create triangle
+					let geom = new THREE.BufferGeometry().setFromPoints(pts);
+					const uvs = [
+						0,0,
+						0,1,
+						1,0
+					];
+					geom.addAttribute( 'uv', new THREE.BufferAttribute( new Float32Array( uvs ), 2 ) );
+					geom.computeVertexNormals();
+					
 					var frontMesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({color: mv.opt.color, side: THREE.FrontSide}))
-					var backMesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({color: 0xddaaff, side: THREE.BackSide}))
+					//var backMesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({color: 0xddaaff, side: THREE.BackSide}))
+					var backMesh = new THREE.Mesh(geom, dottyMaterial)
 					scene.add(frontMesh, backMesh)
-				
+								
 				} else {
 					//** render plane
 					var nx = mv.basisSVal('e_1')
