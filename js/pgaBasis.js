@@ -70,27 +70,33 @@ var pgaBasis = function(scene) {
 					var xyz1 = this.pointXYZ(mv.components[1])
 					var xyz2 = this.pointXYZ(mv.components[2])
 
-					var pts = new Array();
-
 					// coordinates of triangle
+					var pts = new Array();
 					pts[0] = new THREE.Vector3(xyz0.x, xyz0.y, xyz0.z);
 					pts[1] = new THREE.Vector3(xyz1.x, xyz1.y, xyz1.z);
 					pts[2] = new THREE.Vector3(xyz2.x, xyz2.y, xyz2.z);
+
+					if (mv.renderStuff == null) {
+						mv.renderStuff = {}
+						var rs = mv.renderStuff
+						rs.geom = new THREE.BufferGeometry().setFromPoints(pts);
+						const uvs = [
+							0,0,
+							0,1,
+							1,0
+						];
+						rs.geom.addAttribute( 'uv', new THREE.BufferAttribute( new Float32Array( uvs ), 2 ) );
+						rs.frontMesh = new THREE.Mesh(rs.geom, new THREE.MeshBasicMaterial({color: mv.opt.color, side: THREE.FrontSide}))
+						//var backMesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({color: 0xddaaff, side: THREE.BackSide}))
+						rs.backMesh = new THREE.Mesh(rs.geom, dottyMaterial)
+						scene.add(rs.frontMesh, rs.backMesh)
+					} else {
+						mv.renderStuff.geom.setFromPoints(pts);
+					}
 					
 					// create triangle
-					let geom = new THREE.BufferGeometry().setFromPoints(pts);
-					const uvs = [
-						0,0,
-						0,1,
-						1,0
-					];
-					geom.addAttribute( 'uv', new THREE.BufferAttribute( new Float32Array( uvs ), 2 ) );
-					geom.computeVertexNormals();
+					mv.renderStuff.geom.computeVertexNormals();
 					
-					var frontMesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({color: mv.opt.color, side: THREE.FrontSide}))
-					//var backMesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({color: 0xddaaff, side: THREE.BackSide}))
-					var backMesh = new THREE.Mesh(geom, dottyMaterial)
-					scene.add(frontMesh, backMesh)
 								
 				} else {
 					//** render plane
@@ -170,22 +176,24 @@ var pgaBasis = function(scene) {
 				var i0 =   mv.basisSVal('e_123')
 				
 				// outside
-				if (mv.geomOut == null) {
-					mv.geomOut = new THREE.SphereGeometry(mv.opt.size, 9, 9)
-					mv.matOut = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111} )
-					mv.meshOut = new THREE.Mesh ( mv.geomOut, mv.matOut )
+				if (mv.renderStuff == null) {
+					mv.renderStuff = {}
+					var rs = mv.renderStuff
+					rs.geomOut = new THREE.SphereGeometry(mv.opt.size, 9, 9)
+					rs.matOut = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111} )
+					rs.meshOut = new THREE.Mesh ( rs.geomOut, rs.matOut )
 
 					// inside
 					var insideSize = (1 + (Math.sign(i0) * -0.1) ) * mv.opt.size  // +- 10% of outside size
 					//var insideSize = 1.2 * mv.opt.size  // +- 20% of outside size
-					mv.geomIn = new THREE.SphereGeometry(insideSize, 5, 5)
-					mv.matIn = new THREE.MeshStandardMaterial( {color: mv.opt.color, wireframe: true} )
-					mv.meshIn = new THREE.Mesh ( mv.geomIn, mv.matIn )
+					rs.geomIn = new THREE.SphereGeometry(insideSize, 5, 5)
+					rs.matIn = new THREE.MeshStandardMaterial( {color: mv.opt.color, wireframe: true} )
+					rs.meshIn = new THREE.Mesh ( rs.geomIn, rs.matIn )
 
-					mv.renderGroup = new THREE.Group();
-					mv.renderGroup.add( mv.meshOut );
-					mv.renderGroup.add( mv.meshIn );
-					scene.add( mv.renderGroup )
+					rs.renderGroup = new THREE.Group();
+					rs.renderGroup.add( rs.meshOut );
+					rs.renderGroup.add( rs.meshIn );
+					scene.add( rs.renderGroup )
 				}
 
 				
@@ -200,13 +208,13 @@ var pgaBasis = function(scene) {
 					cemo.addVectorToScene([[xyz.x, xyz.y, xyz.z],[2*xyz.x, 2*xyz.y, 2*xyz.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
 				}
 
-				mv.renderGroup.position.set(xyz.x, xyz.y, xyz.z)
+				mv.renderStuff.renderGroup.position.set(xyz.x, xyz.y, xyz.z)
 			}
 
 			if (options && options.renderComponents && mv.components) {
 				var comp
 				for (var i=0; i<mv.components.length; ++i) {
-					mv.components[i].render()// options)
+					mv.components[i].render(options)
 				}
 			}
 

@@ -621,7 +621,10 @@ var basisSet = function (p,q,r) {
 			for (var i=0; i< mv.blades.length; ++i) {
 				mvResult.pushBlade(mv.blades[i].copy())
 			}
-				
+			if (this.renderStuff) {
+				mvResult.renderStuff = this.renderStuff
+			}
+
 			return mvResult
 		}
 
@@ -725,9 +728,12 @@ var basisSet = function (p,q,r) {
 				resMV.components = []
 				for (var i=0; i<this.components.length; ++i) {
 					comp = this.components[i]
-					newComp = rotor.gp(comp.gp(rotorInverse)).selectGrade(comp.grade())
-					resMV.components.push(newComp)
-					if (comp.opt) { Object.keys(comp.opt).forEach(k=> newComp.opt[k] = comp.opt[k]) }
+					var compCopy = comp.copy()
+					compCopy.move(rotor, compCopy)
+					resMV.components.push(compCopy)
+//					newComp = rotor.gp(comp.gp(rotorInverse)).selectGrade(comp.grade())
+//					resMV.components.push(newComp)
+//					if (comp.opt) { Object.keys(comp.opt).forEach(k=> newComp.opt[k] = comp.opt[k]) }
 				}
 			}
 

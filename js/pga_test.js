@@ -38,15 +38,21 @@ bs.multiVector('1e_123').render()
 
 
 var p1 = bs.multiVector('1e_0 + 1e_1 + 2e_2').dual().strLog('p1: ').render({color: 0xff0000})
-var p2 = bs.multiVector('1e_0 + 1e_2 + 2e_3').dual().strLog('p2: ').render({color: 0x00ff00})
+var p2 = bs.multiVector('1e_0 + 1e_2 + 1.5e_3').dual().strLog('p2: ').render({color: 0x00ff00})
+var p3 = bs.multiVector('1e_0 + .3e_2 + .2e_3').dual().strLog('p2: ').render({color: 0x0000ff})
 var join = p1.join(p2).strLog('join: ').render()
 
 var a = bs.multiVector('1e_0 + 1e_1 + 2e_2 + 1e_3').dual().strLog('a: ').render({color: 0xdd00ff})
 
-var JoinAp2 = a.join(p2).strLog('JoinAp2: ').render()
-var JoinAp2p1 = JoinAp2.join(p1).strLog('JoinAp2p1: ').render({color: 0xff0000})
-
 var biv = bs.multiVector(' 1e_12 + 1e_23 - 1e_13').normalize().render()
+
+var JoinAp2 = p3.join(p2).strLog('JoinAp2: ').render()
+var JoinAp2p1 = JoinAp2.join(p1).strLog('JoinAp2p1: ')
+JoinAp2p1.id = 'JoinAp2p1'
+var movedTriangle = JoinAp2p1.copy().render({color: 0xdd00ff})
+movedTriangle.id = 'movedTriange'
+
+
 
 var R = biv.exp(Math.PI/100)
 /*
@@ -96,17 +102,22 @@ infoDiv.innerHTML = bs.cayleyHtml({order: bladeOrder})
 **	animate
 **************************/
 var animationCounter = 0
-var movedP1 = p1.copy()
-movedP1.opt.color = 0xff0000
+var movedP1 = a.copy()
+movedP1.opt.color = 0xff00ff
+var rotor
 
 function animate() {
 
 	requestAnimationFrame( animate )
 	animationCounter += .01
 	
-	if (animationCounter < 110) {
-		p1.move(biv.eexp(animationCounter*5), movedP1)
+	if (animationCounter < 100) {
+		rotor = biv.eexp(animationCounter)
+		a.move(rotor, movedP1)
 		movedP1.render()
+
+		JoinAp2p1.move(rotor, movedTriangle)
+		movedTriangle.render({color: 0xff0000, renderComponents: true})
 	}
 
 	cemoCam.renderer.render( scene, camera )
