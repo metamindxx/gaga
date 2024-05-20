@@ -90,11 +90,11 @@ var animationCounter = 0
 var movedP1 = a.copy()
 movedP1.opt.color = 0xff00ff
 var rotor
-
+var start = Date.now()
 function animate() {
 
 	requestAnimationFrame( animate )
-	animationCounter += .01
+	animationCounter = (Date.now() - start)/10000
 	
 	if (animationCounter < 100) {
 		rotor = biv.eexp(-animationCounter)
