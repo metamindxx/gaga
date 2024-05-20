@@ -44,7 +44,7 @@ var join = p1.join(p2).strLog('join: ').render()
 
 var a = bs.multiVector('1e_0 + 1e_1 + 2e_2 + 1e_3').dual().strLog('a: ').render({color: 0xdd00ff})
 
-var biv = bs.multiVector(' 1e_12 + 1e_23 - 1e_13').normalize().render()
+var biv = bs.multiVector(' 1e_12 + 1e_23 - 1e_13 + 2e_01 - 1e_02').normalize().render()
 
 var JoinAp2 = p3.join(p2).strLog('JoinAp2: ').render()
 var JoinAp2p1 = JoinAp2.join(p1).strLog('JoinAp2p1: ')
@@ -117,7 +117,8 @@ function animate() {
 		movedP1.render()
 
 		JoinAp2p1.move(rotor, movedTriangle)
-		movedTriangle.render({color: 0xff0000, renderComponents: true})
+		//movedTriangle.render({color: 0xff0000, renderComponents: true})
+		movedTriangle.render({color: 0xff0000, renderComponents: false})
 	}
 
 	cemoCam.renderer.render( scene, camera )
