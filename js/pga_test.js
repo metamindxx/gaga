@@ -112,7 +112,7 @@ function animate() {
 	animationCounter += .01
 	
 	if (animationCounter < 100) {
-		rotor = biv.eexp(animationCounter)
+		rotor = biv.eexp(-animationCounter)
 		a.move(rotor, movedP1)
 		movedP1.render()
 

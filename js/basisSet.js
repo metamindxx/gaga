@@ -532,7 +532,7 @@ var basisSet = function (p,q,r) {
 
 		// enki's exponential
 		mv.eexp = function(alpha) {
-			alpha = (alpha % (Math.PI * 2)) - Math.PI
+			//alpha = (alpha % (Math.PI * 2)) - Math.PI
 
 			// (e01, e02, e03, e12, e31, e23)
 			var B = [this.bVal('e_01') * alpha
