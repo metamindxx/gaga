@@ -46,28 +46,13 @@ var a = bs.multiVector('1e_0 + 1e_1 + 2e_2 + 1e_3').dual().strLog('a: ').render(
 
 var biv = bs.multiVector(' 1e_12 + 1e_23 - 1e_13 + 2e_01 - 1e_02').normalize().render()
 
+var translation = bs.multiVector('1e_01+1e_02').render()
+
 var JoinAp2 = p3.join(p2).strLog('JoinAp2: ').render()
 var JoinAp2p1 = JoinAp2.join(p1).strLog('JoinAp2p1: ')
 JoinAp2p1.id = 'JoinAp2p1'
 var movedTriangle = JoinAp2p1.copy().render({color: 0xdd00ff})
-movedTriangle.id = 'movedTriange'
-
-
-
-var R = biv.exp(Math.PI/100)
-/*
-function rotateAll(point) {
-	let t = 0
-	var target = point.copy()
-	for(let i=0; i<100; ++i){
-		point.move(biv.exp(t*Math.PI/100), target) //If you set target = to the left here, it moves well but renders too much
-		var targ = target.copy()
-		targ.render()
-		//point = movedPoint.copy()
-		++t
-	}
-}
-rotateAll(p1,R)*/
+movedTriangle.id = 'movedTriangle'
 
 //=====================================================================================//
 
