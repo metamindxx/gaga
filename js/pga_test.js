@@ -30,29 +30,22 @@ var dottyMaterial = new THREE.MeshLambertMaterial({map: loader.load("/textures/d
 
 
 //Rendering the origin
-bs.multiVector('1e_123').render()
+var origin = bs.multiVector('1e_123').strLog('origin: ').render()
 
 //=====================================================================================//
 
 //		Note: still need to fix .smul() for joinlines and joinplanes (still doesn't invert point order)
 
 
-var p1 = bs.multiVector('1e_0 + 1e_1 + 2e_2').dual().strLog('p1: ').render({color: 0xff0000})
-var p2 = bs.multiVector('1e_0 + 1e_2 + 1.5e_3').dual().strLog('p2: ').render({color: 0x00ff00})
-var p3 = bs.multiVector('1e_0 + .3e_2 + .2e_3').dual().strLog('p2: ').render({color: 0x0000ff})
-var join = p1.join(p2).strLog('join: ').render()
+var p1 = bs.multiVector('1e_0 + 1e_1 + 1e_2').dual().strLog('p1: ').render({color: 0xff0000})
+var p2 = bs.multiVector('1e_0 + 1e_1 + 2e_2').dual().strLog('p2: ').render({color: 0x00ff00})
+var CoM = bs.multiVector('1e_0').dual().add(bs.multiVector('1e_1 + 1.5e_2').dual()).strLog('CoM: ').render()
 
-var a = bs.multiVector('1e_0 + 1e_1 + 2e_2 + 1e_3').dual().strLog('a: ').render({color: 0xdd00ff})
+var B = bs.multiVector('1e_0 + 1e_2').dual().join(bs.multiVector('1e_0 + 1e_2 + 1e_3').dual()).strLog('B: ').render()
 
-var biv = bs.multiVector(' 1e_12 + 1e_23 - 1e_13 + 2e_01 - 1e_02').normalize().render()
+var B1 = bs.multiVector('1e_12 + 1.1e_01').normalize().strLog('B1: ').render()
 
-var translation = bs.multiVector('1e_01+1e_02').render()
-
-var JoinAp2 = p3.join(p2).strLog('JoinAp2: ').render()
-var JoinAp2p1 = JoinAp2.join(p1).strLog('JoinAp2p1: ')
-JoinAp2p1.id = 'JoinAp2p1'
-var movedTriangle = JoinAp2p1.copy().render({color: 0xdd00ff})
-movedTriangle.id = 'movedTriangle'
+var Bb
 
 //=====================================================================================//
 
@@ -87,23 +80,27 @@ infoDiv.innerHTML = bs.cayleyHtml({order: bladeOrder})
 **	animate
 **************************/
 var animationCounter = 0
-var movedP1 = a.copy()
-movedP1.opt.color = 0xff00ff
+var movedCoM = CoM.copy()
+movedCoM.opt.color = 0xff00ff
+var movedBb 
 var rotor
 var start = Date.now()
+
 function animate() {
 
 	requestAnimationFrame( animate )
 	animationCounter = (Date.now() - start)/10000
 	
 	if (animationCounter < 100) {
-		rotor = biv.eexp(-animationCounter)
-		a.move(rotor, movedP1)
-		movedP1.render()
+		rotor = B.eexp(-animationCounter)
+		Bb = B.move(rotor.reverse(),movedBb)	// Makes bodyframe bivector using worldframe-bivector-based motor
+		//CoM.move(rotor, movedCoM)			// To rotate using worldframe bivector
+		rotorBb = Bb.eexp(-animationCounter)
+		CoM.move(rotorBb, movedCoM)			//To rotate using bodyframe bivector
+		
+		movedCoM.render()
+		
 
-		JoinAp2p1.move(rotor, movedTriangle)
-		//movedTriangle.render({color: 0xff0000, renderComponents: true})
-		movedTriangle.render({color: 0xff0000, renderComponents: false})
 	}
 
 	cemoCam.renderer.render( scene, camera )
