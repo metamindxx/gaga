@@ -35,17 +35,22 @@ var origin = bs.multiVector('1e_123').strLog('origin: ').render()
 //=====================================================================================//
 
 //		Note: still need to fix .smul() for joinlines and joinplanes (still doesn't invert point order)
+let m1 = 100
+let m2 = 30
 
+var x1 = bs.multiVector('1e_1+1e_2').strLog('x1: ')
+var x2 = bs.multiVector('1e_1+2e_2').strLog('x1: ')
+var sumX = x1.smul(m1).add(x2.smul(m2)).smul(1/(m1+m2))
 
-var p1 = bs.multiVector('1e_0 + 1e_1 + 1e_2').dual().strLog('p1: ').render({color: 0xff0000})
-var p2 = bs.multiVector('1e_0 + 1e_1 + 2e_2').dual().strLog('p2: ').render({color: 0x00ff00})
-var CoM = bs.multiVector('1e_0').dual().add(bs.multiVector('1e_1 + 1.5e_2').dual()).strLog('CoM: ').render()
+var p1 = bs.multiVector('1e_0').add(x1).dual().strLog('p1: ').render({color: 0xff0000})
+var p2 = bs.multiVector('1e_0').add(x2).dual().strLog('p2: ').render({color: 0x00ff00})
+var CoM = bs.multiVector('1e_0').add(sumX).dual().strLog('CoM: ').render()
 
 var B = bs.multiVector('1e_0 + 1e_2').dual().join(bs.multiVector('1e_0 + 1e_2 + 1e_3').dual()).strLog('B: ').render()
 
 var B1 = bs.multiVector('1e_12 + 1.1e_01').normalize().strLog('B1: ').render()
 
-var Bb
+
 
 //=====================================================================================//
 
@@ -82,8 +87,11 @@ infoDiv.innerHTML = bs.cayleyHtml({order: bladeOrder})
 var animationCounter = 0
 var movedCoM = CoM.copy()
 movedCoM.opt.color = 0xff00ff
+var Bb
 var movedBb 
 var rotor
+var movedP1 = p1.copy()
+var movedP2 = p2.copy()
 var start = Date.now()
 
 function animate() {
@@ -97,10 +105,12 @@ function animate() {
 		//CoM.move(rotor, movedCoM)			// To rotate using worldframe bivector
 		rotorBb = Bb.eexp(-animationCounter)
 		CoM.move(rotorBb, movedCoM)			//To rotate using bodyframe bivector
-		
-		movedCoM.render()
-		
+		p1.move(rotorBb,movedP1)
+		p2.move(rotorBb,movedP2)
 
+		movedCoM.render()
+		movedP1.render()
+		movedP2.render()
 	}
 
 	cemoCam.renderer.render( scene, camera )
