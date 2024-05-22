@@ -4,7 +4,7 @@ var cemoCam = new CemoVanillaCamera('points_div')
 // var cemoCam = new CemoOrthCamera('points_div')
 cemoCam.init(scene)
 var camera = cemoCam.camera // main camera
-camera.position.set(1, 4, 4)
+camera.position.set(2, 4, 4)
 //camera.rotation.z += Math.PI/2
 
 // Lights
@@ -34,23 +34,42 @@ var origin = bs.multiVector('1e_123').strLog('origin: ').render()
 
 //=====================================================================================//
 
-//		Note: still need to fix .smul() for joinlines and joinplanes (still doesn't invert point order)
-let m1 = 100
-let m2 = 30
+function cross(A, B) {
+	return A.gp(B).add(B.gp(A).smul(-1)).smul(0.5)
+}
 
+//		Note: still need to fix .smul() for joinlines and joinplanes (still doesn't invert point order)
+// Masses
+let m1 = 10
+let m2 = 10
+
+// Vectors positions
 var x1 = bs.multiVector('1e_1+1e_2').strLog('x1: ')
-var x2 = bs.multiVector('1e_1+2e_2').strLog('x1: ')
+var x2 = bs.multiVector('-1e_1-1e_2').strLog('x1: ')
 var sumX = x1.smul(m1).add(x2.smul(m2)).smul(1/(m1+m2))
 
-var p1 = bs.multiVector('1e_0').add(x1).dual().strLog('p1: ').render({color: 0xff0000})
-var p2 = bs.multiVector('1e_0').add(x2).dual().strLog('p2: ').render({color: 0x00ff00})
-var CoM = bs.multiVector('1e_0').add(sumX).dual().strLog('CoM: ').render()
+// Points from vectors
+var X1 = bs.multiVector('1e_0').add(x1).dual().strLog('X1: ').render({color: 0xff0000})
+var X2 = bs.multiVector('1e_0').add(x2).dual().strLog('X2: ').render({color: 0x00ff00})
+var CoM = bs.multiVector('1e_0').add(sumX).dual().strLog('CoM: ').render({color: 0xff00ff})
 
-var B = bs.multiVector('1e_0 + 1e_2').dual().join(bs.multiVector('1e_0 + 1e_2 + 1e_3').dual()).strLog('B: ').render()
+// Initial conditions
+//var initialRotationAboutCoM = CoM.join(bs.multiVector('1e_3').dual()).strLog('iTaCoM: ')
+var initialRotationAboutCoM = bs.multiVector('1e_12')
+//var renderingTheAbove = bs.multiVector('1.75e_01 -1.00e_02 +1.00e_12').render()
+var state = [bs.multiVector('1e_'),initialRotationAboutCoM]
 
-var B1 = bs.multiVector('1e_12 + 1.1e_01').normalize().strLog('B1: ').render()
+// Force function
+function Force(M,B) {
+	return (M.reverse().gp(bs.multiVector('-9.81e_02').gp(M))).unDual()
+}
 
-
+// State change function
+function dS(M,B) {
+	var dotM = M.gp(B).smul(-0.5)//.strLog('dotM: ')
+	var dotB = (Force(M,B).add(cross(B,B.dual()))).unDual()//.strLog('dotB:')
+	return [dotM, dotB] 
+}
 
 //=====================================================================================//
 
@@ -85,14 +104,12 @@ infoDiv.innerHTML = bs.cayleyHtml({order: bladeOrder})
 **	animate
 **************************/
 var animationCounter = 0
-var movedCoM = CoM.copy()
-movedCoM.opt.color = 0xff00ff
-var Bb
-var movedBb 
-var rotor
-var movedP1 = p1.copy()
-var movedP2 = p2.copy()
+
 var start = Date.now()
+
+var movedX1 = X1.copy()
+var movedX2 = X2.copy()
+var movedCoM = CoM.copy()
 
 function animate() {
 
@@ -100,17 +117,16 @@ function animate() {
 	animationCounter = (Date.now() - start)/10000
 	
 	if (animationCounter < 100) {
-		rotor = B.eexp(-animationCounter)
-		Bb = B.move(rotor.reverse(),movedBb)	// Makes bodyframe bivector using worldframe-bivector-based motor
-		//CoM.move(rotor, movedCoM)			// To rotate using worldframe bivector
-		rotorBb = Bb.eexp(-animationCounter)
-		CoM.move(rotorBb, movedCoM)			//To rotate using bodyframe bivector
-		p1.move(rotorBb,movedP1)
-		p2.move(rotorBb,movedP2)
-
+		
+		X1.move(state[0],movedX1)
+		X2.move(state[0],movedX2)
+		CoM.move(state[0],movedCoM)
+		movedX1.render()
+		movedX2.render()
 		movedCoM.render()
-		movedP1.render()
-		movedP2.render()
+
+		state[0] = state[0].add(dS(state[0],state[1])[0].smul(1/300))
+		state[1] = state[1].add(dS(state[0],state[1])[1].smul(1/300))
 	}
 
 	cemoCam.renderer.render( scene, camera )
