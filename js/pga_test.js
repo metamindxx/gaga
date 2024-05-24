@@ -40,8 +40,8 @@ function cross(A, B) {
 
 //		Note: still need to fix .smul() for joinlines and joinplanes (still doesn't invert point order)
 // Masses
-let m1 = 10
-let m2 = 10
+let m1 = 0.5
+let m2 = 0.5
 
 // Vectors positions
 var x1 = bs.multiVector('1e_1+1e_2').strLog('x1: ')
