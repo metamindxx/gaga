@@ -35,7 +35,7 @@ var origin = bs.multiVector('1e_123').strLog('origin: ').render()
 //=====================================================================================//
 
 function cross(A, B) {
-	return A.gp(B).add(B.gp(A).smul(-1)).smul(0.5).selectGrade(A.gradeStored)
+	return A.gp(B).add(B.gp(A).smul(-1)).smul(0.5)
 }
 
 //		Note: still need to fix .smul() for joinlines and joinplanes (still doesn't invert point order)
@@ -54,39 +54,28 @@ var X2 = bs.multiVector('1e_0').add(x2).dual().strLog('X2: ').render({color: 0x0
 var CoM = bs.multiVector('1e_0').add(sumX).dual().strLog('CoM: ').render({color: 0xff00ff})
 
 // Initial conditions
-var initialRotationAboutCoM = CoM.join(bs.multiVector('1e_3').dual()).smul(1).strLog('iTaCoM: ').render()
-//var initialRotationAboutCoM = bs.multiVector('5e_12').strLog('iTaCoM: ')
+var initialRotationAboutCoM = CoM.join(bs.multiVector('10e_3').dual()).strLog('iTaCoM: ')
+//var initialRotationAboutCoM = bs.multiVector('10e_12+10e_13')
+//var initialRotationAboutCoM = bs.multiVector('1e_')
 //var renderingTheAbove = bs.multiVector('1.75e_01 -1.00e_02 +1.00e_12').render()
-var state = [bs.multiVector('1e_'),initialRotationAboutCoM]
+var state = [bs.multiVector('-1e_01 - 1e_02').eexp(1),initialRotationAboutCoM]
+
+bs.multiVector('1e_0 + 2e_1 + 2e_2').dual().render()
+bs.multiVector('1e_0 + 2e_1 + 0e_2').dual().render()
+bs.multiVector('1e_0 + 2e_1 - 2e_2').dual().render()
 
 // Force function
 function Force(M) {
-	return (M.reverse().gp(bs.multiVector('-10e_02').gp(M)).dual())
+	return (M.reverse().gp(bs.multiVector('-9.81e_02').gp(M))).unDual()
 }
 
 // State change function
-function dS(M,B,x,y,m1,m2) {
+function dS(M,B) {
 	var dotM = M.gp(B).smul(-0.5)//.strLog('dotM: ')
-	var inside = Force(M).add(cross(B,Ib(B,M,x,y,m1,m2)).smul(1))
+	var inside = Force(M).add(cross(B,B.dual()))
 	var dotB = (inside).unDual()//.strLog('dotB:')
 	return [dotM, dotB] 
 }
-
-
-
-function Ib(Bb,M,x,y,m1,m2) {
-	return M.reverse().gp(Iw(M.gp(Bb.gp(M.reverse())),x,y,m1,m2).gp(M)).strLog('Ib: ')
-}
-
-function Iw(Bw,x,y,m1,m2) {
-	el1 = x.join(cross(x,Bw)).strLog('el1: ')
-	el2 = y.join(cross(y,Bw)).strLog('el2: ')
-	return el1.smul(m1).add(el2.smul(m2)).strLog('Iw: ')
-}
-
-bs.multiVector('1.33e_03 - 0.67e_13 - 0.67e_23').render()
-bs.multiVector('2.67e_03 + 1.33e_13 + 1.33e_23').render()
-
 
 //=====================================================================================//
 
@@ -133,7 +122,7 @@ function animate() {
 	requestAnimationFrame( animate )
 	animationCounter = (Date.now() - start)/10000
 	
-	if (animationCounter < .01) {
+	if (animationCounter < 100) {
 		
 		X1.move(state[0],movedX1)
 		X2.move(state[0],movedX2)
@@ -142,8 +131,8 @@ function animate() {
 		movedX2.render()
 		movedCoM.render()
 
-		state[0] = state[0].add(dS(state[0],state[1],X1,X2,m1,m2)[0].smul(1/300))
-		state[1] = state[1].add(dS(state[0],state[1],X1,X2,m1,m2)[1].smul(1/300))
+		state[0] = state[0].add(dS(state[0],state[1])[0].smul(1/6000))
+		state[1] = state[1].add(dS(state[0],state[1])[1].smul(1/6000))
 	}
 
 	cemoCam.renderer.render( scene, camera )
