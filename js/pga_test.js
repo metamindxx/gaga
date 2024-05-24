@@ -32,11 +32,30 @@ var dottyMaterial = new THREE.MeshLambertMaterial({map: loader.load("/textures/d
 //Rendering the origin
 var origin = bs.multiVector('1e_123').strLog('origin: ').render()
 
-//=====================================================================================//
+//=================================================================================================//
 
-function cross(A, B) {
-	return A.gp(B).add(B.gp(A).smul(-1)).smul(0.5)
-}
+//_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-||
+                                                                                      //|| 
+// Cross product function                                                             //|| 
+function cross(A, B) {                                                                //||
+	return A.gp(B).add(B.gp(A).smul(-1)).smul(0.5)                                    //||
+}                                                                                     //||
+                                                                                      //||
+// Force function                                                                     //||
+function Force(M) {                                                                   //||
+	return (M.reverse().gp(bs.multiVector('-9.81e_02').gp(M))).unDual()               //||
+}                                                                                     //||
+                                                                                      //||
+// State change function                                                              //||
+function dS(M,B) {                                                                    //||
+	var dotM = M.gp(B).smul(-0.5)//.strLog('dotM: ')                                  //||
+	var inside = Force(M).add(cross(B,B.dual()))                                      //||
+	var dotB = (inside).unDual()//.strLog('dotB:')                                    //||
+	return [dotM, dotB]                                                               //||
+}                                                                                     //||
+                                                                                      //||
+                                                                                      //||
+//_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-||
 
 //		Note: still need to fix .smul() for joinlines and joinplanes (still doesn't invert point order)
 // Masses
@@ -64,20 +83,9 @@ bs.multiVector('1e_0 + 2e_1 + 2e_2').dual().render()
 bs.multiVector('1e_0 + 2e_1 + 0e_2').dual().render()
 bs.multiVector('1e_0 + 2e_1 - 2e_2').dual().render()
 
-// Force function
-function Force(M) {
-	return (M.reverse().gp(bs.multiVector('-9.81e_02').gp(M))).unDual()
-}
 
-// State change function
-function dS(M,B) {
-	var dotM = M.gp(B).smul(-0.5)//.strLog('dotM: ')
-	var inside = Force(M).add(cross(B,B.dual()))
-	var dotB = (inside).unDual()//.strLog('dotB:')
-	return [dotM, dotB] 
-}
 
-//=====================================================================================//
+//=================================================================================================//
 
 var bannerDiv = document.getElementById('banner_div')
 bannerDiv.style.fontFamily = 'Courier New, Courier'
