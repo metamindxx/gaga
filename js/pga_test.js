@@ -31,6 +31,7 @@ var dottyMaterial = new THREE.MeshLambertMaterial({map: loader.load("/textures/d
 
 //Rendering the origin
 var origin = bs.multiVector('1e_123').strLog('origin: ').render()
+var infinity = bs.multiVector('1e_0')
 
 //=================================================================================================//
 
@@ -56,11 +57,11 @@ function Fb(M) {                                                                
 }                                                                                     //||
                                                                                       //||
 // State change function                                                              //||
-function dS(M,B) {                                                                    //||
-	var dotM = M.gp(B).smul(-0.5)//.strLog('dotM: ')                                  //||
-	var inside = Fb(M).add(cross(B,B.dual()))                                         //||
+function stateDot(state) {                                                                    //||
+	var dotM = state.M.gp(state.B).smul(-0.5)//.strLog('dotM: ')                                  //||
+	var inside = Fb(state.M).add(cross(state.B, state.B.dual()))                                         //||
 	var dotB = (inside).unDual()//.strLog('dotB:')                                    //||
-	return [dotM, dotB]                                                               //||
+	return {M: dotM, B: dotB}                                                               //||
 }                                                                                     //||
                                                                                       //||
 function Ib(M,B,pA) {
@@ -79,9 +80,9 @@ var x2 = bs.multiVector('-1e_1-1e_2').strLog('x1: ')
 var sumX = x1.smul(masses[0]).add(x2.smul(masses[1])).smul(1/aSum(masses))
 
 // Points from vectors
-var X1 = bs.multiVector('1e_0').add(x1).dual().strLog('X1: ').render({color: 0xff0000})
-var X2 = bs.multiVector('1e_0').add(x2).dual().strLog('X2: ').render({color: 0x00ff00})
-var CoM = bs.multiVector('1e_0').add(sumX).dual().strLog('CoM: ').render({color: 0xff00ff})
+var X1 = infinity.add(x1).dual().strLog('X1: ').render({color: 0xff0000})
+var X2 = infinity.add(x2).dual().strLog('X2: ').render({color: 0x00ff00})
+var CoM = infinity.add(sumX).dual().strLog('CoM: ').render({color: 0xff00ff})
 
 
 // Initial conditions
@@ -89,7 +90,8 @@ var initialRotationAboutCoM = CoM.join(bs.multiVector('10e_3').dual()).strLog('i
 //var initialRotationAboutCoM = bs.multiVector('10e_12+10e_13')
 //var initialRotationAboutCoM = bs.multiVector('1e_')
 //var renderingTheAbove = bs.multiVector('1.75e_01 -1.00e_02 +1.00e_12').render()
-var state = [bs.multiVector('-1e_01 - 1e_02').eexp(1),initialRotationAboutCoM]
+var state = {M: bs.multiVector('-1e_01 - 1e_02').eexp(1),
+			 B: initialRotationAboutCoM}
 
 bs.multiVector('1e_0 + 2e_1 + 2e_2').dual().render()
 bs.multiVector('1e_0 + 2e_1 + 0e_2').dual().render()
@@ -136,6 +138,7 @@ var start = Date.now()
 var movedX1 = X1.copy()
 var movedX2 = X2.copy()
 var movedCoM = CoM.copy()
+var deltaState
 
 function animate() {
 
@@ -144,15 +147,16 @@ function animate() {
 	
 	if (animationCounter < 100) {
 		
-		X1.move(state[0],movedX1)
-		X2.move(state[0],movedX2)
-		CoM.move(state[0],movedCoM)
+		X1.move(state.M,movedX1)
+		X2.move(state.M,movedX2)
+		CoM.move(state.M,movedCoM)
 		movedX1.render()
 		movedX2.render()
 		movedCoM.render()
 
-		state[0] = state[0].add(dS(state[0],state[1])[0].smul(1/6000))
-		state[1] = state[1].add(dS(state[0],state[1])[1].smul(1/6000))
+		deltaState = stateDot(state)
+		state.M = state.M.add(deltaState.M.smul(1/6000))
+		state.B = state.B.add(deltaState.B.smul(1/6000))
 	}
 
 	cemoCam.renderer.render( scene, camera )
