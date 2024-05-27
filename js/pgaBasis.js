@@ -51,10 +51,16 @@ var pgaBasis = function(scene) {
 				var ex = - mv.basisSVal('e_023')
 				,	ey =   mv.basisSVal('e_013')
 				,	ez = - mv.basisSVal('e_012')
-				var i0 =   mv.basisSVal('e_123')
+				,	i0 =   mv.basisSVal('e_123')
 
-				//i0 = Math.pow(ex*ex + ey*ey + ez*ez, 0.5)
-				return {x: ex/i0, y: ey/i0, z: ez/i0}
+				var infinite = false
+				if (i0<.0001) {
+					infinite = true
+					var iMag = Math.pow(ex*ex + ey*ey + ez*ez, 1/2)
+					return {x: ex/iMag, y: ey/iMag, z: ez/iMag, i: 0, inf: infinite}
+				} else {
+					return {x: ex/i0, y: ey/i0, z: ez/i0, i: 1, inf: infinite}
+				}
 		}
 
 	,	renderMV: function (mv, options) {
@@ -143,7 +149,13 @@ var pgaBasis = function(scene) {
 					var xyz0 = this.pointXYZ(p0)
 					var p1 = mv.components[1]
 					var xyz1 = this.pointXYZ(p1)
+					if (xyz0.inf) {
+						cemo.addVectorToScene([[xyz1.x, xyz1.y, xyz1.z],[xyz0.x + xyz1.x, xyz0.y + xyz1.y, xyz0.z + xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
+					} else if (xyz1.inf) {
+						cemo.addVectorToScene([[xyz0.x, xyz0.y, xyz0.z],[xyz0.x + xyz1.x, xyz0.y + xyz1.y, xyz0.z + xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
+					} else {
 					cemo.addVectorToScene([[xyz0.x, xyz0.y, xyz0.z],[xyz1.x, xyz1.y, xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
+					}
 				} else {
 					// e for euclidian - direction of line
 					var ex =   mv.basisSVal('e_23')
@@ -172,8 +184,25 @@ var pgaBasis = function(scene) {
 				if (!mv.opt.size) { mv.opt.size = .1 }
 
 				// z,y,x,1 == d[11], d[12], d[13], d[14]
-				var xyz = this.pointXYZ(mv)
 				var i0 =   mv.basisSVal('e_123')
+				var xyz
+				// is ideal point?
+				if (Math.abs(i0) < .001) {
+					mv.opt.size *= .2
+					// put the point a distance of 1 away from the origin and put an arrow pointing to infinity
+					xyz = {x: - mv.basisSVal('e_023')
+						,  y:  mv.basisSVal('e_013')
+						,  z: - mv.basisSVal('e_012')}
+
+					i0 = Math.pow(xyz.x*xyz.x + xyz.y*xyz.y + xyz.z*xyz.z, 0.5)
+					ex = ex/i0
+					ey = ey/i0
+					ez = ez/i0
+					i0 = 1
+					cemo.addVectorToScene([[xyz.x, xyz.y, xyz.z],[2*xyz.x, 2*xyz.y, 2*xyz.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
+				} else {
+					xyz = this.pointXYZ(mv)
+				}
 				
 				// outside
 				if (mv.renderStuff == null) {
@@ -194,18 +223,6 @@ var pgaBasis = function(scene) {
 					rs.renderGroup.add( rs.meshOut );
 					rs.renderGroup.add( rs.meshIn );
 					scene.add( rs.renderGroup )
-				}
-
-				
-				// is ideal point?
-				if (Math.abs(i0) < .001) {
-					// put the point a distance of 1 away from the origin and put an arrow pointing to infinity
-					i0 = Math.pow(ex*ex + ey*ey + ez*ez, 0.5)
-					ex = ex/i0
-					ey = ey/i0
-					ez = ez/i0
-					i0 = 1
-					cemo.addVectorToScene([[xyz.x, xyz.y, xyz.z],[2*xyz.x, 2*xyz.y, 2*xyz.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
 				}
 
 				mv.renderStuff.renderGroup.position.set(xyz.x, xyz.y, xyz.z)

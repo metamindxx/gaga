@@ -155,8 +155,8 @@ function animate() {
 		movedCoM.render()
 
 		deltaState = stateDot(state)
-		state.M = state.M.add(deltaState.M.smul(1/6000))
-		state.B = state.B.add(deltaState.B.smul(1/6000))
+		state.M = state.M.add(deltaState.M.smul(1/600))
+		state.B = state.B.add(deltaState.B.smul(1/600))
 	}
 
 	cemoCam.renderer.render( scene, camera )
