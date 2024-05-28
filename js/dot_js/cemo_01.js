@@ -40,7 +40,7 @@ var cemo = {
 		scene.add(mshCne);
 		return mshCne
 	}
-,	addVectorToScene: function (coords, mtrl, scene) {
+,	addVectorToScene: function (coords, mtrl, scene, isDouble) {
 		lStart = [0.0, 0.0, 0.0]
 		lEnd   = [0.0, 1.0, 0.0]
 
@@ -63,6 +63,15 @@ var cemo = {
 		var group = new THREE.Group();
 		group.add( mCone );
 		group.add( mLine );
+
+		if (isDouble) {
+			var gCone2 = new THREE.ConeBufferGeometry(cnHeight / 4, cnHeight, 4)
+			gCone2.applyMatrix( new THREE.Matrix4().makeTranslation( 0, - cnHeight / 2, 0 ) );
+			var mCone2 = new THREE.Mesh( gCone2, mtrl )
+			mCone2.position.y = 1-cnHeight*.6
+			group.add(mCone2)
+		}
+
 		scene.add( group );
 
 		group.position.x = coords[0][0]

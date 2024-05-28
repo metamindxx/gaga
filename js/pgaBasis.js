@@ -199,7 +199,7 @@ var pgaBasis = function(scene) {
 					ey = ey/i0
 					ez = ez/i0
 					i0 = 1
-					cemo.addVectorToScene([[xyz.x, xyz.y, xyz.z],[2*xyz.x, 2*xyz.y, 2*xyz.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
+					cemo.addVectorToScene([[xyz.x, xyz.y, xyz.z],[2*xyz.x, 2*xyz.y, 2*xyz.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, true)
 				} else {
 					xyz = this.pointXYZ(mv)
 				}
