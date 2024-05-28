@@ -57,11 +57,11 @@ function Fb(M) {                                                                
 }                                                                                     //||
                                                                                       //||
 // State change function                                                              //||
-function stateDot(state) {                                                                    //||
-	var dotM = state.M.gp(state.B).smul(-0.5)//.strLog('dotM: ')                                  //||
-	var inside = Fb(state.M).add(cross(state.B, state.B.dual()))                                         //||
+function stateDot(state) {                                                            //||
+	var dotM = state.M.gp(state.B).smul(-0.5)//.strLog('dotM: ')                      //||
+	var inside = Fb(state.M).add(cross(state.B, state.B.dual()))                      //||
 	var dotB = (inside).unDual()//.strLog('dotB:')                                    //||
-	return {M: dotM, B: dotB}                                                               //||
+	return {M: dotM, B: dotB}                                                         //||
 }                                                                                     //||
                                                                                       //||
 function Ib(M,B,pA) {
@@ -155,8 +155,8 @@ function animate() {
 		movedCoM.render()
 
 		deltaState = stateDot(state)
-		state.M = state.M.add(deltaState.M.smul(1/600))
-		state.B = state.B.add(deltaState.B.smul(1/600))
+		state.M = state.M.add(deltaState.M.smul(1/6000))
+		state.B = state.B.add(deltaState.B.smul(1/6000))
 	}
 
 	cemoCam.renderer.render( scene, camera )
