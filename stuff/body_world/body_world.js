@@ -76,7 +76,9 @@ var initialTranslationVector = bs.multiVector('1e_1 + 1e_2 + 1e_3')
 ,	BTo = infinity.op( initialTranslationVector ) // initial translation bivector
 ,	BRo = bs.multiVector('1e_13') // initial rotation bivector
 ,	Bo = BTo.add(BRo).normalize()
-,	Mo = Bo.smul(-1).eexp(1/2).strLog('Mo: ')
+,	MRo = BRo.eexp(-Math.PI / 8).strLog('MRo: ') // pi is a full turn (double covered)
+,	MTo = BTo.eexp(-1/2).strLog('MTo: ')
+,	Mo = MTo.gp(MRo)
 //var oDash = infinity.add ( bs.multiVector('1e_1 + 1e_2 + 1e_3') ).dual()
 
 var translationTarget = origin.add(initialTranslationVector.dual()).render()
