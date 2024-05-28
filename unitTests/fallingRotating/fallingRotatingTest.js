@@ -139,8 +139,9 @@ function animate() {
 		movedX2.render()
 		movedCoM.render()
 
-		state[0] = state[0].add(dS(state[0],state[1])[0].smul(1/6000))
-		state[1] = state[1].add(dS(state[0],state[1])[1].smul(1/6000))
+		dState = dS(state[0],state[1])
+		state[0] = state[0].add(dState[0].smul(1/6000))
+		state[1] = state[1].add(dState[1].smul(1/6000))
 	}
 
 	cemoCam.renderer.render( scene, camera )
