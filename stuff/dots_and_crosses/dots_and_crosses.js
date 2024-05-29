@@ -86,9 +86,14 @@ var B = bs.multiVector('1e_01 + 1e_12').strLog('B: ').render({color: 0x0000ff})
 var state = {M: bs.multiVector('-1e_01 - 1e_02').eexp(1),
 			 B: B}
 
+// Xdot = X x B
 var Xdot = cross(X, B).selectGrade(3).strLog('Xdot: ').render({color: 0x00ff00})
 
-var XjXd = X.join(Xdot).strLog('XjXd: ').render({color: 0xff00ff})
+var X_j_Xd = X.join(Xdot).strLog('X_j_Xd: ').render({color: 0xff00ff})
+var Ib = X_j_Xd // I[B] = X v Xdot = x v (X x B)
+
+// Fb = (Ib[Bb] x Bb) + Ib[Bb.dot]
+var Ib_x_Bb = cross(X_j_Xd, B).selectGrade(2).strLog('Ib_x_Bb: ').render({color: 0x000000})
 
 
 //=================================================================================================//
