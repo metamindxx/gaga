@@ -132,6 +132,7 @@ var pgaBasis = function(scene) {
 					var group = new THREE.Group();
 					group.add( mshCircFront );
 					group.add( mshCircBack );
+					mshCircFront.clickParent = mv
 
 					// need to translate first since it uses object coordinates...
 					// group.translateOnAxis(theAxis, nd)
@@ -149,13 +150,15 @@ var pgaBasis = function(scene) {
 					var xyz0 = this.pointXYZ(p0)
 					var p1 = mv.components[1]
 					var xyz1 = this.pointXYZ(p1)
+					var msh
 					if (xyz0.inf) {
-						cemo.addVectorToScene([[xyz1.x, xyz1.y, xyz1.z],[xyz0.x + xyz1.x, xyz0.y + xyz1.y, xyz0.z + xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
+						msh = cemo.addVectorToScene([[xyz1.x, xyz1.y, xyz1.z],[xyz0.x + xyz1.x, xyz0.y + xyz1.y, xyz0.z + xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, mv)
 					} else if (xyz1.inf) {
-						cemo.addVectorToScene([[xyz0.x, xyz0.y, xyz0.z],[xyz0.x + xyz1.x, xyz0.y + xyz1.y, xyz0.z + xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
+						msh = cemo.addVectorToScene([[xyz0.x, xyz0.y, xyz0.z],[xyz0.x + xyz1.x, xyz0.y + xyz1.y, xyz0.z + xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, mv)
 					} else {
-					cemo.addVectorToScene([[xyz0.x, xyz0.y, xyz0.z],[xyz1.x, xyz1.y, xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
+						msh = cemo.addVectorToScene([[xyz0.x, xyz0.y, xyz0.z],[xyz1.x, xyz1.y, xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, mv)
 					}
+					msh.clickParent = mv
 				} else {
 					// e for euclidian - direction of line
 					var ex =   mv.basisSVal('e_23')
@@ -178,7 +181,7 @@ var pgaBasis = function(scene) {
 					,	crossY =  ez*ix - iz*ex
 					,	crossZ =  ex*iy - ix*ey
 
-					cemo.addVectorToScene([[crossX, crossY, crossZ],[crossX + ex, crossY + ey, crossZ + ez]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene)
+					cemo.addVectorToScene([[crossX, crossY, crossZ],[crossX + ex, crossY + ey, crossZ + ez]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, mv)
 				}
 			} else if (mv.grade() == 3) {
 				if (!mv.opt.size) { mv.opt.size = .1 }
@@ -199,7 +202,7 @@ var pgaBasis = function(scene) {
 					ey = ey/i0
 					ez = ez/i0
 					i0 = 1
-					cemo.addVectorToScene([[xyz.x, xyz.y, xyz.z],[2*xyz.x, 2*xyz.y, 2*xyz.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, true)
+					cemo.addVectorToScene([[xyz.x, xyz.y, xyz.z],[2*xyz.x, 2*xyz.y, 2*xyz.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, mv, true)
 				} else {
 					xyz = this.pointXYZ(mv)
 				}
@@ -209,7 +212,7 @@ var pgaBasis = function(scene) {
 					mv.renderStuff = {}
 					var rs = mv.renderStuff
 					rs.geomOut = new THREE.SphereGeometry(mv.opt.size, 9, 9)
-					rs.matOut = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111} )
+					rs.matOut = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111, side: THREE.DoubleSide} )
 					rs.meshOut = new THREE.Mesh ( rs.geomOut, rs.matOut )
 
 					// inside
@@ -223,6 +226,8 @@ var pgaBasis = function(scene) {
 					rs.renderGroup.add( rs.meshOut );
 					rs.renderGroup.add( rs.meshIn );
 					scene.add( rs.renderGroup )
+					//rs.meshIn.clickParent = mv
+					rs.meshOut.clickParent = mv
 				}
 
 				mv.renderStuff.renderGroup.position.set(xyz.x, xyz.y, xyz.z)

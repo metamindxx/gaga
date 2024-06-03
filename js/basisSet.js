@@ -391,25 +391,29 @@ var basisSet = function (p,q,r) {
 			console.log(sBits.join(' '))
 			return this
 		}
-		mv.grade = function () { // bladeFromId('e_01')
-			if (this.gradeStored == -1) {
+		mv.grade = function (refreshGrade) { // bladeFromId('e_01')
+			if (this.gradeStored == -1 || refreshGrade) {
+				this.gradeStored = -1
+
 				// recalculate grade
 				var blade
 				for (var i=0; i< this.blades.length; ++i) {
 					blade = this.blades[i]
-					if (this.gradeStored == -1) {
-						// first grade. init.
-						this.gradeStored = blade.basis.grade
-					} else if (this.gradeStored == blade.basis.grade) {
-						// the grades match. carry on
-					} else {
-						// mixed grade
-						// the grade is a str eg. '0,2,4'
-						// is the new blade already in the string
-						//    eg try to find ',2,' in ',0,2,4,'
-						if ( (',' + this.gradeStored + ',').indexOf( ',' + blade.basis.grade + ',') == -1) {
-							this.gradeStored = this.gradeStored + ',' + blade.basis.grade
-							// console.log('mixed grade object: ' + this.grade)
+					if (Math.abs(blade.mul) > 0.0001) {
+						if (this.gradeStored == -1) {
+							// first grade. init.
+							this.gradeStored = blade.basis.grade
+						} else if (this.gradeStored == blade.basis.grade) {
+							// the grades match. carry on
+						} else {
+							// mixed grade
+							// the grade is a str eg. '0,2,4'
+							// is the new blade already in the string
+							//    eg try to find ',2,' in ',0,2,4,'
+							if ( (',' + this.gradeStored + ',').indexOf( ',' + blade.basis.grade + ',') == -1) {
+								this.gradeStored = this.gradeStored + ',' + blade.basis.grade
+								// console.log('mixed grade object: ' + this.grade)
+							}
 						}
 					}
 				}
@@ -441,6 +445,11 @@ var basisSet = function (p,q,r) {
 				}
 			}
 			return mvResult
+		}
+		mv.cross = function (mv2) {
+			var res = this.gp(mv2).add(  mv2.gp(this).smul(-1)  ).smul(0.5)
+			res.grade(true) // recalc the grade
+			return  res
 		}
 		mv.selectGrade = function (grade) {
 			var mv = this
@@ -526,7 +535,6 @@ var basisSet = function (p,q,r) {
 				nPow = nPow.gp(n).smul(1/i)
 				res = res.add(nPow)
 			}
-
 			return res
 		}
 
@@ -668,6 +676,13 @@ var basisSet = function (p,q,r) {
 			}
 			return mvResult
 		}
+		mv.onClick = function() {
+			if (this.id)
+				this.strLog(this.id + ': ')
+			else 
+				this.strLog()
+		}
+
 
 
 //--------------

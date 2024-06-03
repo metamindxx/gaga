@@ -40,7 +40,7 @@ var cemo = {
 		scene.add(mshCne);
 		return mshCne
 	}
-,	addVectorToScene: function (coords, mtrl, scene, isDouble) {
+,	addVectorToScene: function (coords, mtrl, scene, clickParent, isDouble) {
 		lStart = [0.0, 0.0, 0.0]
 		lEnd   = [0.0, 1.0, 0.0]
 
@@ -63,6 +63,8 @@ var cemo = {
 		var group = new THREE.Group();
 		group.add( mCone );
 		group.add( mLine );
+		mCone.clickParent = clickParent
+		mLine.clickParent = clickParent
 
 		if (isDouble) {
 			var gCone2 = new THREE.ConeBufferGeometry(cnHeight / 4, cnHeight, 4)
@@ -70,6 +72,7 @@ var cemo = {
 			var mCone2 = new THREE.Mesh( gCone2, mtrl )
 			mCone2.position.y = 1-cnHeight*.6
 			group.add(mCone2)
+			mCone2.clickParent = clickParent
 		}
 
 		scene.add( group );
@@ -315,7 +318,7 @@ var cemo = {
 
 					if(newRadius < this.r_in || newRadius > this.r_out) {
 						// https://gamedev.stackexchange.com/questions/33384/how-to-bounce-a-2d-point-particle-off-of-a-circular-edge
-						// new velocity v' = v - [2 (n · v) n]
+						// new velocity v' = v - [2 (n ï¿½ v) n]
 						// n is the normal vector ~ position vector / radius
 						// n . v is dot product
 						nY = position.y / radius

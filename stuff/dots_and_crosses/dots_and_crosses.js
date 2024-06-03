@@ -48,7 +48,9 @@ function aSum(a) {                                                              
                                                                                       //||
 // Cross product function                                                             //||
 function cross(A, B) {                                                                //||
-	return A.gp(B).add(B.gp(A).smul(-1)).smul(0.5)                                    //||
+	var res = A.gp(B).add(B.gp(A).smul(-1)).smul(0.5)
+	res.grade(true)
+	return  res                             //||
 }                                                                                     //||
                                                                                       //||
 // Force function                                                                     //||
@@ -79,29 +81,73 @@ var x = bs.multiVector('1e_1 - 1e_2 + 1e_3')
 
 // Points from vectors
 var X = infinity.add(x).dual().strLog('X: ').render({color: 0xff0000})
+X.id = 'X'
 
 // Initial conditions
-var B = bs.multiVector('1e_01 + 1e_12').strLog('B: ').render({color: 0x0000ff})
+var B = bs.multiVector('2e_01 + 1e_12').strLog('B: ').render({color: 0x0000ff})
+B.id = 'B'
 
 var state = {M: bs.multiVector('-1e_01 - 1e_02').eexp(1),
 			 B: B}
 
 // Xdot = X x B
-var Xdot = cross(X, B).selectGrade(3).strLog('Xdot: ').render({color: 0x00ff00})
+var Xdot = cross(X, B).strLog('Xdot: ').render({color: 0x00ff00})
+Xdot.id = 'Xdot = X cross B'
 
 var X_j_Xd = X.join(Xdot).strLog('X_j_Xd: ').render({color: 0xff00ff})
-var Ib = X_j_Xd // I[B] = X v Xdot = x v (X x B)
+X_j_Xd.id = 'Inertia I = X join Xdot'
+//var Ib = X_j_Xd // I[B] = X v Xdot = x v (X x B)
 
 // Fb = (Ib[Bb] x Bb) + Ib[Bb.dot]
 var Ib_x_Bb = cross(X_j_Xd, B).selectGrade(2).strLog('Ib_x_Bb: ').render({color: 0x000000})
+Ib_x_Bb.id = 'Force_b from M = Ib cross Bb'
+
+var g = bs.multiVector('- 10e_013').strLog('g: ')
+origin.strLog('o: ')
+//var gravity = origin.join(g).strLog('gravity: ').render({color: 0xff0000})
 
 
 //=================================================================================================//
+
+// B in body frame
+var Bd = B.dual().strLog('B.dual(): ').render({color: 0xe78120})
+var BxBd = cross(Bd, B).strLog('B x B.dual(): ').render({color: 0x4f8120})
 
 
 /**************************
 **	animate
 **************************/
+var raycaster = new THREE.Raycaster();
+
+var mouse = new THREE.Vector2();
+function onDocumentMouseClick( event ) {
+	event.preventDefault();
+	if (event.ctrlKey) {
+		mouse.x = ( event.clientX / cemoCam.rndr_w ) * 2 - 1;
+		mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+		// update the picking ray with the camera and mouse position
+		raycaster.setFromCamera( mouse, camera );
+		//	scene.add(new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, 300, 0xff0000) );
+		var intersects = raycaster.intersectObjects( scene.children, true );
+
+		for ( var i = 0; i < intersects.length; i++ ) {
+			//console.log('intersects: ' + intersects.length)
+			if(intersects[i].object.clickParent) {
+				var o = intersects[i].object.clickParent
+				if(o && o.onClick) {
+					o.onClick(event)
+					return
+				}
+			}
+		}
+	}
+
+}
+document.addEventListener( 'click', onDocumentMouseClick, false );
+//window.addEventListener( 'pointermove', onDocumentMouseClick );
+
+
 var animationCounter = 0
 
 var start = Date.now()

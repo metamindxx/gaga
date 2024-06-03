@@ -47,9 +47,9 @@ function aSum(a) {                                                              
 }                                                                                     //||
                                                                                       //||
 // Cross product function                                                             //|| 
-function cross(A, B) {                                                                //||
-	return A.gp(B).add(B.gp(A).smul(-1)).smul(0.5)                                    //||
-}                                                                                     //||
+//function cross(A, B) {                                                              //||
+//	return A.gp(B).add(B.gp(A).smul(-1)).smul(0.5)                                    //||
+//}                                                                                   //||
                                                                                       //||
 // Force function                                                                     //||
 function Fb(M) {                                                                      //||
@@ -59,7 +59,7 @@ function Fb(M) {                                                                
 // State change function                                                              //||
 function stateDot(state) {                                                            //||
 	var dotM = state.M.gp(state.B).smul(-0.5)//.strLog('dotM: ')                      //||
-	var inside = Fb(state.M).add(cross(state.B, state.B.dual()))                      //||
+	var inside = Fb(state.M).add(  state.B.cross(state.B.dual())  )                   //||
 	var dotB = (inside).unDual()//.strLog('dotB:')                                    //||
 	return {M: dotM, B: dotB}                                                         //||
 }                                                                                     //||
