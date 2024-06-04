@@ -64,7 +64,7 @@ var cemo = {
 		group.add( mCone );
 		group.add( mLine );
 		mCone.clickParent = clickParent
-		mLine.clickParent = clickParent
+		//mLine.clickParent = clickParent
 
 		if (isDouble) {
 			var gCone2 = new THREE.ConeBufferGeometry(cnHeight / 4, cnHeight, 4)

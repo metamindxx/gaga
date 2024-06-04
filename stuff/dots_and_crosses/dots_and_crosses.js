@@ -118,11 +118,12 @@ var BxBd = cross(Bd, B).strLog('B x B.dual(): ').render({color: 0x4f8120})
 **	animate
 **************************/
 var raycaster = new THREE.Raycaster();
+raycaster.params.Line.threshold = 0.1
 
-var mouse = new THREE.Vector2();
 function onDocumentMouseClick( event ) {
 	event.preventDefault();
 	if (event.ctrlKey) {
+		var mouse = new THREE.Vector2();
 		mouse.x = ( event.clientX / cemoCam.rndr_w ) * 2 - 1;
 		mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 
@@ -137,13 +138,14 @@ function onDocumentMouseClick( event ) {
 				var o = intersects[i].object.clickParent
 				if(o && o.onClick) {
 					o.onClick(event)
-					return
+					//return
 				}
 			}
 		}
 	}
 
 }
+
 document.addEventListener( 'click', onDocumentMouseClick, false );
 //window.addEventListener( 'pointermove', onDocumentMouseClick );
 

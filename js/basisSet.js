@@ -676,7 +676,11 @@ var basisSet = function (p,q,r) {
 			}
 			return mvResult
 		}
-		mv.onClick = function() {
+		mv.onClick = function(event) {
+			if (event == this.lastEvent) {
+				return
+			}
+			this.lastEvent = event
 			if (this.id)
 				this.strLog(this.id + ': ')
 			else 
