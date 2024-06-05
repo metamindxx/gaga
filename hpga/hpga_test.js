@@ -27,10 +27,12 @@ var hpga = hpgaBasis(scene)
 const loader = new THREE.TextureLoader();
 var dottyMaterial = new THREE.MeshLambertMaterial({map: loader.load("/textures/dots_256.png"), alphaTest: 0.5, side: THREE.BackSide})
 
-let grid = new THREE.GridHelper(4, 20, 0xffff00, 0xffff00);
-grid.position.y = -0.001;
+//let grid = new THREE.GridHelper(4, 20, 0xffff00, 0xffff00);
+//grid.position.y = -0.001;
 //scene.add(grid, new THREE.AxesHelper(1));
 
+//**************
+// Sheet
 let graphGeom = new THREE.PlaneBufferGeometry(4, 4, 20, 20);
 graphGeom.rotateX(Math.PI * -0.5);
 //let graphMat = new THREE.MeshNormalMaterial({side: THREE.DoubleSide, opacity: .1, wireframe: false});
@@ -48,6 +50,30 @@ for(let i = 0; i < pos.count; i++){
 graphGeom.computeVertexNormals();
 
 scene.add(graph)
+
+//**************
+// Curve
+var hypPoints = []
+for (var i=-2; i<2; i+=.02) {
+	hypPoints.push(new THREE.Vector3(i, Math.pow(1 + i*i, .5), 0))
+}
+
+const curveGeom = new THREE.BufferGeometry().setFromPoints( hypPoints );
+const curveMat = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+const curve = new THREE.Line( curveGeom, curveMat );
+scene.add(curve)
+
+//**************
+// Unit circle
+const circGeom = new THREE.CircleGeometry( 1, 20 ); 
+//let circMat = new THREE.MeshNormalMaterial({color: 0xffff00, side: THREE.DoubleSide, transparent: true, opacity: .3, wireframe: false});
+let circMat = new THREE.MeshPhongMaterial({color: 0xffff00, side: THREE.DoubleSide, transparent: true, opacity: .3, wireframe: false});
+//const circMat = new THREE.MeshBasicMaterial( { color: 0xffff00 } ); 
+const circle = new THREE.Mesh( circGeom, circMat ); 
+circle.lookAt(new THREE.Vector3(0, 1, 0))
+circle.position.set(0,1,0)
+scene.add( circle );
+
 
 /*
 bs.multiVector('2e_1 + 2e_2').render()
