@@ -83,9 +83,24 @@ var hpgaBasis = function(scene) {
 					scene.add( group );
 
 					// perp line is dual
-					var perpLine = mv.gp(pss)//.render({color: 0xff0000})
-					var firstPlane = perpLine.join(origin)//.render({color: 0x0000ff})
+					var perpLine = mv.gp(pss).strLog('un normalised: ').normalize().strLog('normalised: ')
+					console.log('norm sq: ' + perpLine.normSq())
+					//.normalize().strLog('normalised: ')//.render({color: 0xff0000})
+					var firstPlane = perpLine.join(origin)//.render({color: 0x0000ff})					
 					var firstPoint = firstPlane.gp(mv).render({color: 0x0000ff})
+
+					var points = []
+					var rotors = []
+					var pt, rotor
+					for (i=-1; i<1;i+=.1)  {
+						rotor = perpLine.exp(i)
+						pt = rotor.gp( firstPoint.gp(rotor.reverse() )).normalize()
+						rotors.push(rotor)
+						points.push(pt.strLog('pt ' + i + ': ').render({color: 0x00ffff}))
+					}
+
+					var a = 3
+
 
 
 

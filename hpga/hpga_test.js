@@ -78,7 +78,7 @@ scene.add( circle );
 
 
 //var line1 = bs.multiVector('1e_0 + 2e_1').render()
-var vec1 = bs.multiVector('3e_0 + 3e_1 + 2e_2').strLog('vec1: ').render()
+var vec1 = bs.multiVector('.5e_0 + 3e_1 + 2e_2').strLog('vec1: ').render()
 var perpLine = vec1.gp(pss).strLog('perpLine: ').render({color: 0xff00ff})
 
 var h2point = function(x,y) {
@@ -86,7 +86,7 @@ var h2point = function(x,y) {
 	return h2p
 }
 
-var p1 = h2point(.4, .8).render()
+//var p1 = h2point(.4, .8).render()
 
 
 /*

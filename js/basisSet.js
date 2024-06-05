@@ -498,7 +498,9 @@ var basisSet = function (p,q,r) {
 			return mvResult.bladeIdx[bs.bases[0].id].mul
 		}
 		mv.norm = function () {
-			return Math.pow(this.normSq(), .5)
+			// with a hyperbolic metric, normSq can be negative for improper things.
+			// hence we need the abs value
+			return Math.pow(Math.abs(this.normSq()), .5)
 		}
 		mv.inorm = function () {
 			return Math.pow(this.dual().normSq(), .5)
