@@ -139,7 +139,7 @@ var hpgaBasis = function(scene) {
 				// line
 					var pts = []
 					pts.push(new THREE.Vector3(0, 0, 0))
-					pts.push(new THREE.Vector3(ne01, ne12, ne20))
+					pts.push(new THREE.Vector3(ne20, -ne12, ne01))
 					
 					const lineGeom = new THREE.BufferGeometry().setFromPoints( pts );
 					const lineMat = new THREE.LineBasicMaterial( { color: 0xff0000 } );
