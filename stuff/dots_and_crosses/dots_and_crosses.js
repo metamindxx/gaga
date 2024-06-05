@@ -143,7 +143,6 @@ function onDocumentMouseClick( event ) {
 			}
 		}
 	}
-
 }
 
 document.addEventListener( 'click', onDocumentMouseClick, false );
