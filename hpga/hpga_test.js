@@ -31,6 +31,9 @@ var dottyMaterial = new THREE.MeshLambertMaterial({map: loader.load("/textures/d
 //grid.position.y = -0.001;
 //scene.add(grid, new THREE.AxesHelper(1));
 
+var pss = bs.multiVector('1e_012')
+var origin = bs.multiVector('1e_12')
+
 //**************
 // Sheet
 let graphGeom = new THREE.PlaneBufferGeometry(4, 4, 20, 20);
@@ -48,14 +51,13 @@ for(let i = 0; i < pos.count; i++){
 	  pos.setY(i, Math.pow(1 + x*x + z*z, .5));
 	}
 graphGeom.computeVertexNormals();
-
 scene.add(graph)
 
 //**************
 // Curve
 var hypPoints = []
 for (var i=-2; i<2; i+=.02) {
-	hypPoints.push(new THREE.Vector3(i, Math.pow(1 + i*i, .5), 0))
+	hypPoints.push(new THREE.Vector3(i, Math.pow(1 + i*i, .5), 0)) 	
 }
 
 const curveGeom = new THREE.BufferGeometry().setFromPoints( hypPoints );
@@ -75,12 +77,19 @@ circle.position.set(0,1,0)
 scene.add( circle );
 
 
+//var line1 = bs.multiVector('1e_0 + 2e_1').render()
+var vec1 = bs.multiVector('.4e_0 + 2e_2').strLog('vec1: ').render()
+var perpLine = vec1.gp(pss).strLog('perpLine: ').render({color: 0xff00ff})
+
+var h2point = function(x,y) {
+	var h2p = bs.multiVector('1e_12 - ' + x + 'e_02 + ' + y + 'e_01')
+	return h2p
+}
+
+var p1 = h2point(.4, .8).render()
+
+
 /*
-bs.multiVector('2e_1 + 2e_2').render()
-bs.multiVector('2e_1 + 0e_2').render()
-bs.multiVector('2e_1 - 2e_2').render()
-
-
 
 //=================================================================================================//
 var bannerDiv = document.getElementById('banner_div')

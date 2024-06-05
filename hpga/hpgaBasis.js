@@ -47,54 +47,19 @@ var hpgaBasis = function(scene) {
 			if (!mv.opt.color) { mv.opt.color =  0x333333 }
 
 			// what type of object
-			if (mv.grade() == 3) {
+			if (mv.grade() == 1) {
 				if (!mv.opt.size) { mv.opt.size = .5 }
-				if (mv.components) {
-					var xyz0 = this.pointXYZ(mv.components[0])
-					var xyz1 = this.pointXYZ(mv.components[1])
-					var xyz2 = this.pointXYZ(mv.components[2])
 
-					// coordinates of triangle
-					var pts = new Array();
-					pts[0] = new THREE.Vector3(xyz0.x, xyz0.y, xyz0.z);
-					pts[1] = new THREE.Vector3(xyz1.x, xyz1.y, xyz1.z);
-					pts[2] = new THREE.Vector3(xyz2.x, xyz2.y, xyz2.z);
-
-					if (mv.renderStuff == null) {
-						mv.renderStuff = {}
-						var rs = mv.renderStuff
-						rs.geom = new THREE.BufferGeometry().setFromPoints(pts);
-						const uvs = [
-							0,0,
-							0,1,
-							1,0
-						];
-						rs.geom.addAttribute( 'uv', new THREE.BufferAttribute( new Float32Array( uvs ), 2 ) );
-						rs.frontMesh = new THREE.Mesh(rs.geom, new THREE.MeshBasicMaterial({color: mv.opt.color, side: THREE.FrontSide}))
-						//var backMesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({color: 0xddaaff, side: THREE.BackSide}))
-						rs.backMesh = new THREE.Mesh(rs.geom, dottyMaterial)
-						scene.add(rs.frontMesh, rs.backMesh)
-					} else {
-						mv.renderStuff.geom.setFromPoints(pts);
-					}
-
-					// create triangle
-					mv.renderStuff.geom.computeVertexNormals();
-
-
-				} else {
 					//** render plane
-					var nx = mv.basisSVal('e_1')
-					var ny = mv.basisSVal('e_2')
-					var nz = mv.basisSVal('e_3')
-					var nd = mv.basisSVal('e_0')
-					var mag = Math.pow(nx*nx + ny*ny + nz*nz, 1/2)
+					var ne1 = mv.basisSVal('e_1')
+					var ne2 = mv.basisSVal('e_2')
+					var ne0 = mv.basisSVal('e_0')
+					var mag = Math.pow(ne1*ne1 + ne2*ne2 - ne0*ne0, 1/2)
 
 					// normalize
-					nx = nx/mag
-					ny = ny/mag
-					nz = nz/mag
-					nd = -nd/mag
+					ne1 = ne1/mag
+					ne2 = ne2/mag
+					ne0 = ne0/mag
 
 					// front
 					var gCircFront = new THREE.CircleGeometry( mv.opt.size, 32 );
@@ -114,74 +79,78 @@ var hpgaBasis = function(scene) {
 
 					// need to translate first since it uses object coordinates...
 					// group.translateOnAxis(theAxis, nd)
-					group.lookAt(new THREE.Vector3(nx, ny, nz))
-					group.position.set(nx*nd, ny*nd, nz*nd)
+					group.lookAt(new THREE.Vector3(ne1, ne0, ne2))
 					scene.add( group );
-				}
+
+					// perp line is dual
+					var perpLine = mv.gp(pss)//.render({color: 0xff0000})
+					var firstPlane = perpLine.join(origin)//.render({color: 0x0000ff})
+					var firstPoint = firstPlane.gp(mv).render({color: 0x0000ff})
+
 
 
 
 			} else if (mv.grade() == 2) {
-				//** render line
-				if (mv.components) {
-					var p0 = mv.components[0]
-					var xyz0 = this.pointXYZ(p0)
-					var p1 = mv.components[1]
-					var xyz1 = this.pointXYZ(p1)
-					var msh
-					if (xyz0.inf) {
-						msh = cemo.addVectorToScene([[xyz1.x, xyz1.y, xyz1.z],[xyz0.x + xyz1.x, xyz0.y + xyz1.y, xyz0.z + xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, mv)
-					} else if (xyz1.inf) {
-						msh = cemo.addVectorToScene([[xyz0.x, xyz0.y, xyz0.z],[xyz0.x + xyz1.x, xyz0.y + xyz1.y, xyz0.z + xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, mv)
-					} else {
-						msh = cemo.addVectorToScene([[xyz0.x, xyz0.y, xyz0.z],[xyz1.x, xyz1.y, xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, mv)
-					}
-					msh.clickParent = mv
-				} else {
-					// e for euclidian - direction of line
-					var ex =   mv.basisSVal('e_23')
-					,	ey = - mv.basisSVal('e_13')
-					,	ez =   mv.basisSVal('e_12')
-					var mag = Math.pow(ex*ex + ey*ey + ez*ez, 1/2)
-					ex = ex/mag
-					ey = ey/mag
-					ez = ez/mag
+				if (!mv.opt.size) { mv.opt.size = .03 }
+				var ne01 = mv.bVal('e_01')
+				var ne20 = -mv.bVal('e_02')
+				var ne12 = mv.bVal('e_12')
+				var magSq = -ne01*ne01 - ne20*ne20 + ne12*ne12
+				if (magSq > 0) {
+					var mag = Math.pow(magSq, 1/2)
 
-					// i for infinite - moment of line
-					var ix = mv.basisSVal('e_01') / mag
-					,	iy = mv.basisSVal('e_02') / mag
-					,	iz = mv.basisSVal('e_03') / mag
+					// normalize
+					ne01 = ne01/mag
+					ne20 = ne20/mag
+					ne12 = ne12/mag
 
-					// take the cross product (shh!) to rotate the moment line around the direction line.
-					// the moment line is the correct length and now lies in the plane of the moment's rotation perp to the direction
-					// ie, this is the translation
-					var crossX =  ey*iz - iy*ez
-					,	crossY =  ez*ix - iz*ex
-					,	crossZ =  ex*iy - ix*ey
+					// on the sheet
+					geomSheet = new THREE.SphereGeometry(mv.opt.size, 9, 9)
+					matSheet = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111, side: THREE.DoubleSide} )
+					meshSheet = new THREE.Mesh ( geomSheet, matSheet )
+					meshSheet.position.set(ne01, ne12, ne20)
+					scene.add( meshSheet );
 
-					cemo.addVectorToScene([[crossX, crossY, crossZ],[crossX + ex, crossY + ey, crossZ + ez]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, mv)
-				}
+					// line
+					var pts = []
+					pts.push(new THREE.Vector3(0, 0, 0))
+					pts.push(new THREE.Vector3(ne01, ne12, ne20))
+					
+					const lineGeom = new THREE.BufferGeometry().setFromPoints( pts );
+					const lineMat = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+					const line = new THREE.Line( lineGeom, lineMat );
+					scene.add(line)
+
+					// on h2
+					ne01 = ne01/ne12
+					ne20 = ne20/ne12
+					geomH2 = new THREE.SphereGeometry(mv.opt.size, 9, 9)
+					matH2 = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111, side: THREE.DoubleSide} )
+					meshH2 = new THREE.Mesh ( geomH2, matH2 )
+					meshH2.position.set(ne01, 1, ne20)
+					scene.add( meshH2 );
+			} else {
+					var mag = Math.pow(-magSq, 1/2)
+
+					// normalize
+					ne01 = ne01/mag
+					ne20 = ne20/mag
+					ne12 = ne12/mag
+				// line
+					var pts = []
+					pts.push(new THREE.Vector3(0, 0, 0))
+					pts.push(new THREE.Vector3(ne01, ne12, ne20))
+					
+					const lineGeom = new THREE.BufferGeometry().setFromPoints( pts );
+					const lineMat = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+					const line = new THREE.Line( lineGeom, lineMat );
+					scene.add(line)
+			}
+				
+
 
 			// Point
-			} else if (mv.grade() == 1) {
-				if (!mv.opt.size) { mv.opt.size = .1 }
-
-				var xyz = this.pointXYZ(mv)
-
-				// render
-				if (mv.renderStuff == null) {
-					mv.renderStuff = {}
-					var rs = mv.renderStuff
-					rs.geomOut = new THREE.SphereGeometry(mv.opt.size, 9, 9)
-					rs.matOut = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111, side: THREE.DoubleSide} )
-					rs.meshOut = new THREE.Mesh ( rs.geomOut, rs.matOut )
-
-					scene.add( rs.meshOut )
-
-					rs.meshOut.clickParent = mv
-				}
-
-				mv.renderStuff.meshOut.position.set(xyz.x, xyz.y, xyz.z)
+			} else if (mv.grade() == 3) {
 			}
 
 			if (options && options.renderComponents && mv.components) {
@@ -199,6 +168,19 @@ var hpgaBasis = function(scene) {
 	bs.addBasis('0', -1)
 	bs.addBasis('1', +1)
 	bs.addBasis('2', +1)
+
+
+	bs.setDual(bs.e, bs.e012, 1)
+
+	bs.setDual(bs.e0, bs.e12, 1)
+	bs.setDual(bs.e1, bs.e02, -1)
+	bs.setDual(bs.e2, bs.e01, 1)
+
+	bs.setDual(bs.e01, bs.e2, 1)
+	bs.setDual(bs.e02, bs.e1, -1)
+	bs.setDual(bs.e12, bs.e0, 1)
+
+	bs.setDual(bs.e012, bs.e, 1)
 
 	/*
 	// gradeOrder?
