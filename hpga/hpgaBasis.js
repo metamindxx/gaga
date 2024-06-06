@@ -89,8 +89,6 @@ var hpgaBasis = function(scene) {
 					var firstPlane = perpLine.join(origin)//.render({color: 0x0000ff})					
 					var firstPoint = firstPlane.gp(mv).strLog('firstPoint: ').render({color: 0x0000ff})
 
-					var points = []
-					var rotors = []
 					var pt, rotor
 					for (var i=-.8; i<.8;i+=.08)  {
 						rotor = perpLine.exp(i)
@@ -115,13 +113,13 @@ var hpgaBasis = function(scene) {
 					geomSheet = new THREE.SphereGeometry(mv.opt.size, 9, 9)
 					matSheet = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111, side: THREE.DoubleSide} )
 					meshSheet = new THREE.Mesh ( geomSheet, matSheet )
-					meshSheet.position.set(ne01, ne12, ne20)
+					meshSheet.position.set(ne20, ne12, ne01)
 					scene.add( meshSheet );
 
 					// line
 					var pts = []
 					pts.push(new THREE.Vector3(0, 0, 0))
-					pts.push(new THREE.Vector3(ne01, ne12, ne20))
+					pts.push(new THREE.Vector3(ne20, ne12, ne01))
 					
 					const lineGeom = new THREE.BufferGeometry().setFromPoints( pts );
 					const lineMat = new THREE.LineBasicMaterial( { color: 0xff0000 } );
@@ -134,7 +132,7 @@ var hpgaBasis = function(scene) {
 					geomH2 = new THREE.SphereGeometry(mv.opt.size, 9, 9)
 					matH2 = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111, side: THREE.DoubleSide} )
 					meshH2 = new THREE.Mesh ( geomH2, matH2 )
-					meshH2.position.set(ne01, 1, ne20)
+					meshH2.position.set(ne20, 1, ne01)
 					scene.add( meshH2 );
 			} else {
 					var mag = Math.pow(-magSq, 1/2)
