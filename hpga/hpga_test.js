@@ -53,17 +53,17 @@ for(let i = 0; i < pos.count; i++){
 graphGeom.computeVertexNormals();
 scene.add(graph)
 
-//**************
+/* /**************
 // Curve
 var hypPoints = []
 for (var i=-2; i<2; i+=.02) {
 	hypPoints.push(new THREE.Vector3(i, Math.pow(1 + i*i, .5), 0)) 	
 }
-
 const curveGeom = new THREE.BufferGeometry().setFromPoints( hypPoints );
 const curveMat = new THREE.LineBasicMaterial( { color: 0xff0000 } );
 const curve = new THREE.Line( curveGeom, curveMat );
 scene.add(curve)
+*/
 
 //**************
 // Unit circle

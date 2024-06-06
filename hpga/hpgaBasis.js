@@ -35,10 +35,31 @@ var hpgaBasis = function(scene) {
 			return mvResult
 		}*/
 
-	, 	pointXYZ: function(mv) {
-				return {x: mv.basisSVal('e_1')
-					  , y: mv.basisSVal('e_2')
-					  , z: mv.basisSVal('e_3')}
+	,	hypXZD: function(mv) {
+			var ne01 = mv.bVal('e_01')
+			var ne20 = -mv.bVal('e_02')
+			var ne12 = mv.bVal('e_12')
+
+			var res = {
+				magSq: -ne01*ne01 - ne20*ne20 + ne12*ne12
+			}
+			if (res.magSq >= 0) {
+				res.isProper = true
+				res.mag = Math.pow(res.magSq, 1/2)
+			} else {
+				res.isProper = false
+				res.mag = Math.pow(-res.magSq, 1/2)
+			}
+
+			// normalize "p" for parabolic
+			res.px = ne20/res.mag
+			res.pz = ne01/res.mag
+			res.pd = ne12/res.mag
+
+			res.hx = res.px / res.pd
+			res.hz = res.pz / res.pd
+
+			return res
 		}
 
 	,	renderMV: function (mv, options) {
@@ -97,29 +118,21 @@ var hpgaBasis = function(scene) {
 
 			} else if (mv.grade() == 2) {
 				if (!mv.opt.size) { mv.opt.size = .03 }
-				var ne01 = mv.bVal('e_01')
-				var ne20 = -mv.bVal('e_02')
-				var ne12 = mv.bVal('e_12')
-				var magSq = -ne01*ne01 - ne20*ne20 + ne12*ne12
-				if (magSq > 0) {
-					var mag = Math.pow(magSq, 1/2)
+				var xzd = this.hypXZD(mv)
 
-					// normalize
-					ne01 = ne01/mag
-					ne20 = ne20/mag
-					ne12 = ne12/mag
+				if (xzd.isProper) {
 
 					// on the sheet
 					geomSheet = new THREE.SphereGeometry(mv.opt.size, 9, 9)
 					matSheet = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111, side: THREE.DoubleSide} )
 					meshSheet = new THREE.Mesh ( geomSheet, matSheet )
-					meshSheet.position.set(ne20, ne12, ne01)
+					meshSheet.position.set(xzd.px, xzd.pd, xzd.pz)
 					scene.add( meshSheet );
 
 					// line
 					var pts = []
 					pts.push(new THREE.Vector3(0, 0, 0))
-					pts.push(new THREE.Vector3(ne20, ne12, ne01))
+					pts.push(new THREE.Vector3(xzd.px, xzd.pd, xzd.pz))
 					
 					const lineGeom = new THREE.BufferGeometry().setFromPoints( pts );
 					const lineMat = new THREE.LineBasicMaterial( { color: 0xff0000 } );
@@ -127,24 +140,17 @@ var hpgaBasis = function(scene) {
 					scene.add(line)
 
 					// on h2
-					ne01 = ne01/ne12
-					ne20 = ne20/ne12
 					geomH2 = new THREE.SphereGeometry(mv.opt.size, 9, 9)
 					matH2 = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111, side: THREE.DoubleSide} )
 					meshH2 = new THREE.Mesh ( geomH2, matH2 )
-					meshH2.position.set(ne20, 1, ne01)
+					meshH2.position.set(xzd.hx, 1, xzd.hz)
 					scene.add( meshH2 );
 			} else {
-					var mag = Math.pow(-magSq, 1/2)
-
-					// normalize
-					ne01 = ne01/mag
-					ne20 = ne20/mag
-					ne12 = ne12/mag
-				// line
+					// line
 					var pts = []
 					pts.push(new THREE.Vector3(0, 0, 0))
-					pts.push(new THREE.Vector3(ne20, -ne12, ne01))
+					// note: d coordinate is negative
+					pts.push(new THREE.Vector3(xzd.px, -xzd.pd, xzd.pz))
 					
 					const lineGeom = new THREE.BufferGeometry().setFromPoints( pts );
 					const lineMat = new THREE.LineBasicMaterial( { color: 0xff0000 } );
