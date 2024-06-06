@@ -526,12 +526,12 @@ var basisSet = function (p,q,r) {
 
 		// exp(alpha * mv.normalized) = 1 + alpha * mv/1 + alpha^2 * mv^2/2! + alpha^3 * mv^3/3!
 		mv.exp = function(alpha) {
-			alpha = (alpha % (Math.PI * 2)) - Math.PI
+			//alpha = (alpha % (Math.PI * 2)) - Math.PI
 			var n = this.smul(alpha)
 			var nPow = n.copy()
 			var res = n.copy().sadd(1)
 
-			var numTerms = 22
+			var numTerms = 11
 			console.log(numTerms)
 			for (i=2; i<numTerms; ++i) {
 				nPow = nPow.gp(n).smul(1/i)

@@ -87,23 +87,15 @@ var hpgaBasis = function(scene) {
 					console.log('norm sq: ' + perpLine.normSq())
 					//.normalize().strLog('normalised: ')//.render({color: 0xff0000})
 					var firstPlane = perpLine.join(origin)//.render({color: 0x0000ff})					
-					var firstPoint = firstPlane.gp(mv).render({color: 0x0000ff})
+					var firstPoint = firstPlane.gp(mv).strLog('firstPoint: ').render({color: 0x0000ff})
 
 					var points = []
 					var rotors = []
 					var pt, rotor
-					for (i=-1; i<1;i+=.1)  {
+					for (var i=-.8; i<.8;i+=.08)  {
 						rotor = perpLine.exp(i)
-						pt = rotor.gp( firstPoint.gp(rotor.reverse() )).normalize()
-						rotors.push(rotor)
-						points.push(pt.strLog('pt ' + i + ': ').render({color: 0x00ffff}))
+						pt = rotor.gp( firstPoint.gp(rotor.reverse() )).normalize().render()
 					}
-
-					var a = 3
-
-
-
-
 
 			} else if (mv.grade() == 2) {
 				if (!mv.opt.size) { mv.opt.size = .03 }

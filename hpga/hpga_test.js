@@ -86,6 +86,8 @@ var h2point = function(x,y) {
 	return h2p
 }
 
+var bv1 = bs.multiVector('2e_02 + 1e_01')
+bv1.gp(bv1).strLog('bv1 sq: ')
 //var p1 = h2point(.4, .8).render()
 
 
