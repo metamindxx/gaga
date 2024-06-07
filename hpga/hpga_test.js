@@ -18,9 +18,9 @@ scene.add(light);
 var mtrlRed   = new THREE.LineBasicMaterial( { color: 0xff0000 } );
 var mtrlGreen = new THREE.LineBasicMaterial( { color: 0x00ff00 } );
 var mtrlBlue  = new THREE.LineBasicMaterial( { color: 0x0000ff } );
-cemo.addVectorToScene([[0, 0, 0],[1, 0, 0]], mtrlRed, scene)
-cemo.addVectorToScene([[0, 0, 0],[0, 1, 0]], mtrlGreen, scene)
-cemo.addVectorToScene([[0, 0, 0],[0, 0, 1]], mtrlBlue, scene)
+cemo.addVectorToScene([[0, 0, 0],[.1, 0, 0]], mtrlRed, scene)
+cemo.addVectorToScene([[0, 0, 0],[0, .1, 0]], mtrlGreen, scene)
+cemo.addVectorToScene([[0, 0, 0],[0, 0, .1]], mtrlBlue, scene)
 
 var hpga = hpgaBasis(scene)
 
@@ -53,88 +53,85 @@ for(let i = 0; i < pos.count; i++){
 graphGeom.computeVertexNormals();
 scene.add(graph)
 
-/* /**************
-// Curve
-var hypPoints = []
-for (var i=-2; i<2; i+=.02) {
-	hypPoints.push(new THREE.Vector3(i, Math.pow(1 + i*i, .5), 0)) 	
-}
-const curveGeom = new THREE.BufferGeometry().setFromPoints( hypPoints );
-const curveMat = new THREE.LineBasicMaterial( { color: 0xff0000 } );
-const curve = new THREE.Line( curveGeom, curveMat );
-scene.add(curve)
-*/
-
 //**************
 // Unit circle
 const circGeom = new THREE.CircleGeometry( 1, 20 ); 
-//let circMat = new THREE.MeshNormalMaterial({color: 0xffff00, side: THREE.DoubleSide, transparent: true, opacity: .3, wireframe: false});
 let circMat = new THREE.MeshPhongMaterial({color: 0xffff00, side: THREE.DoubleSide, transparent: true, opacity: .3, wireframe: false});
-//const circMat = new THREE.MeshBasicMaterial( { color: 0xffff00 } ); 
 const circle = new THREE.Mesh( circGeom, circMat ); 
 circle.lookAt(new THREE.Vector3(0, 1, 0))
 circle.position.set(0,1,0)
 scene.add( circle );
 
 
-//var line1 = bs.multiVector('1e_0 + 2e_1').render()
-var vec1 = bs.multiVector('4.5e_0 + 5e_1 + 2e_2').strLog('vec1: ').render({color: 0x0000ff, showRays: false})
-var vec2 = bs.multiVector('-1e_0 - 1e_1 + 3e_2').strLog('vec1: ').render({color: 0x00ff00, showRays: true})
-//var perpLine = vec1.gp(pss).strLog('perpLine: ').render({color: 0xff00ff})
+//var vec1 = bs.multiVector('1e_0 + 2e_1 + 0e_2').strLog('vec1: ').render({color: 0x0000ff, showRays: false})
+//var vec2 = bs.multiVector('-1e_0 - 1e_1 + 3e_2').strLog('vec1: ').render({color: 0x00ff00, showRays: true})
+
+var e0 = bs.multiVector('1e_0').strLog('e0 : ') //.render({color: 0x00ff00})
+var e0d = e0.dual().strLog('e0d: ') 
+var e0pss = e0.gp(pss).strLog('e0p: ') 
+
+var e1 = bs.multiVector('1e_1').strLog('e1: ') //.render({color: 0xff0000})
+var e1d = e1.dual().strLog('e1d: ') 
+var e1pss = e1.gp(pss).strLog('e1p: ') 
+
+var e2 = bs.multiVector('1e_2').strLog('e2: ') //.render({color: 0x0000ff})
+var e2d = e2.dual().strLog('e2d: ') 
+var e2pss = e2.gp(pss).strLog('e2p: ') 
+
+
+
+var angle = Math.PI * (3/16)
+console.log('angle: ' + angle)
+
+e0.smul(Math.cos(angle)).add(  
+	e1.smul(Math.sin(angle)) ).render()
+
+e0d.smul(Math.cos(angle)).add(  
+	e1d.smul(Math.sin(angle)) ).render()
+
+
+
+//var e01 = bs.multiVector('1e_01')
+//var e02 = bs.multiVector('1e_02')
+//var e12 = bs.multiVector('1e_12')
+
+
 
 var h2point = function(x,y) {
 	var h2p = bs.multiVector('1e_12 - ' + x + 'e_02 + ' + y + 'e_01')
 	return h2p
 }
 
-var bv1 = bs.multiVector('2e_12').render()
-bv1.gp(bv1).strLog('bv1 sq: ')
+//var bv1 = bs.multiVector('2e_12').render()
+//bv1.gp(bv1).strLog('bv1 sq: ')
 //var p1 = h2point(.4, .8).render()
-
-
-/*
-
-//=================================================================================================//
-var bannerDiv = document.getElementById('banner_div')
-bannerDiv.style.fontFamily = 'Courier New, Courier'
-bannerDiv.style.position.absolute = true
-bannerDiv.style.zIndex = 3
-//bannerDiv.innerHTML = 'banner! Yey!' // bs.renderHtml()
-
-
-var infoDiv = document.getElementById('info_div')
-infoDiv.style.fontFamily = 'Courier New, Courier'
-//infoDiv.style.position.absolute = true
-//infoDiv.style.zIndex = 3
-//infoDiv.innerHTML = bs.renderHtml({order: 'creation', vectors: true})
-//infoDiv.innerHTML = bs.renderHtml()
-//infoDiv.innerHTML = 'info:'
-
-//var bladeOrder = ['e','e1','e2','e3','e4','e5','e12','e13','e14','e15','e23','e24','e25','e34','e35','e45','e123','e124','e125','e134','e135','e145','e234','e235','e245','e345','e1234','e1235','e1245','e1345','e2345','e12345']
-/*
-bladeOrder = ['e_',
-				 'e_0',   'e_1',   'e_2',   'e_3',
-				          'e_10',  'e_20',  'e_30',
-				          'e_23',  'e_13',  'e_12',
-				 'e_123', 'e_130', 'e_230', 'e_120',
-			 'e_1230']
-infoDiv.innerHTML = bs.cayleyHtml({order: bladeOrder})
-*/
-//infoDiv.innerHTML = bs.cayleyHtml()
 
 /**************************
 **	animate
 **************************/
 var animationCounter = 0
 var start = Date.now()
+var showNextCount = 0
+var angle, sign
+var e12 = bs.multiVector('1e_12')
+var e01 = bs.multiVector('1e_01')
 
 function animate() {
 	requestAnimationFrame( animate )
-	animationCounter = (Date.now() - start)/10000
-
+	animationCounter = (Date.now() - start)/100
+/*
 	if (animationCounter < 100) {
-	}
+		if (animationCounter > showNextCount) {
+			showNextCount += 10
+			angle = (Math.PI * showNextCount / 100).toFixed(4)
+			console.log('angle: ' + angle)
 
+			e12.smul(Math.cos(angle)).add(  
+				e01.smul(Math.sin(angle)) ).render()
+		}
+
+	}
+*/
 	cemoCam.renderer.render( scene, camera )
 }
 animate()

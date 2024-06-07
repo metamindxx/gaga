@@ -76,7 +76,7 @@ var hpgaBasis = function(scene) {
 					var ne1 = mv.basisSVal('e_1')
 					var ne2 = mv.basisSVal('e_2')
 					var ne0 = mv.basisSVal('e_0')
-					var mag = Math.pow(ne1*ne1 + ne2*ne2 - ne0*ne0, 1/2)
+					var mag = Math.pow(Math.abs(ne1*ne1 + ne2*ne2 - ne0*ne0), 1/2)
 
 					// normalize
 					ne1 = ne1/mag
@@ -105,7 +105,7 @@ var hpgaBasis = function(scene) {
 					scene.add( group );
 
 					// perp line is dual
-					var perpLine = mv.gp(pss).strLog('un normalised: ').normalize().strLog('normalised: ')
+					var perpLine = mv.dual().strLog('perp un-normalised: ').normalize().strLog('perp normalised: ').render({color: 0x0000ff})
 					console.log('norm sq: ' + perpLine.normSq())
 					//.normalize().strLog('normalised: ')//.render({color: 0xff0000})
 					var firstPlane = perpLine.join(origin)//.render({color: 0x0000ff})					
@@ -117,7 +117,7 @@ var hpgaBasis = function(scene) {
 						pts.push( rotor.gp( firstPoint.gp(rotor.reverse() )) )
 					}
 
-					if (options.showRays) {
+					if (options && options.showRays) {
 						for (var i=0; i<pts.length; ++i)  {
 							pts[i].render({color: mv.opt.color})
 						}
@@ -178,14 +178,14 @@ var hpgaBasis = function(scene) {
 					meshH2.position.set(xzd.hx, 1, xzd.hz)
 					scene.add( meshH2 );
 			} else {
-					// line
+					// improper line
 					var pts = []
 					pts.push(new THREE.Vector3(0, 0, 0))
 					// note: d coordinate is negative
-					pts.push(new THREE.Vector3(xzd.px, -xzd.pd, xzd.pz))
+					pts.push(new THREE.Vector3(xzd.px, xzd.pd, xzd.pz))
 					
 					const lineGeom = new THREE.BufferGeometry().setFromPoints( pts );
-					const lineMat = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+					const lineMat = new THREE.LineBasicMaterial( { color: mv.opt.color } );
 					const line = new THREE.Line( lineGeom, lineMat );
 					scene.add(line)
 			}
