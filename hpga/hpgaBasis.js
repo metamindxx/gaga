@@ -51,11 +51,12 @@ var hpgaBasis = function(scene) {
 				res.mag = Math.pow(-res.magSq, 1/2)
 			}
 
-			// normalize "p" for parabolic
+			// normalize "p" for point on hyperbola
 			res.px = ne20/res.mag
 			res.pz = ne01/res.mag
 			res.pd = ne12/res.mag
 
+			// h is for hyperbolic disk
 			res.hx = res.px / res.pd
 			res.hz = res.pz / res.pd
 
@@ -108,16 +109,47 @@ var hpgaBasis = function(scene) {
 					console.log('norm sq: ' + perpLine.normSq())
 					//.normalize().strLog('normalised: ')//.render({color: 0xff0000})
 					var firstPlane = perpLine.join(origin)//.render({color: 0x0000ff})					
-					var firstPoint = firstPlane.gp(mv).strLog('firstPoint: ').render({color: 0x0000ff})
+					var firstPoint = firstPlane.gp(mv)//.strLog('firstPoint: ')//.render({color: 0x0000ff})
 
-					var pt, rotor
+					var pt, xzd, rotor, pts = []
 					for (var i=-.8; i<.8;i+=.08)  {
 						rotor = perpLine.exp(i)
-						pt = rotor.gp( firstPoint.gp(rotor.reverse() )).normalize().render()
+						pts.push( rotor.gp( firstPoint.gp(rotor.reverse() )) )
 					}
 
+					if (options.showRays) {
+						for (var i=0; i<pts.length; ++i)  {
+							pts[i].render({color: mv.opt.color})
+						}
+					}
+
+					// add the curve on the hyperbola
+					var curvePoints = []
+					for (var i=0; i<pts.length; ++i)  {
+						pt = pts[i]
+						xzd = this.hypXZD(pt)
+						curvePoints.push(new THREE.Vector3(xzd.px, xzd.pd, xzd.pz)) 	
+					}
+					const curveGeom = new THREE.BufferGeometry().setFromPoints( curvePoints );
+					const curveMat = new THREE.LineBasicMaterial( { color: mv.opt.color } );
+					const curve = new THREE.Line( curveGeom, curveMat );
+					scene.add(curve)
+
+					// add the disk line
+					var diskPoints = []
+					xzd = this.hypXZD(pts[0])
+					diskPoints.push(new THREE.Vector3(xzd.hx, 1, xzd.hz))
+					xzd = this.hypXZD(pts[pts.length - 1])
+					diskPoints.push(new THREE.Vector3(xzd.hx, 1, xzd.hz))
+
+					const diskLineGeom = new THREE.BufferGeometry().setFromPoints( diskPoints );
+					const diskLine = new THREE.Line( diskLineGeom, curveMat );
+					scene.add(diskLine)
+
+
+
 			} else if (mv.grade() == 2) {
-				if (!mv.opt.size) { mv.opt.size = .03 }
+				if (!mv.opt.size) { mv.opt.size = .02 }
 				var xzd = this.hypXZD(mv)
 
 				if (xzd.isProper) {
@@ -135,7 +167,7 @@ var hpgaBasis = function(scene) {
 					pts.push(new THREE.Vector3(xzd.px, xzd.pd, xzd.pz))
 					
 					const lineGeom = new THREE.BufferGeometry().setFromPoints( pts );
-					const lineMat = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+					const lineMat = new THREE.LineBasicMaterial( { color: mv.opt.color } );
 					const line = new THREE.Line( lineGeom, lineMat );
 					scene.add(line)
 

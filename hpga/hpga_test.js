@@ -78,15 +78,16 @@ scene.add( circle );
 
 
 //var line1 = bs.multiVector('1e_0 + 2e_1').render()
-var vec1 = bs.multiVector('2e_0 + 5e_1 + 2e_2').strLog('vec1: ').render()
-var perpLine = vec1.gp(pss).strLog('perpLine: ').render({color: 0xff00ff})
+var vec1 = bs.multiVector('4.5e_0 + 5e_1 + 2e_2').strLog('vec1: ').render({color: 0x0000ff, showRays: false})
+var vec2 = bs.multiVector('-1e_0 - 1e_1 + 3e_2').strLog('vec1: ').render({color: 0x00ff00, showRays: true})
+//var perpLine = vec1.gp(pss).strLog('perpLine: ').render({color: 0xff00ff})
 
 var h2point = function(x,y) {
 	var h2p = bs.multiVector('1e_12 - ' + x + 'e_02 + ' + y + 'e_01')
 	return h2p
 }
 
-var bv1 = bs.multiVector('2e_02 + 1e_01')
+var bv1 = bs.multiVector('2e_12').render()
 bv1.gp(bv1).strLog('bv1 sq: ')
 //var p1 = h2point(.4, .8).render()
 

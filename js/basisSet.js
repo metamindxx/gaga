@@ -532,7 +532,7 @@ var basisSet = function (p,q,r) {
 			var res = n.copy().sadd(1)
 
 			var numTerms = 11
-			console.log(numTerms)
+			//console.log(numTerms)
 			for (i=2; i<numTerms; ++i) {
 				nPow = nPow.gp(n).smul(1/i)
 				res = res.add(nPow)
