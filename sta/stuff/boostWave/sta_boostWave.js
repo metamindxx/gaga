@@ -49,23 +49,34 @@ var animationCounter = 0
 var start = Date.now()
 
 
-var range = 1
-,	step = .1
+var range = 2
+,	step = .2
 ,	t = 0
 ,	point
 ,	points = []
+
+var expI4Study = function (alpha) {
+	var bits = []
+	bits.push(Math.cos(alpha) + 'e_')
+	var sa = Math.sin(alpha)
+	if (Math.sign(sa) > 0) {
+		bits.push(' + ')
+	}
+	return MV(bits.join(' ') + sa + 'e_1230')
+}
 
 
 
 var newPoint = function(pos) {
 	var p = {opt: {color: 0xff00ff}}
+	
 	p.calcF = function () {
 		var zVal = this.pos.bVal('e_30')
 		var exponent = zVal*woc - w*t
-		this.f = fGlobal.gp( I.exp(exponent) )
+		this.f = fGlobal.gp( expI4Study(exponent) )
 	}
-	p.render = function() {
 
+	p.render = function() {
 		var pos = this.pos // position
 		var posXYZ = {x: pos.bVal('e_10'), y: pos.bVal('e_20'), z: pos.bVal('e_30') }
 		var f = this.f
@@ -73,10 +84,10 @@ var newPoint = function(pos) {
 		if (!this.eVec) {
 			this.eVec = cemo.addVectorToScene([[posXYZ.x, posXYZ.y, posXYZ.z],[posXYZ.x + E_XYZ.x, posXYZ.y + E_XYZ.y, posXYZ.z + E_XYZ.z]], new THREE.MeshBasicMaterial( { color: this.opt.color }), scene, this)
 		} else {
-			this.eVec.position.x = posXYZ.x
-			this.eVec.position.y = posXYZ.y
-			this.eVec.position.z = posXYZ.z
-			this.eVec.ceSetEndFromRoot([E_XYZ.x, E_XYZ.y, E_XYZ.z])
+//			this.eVec.position.x = posXYZ.x
+//			this.eVec.position.y = posXYZ.y
+//			this.eVec.position.z = posXYZ.z
+			this.eVec.ceSetEndFromRoot([posXYZ.x + E_XYZ.x, posXYZ.y + E_XYZ.y, posXYZ.z + E_XYZ.z])
 		}
 		return this
 	}
