@@ -39,7 +39,7 @@ var B = MV('2e_10').strLog('B : ')
 var BI = B.gp(I).strLog('BI: ')
 var E = MV('2e_20').strLog('E: ')
 
-var f = E.add(BI).strLog('f: ')
+var fGlobal = E.add(BI).strLog('f: ')
 
 
 /**************************
@@ -62,7 +62,7 @@ var newPoint = function(pos) {
 	p.calcF = function () {
 		var zVal = this.pos.bVal('e_30')
 		var exponent = zVal*woc - w*t
-		this.f = f.gp( I.exp(exponent) )
+		this.f = fGlobal.gp( I.exp(exponent) )
 	}
 	p.render = function() {
 
@@ -108,10 +108,12 @@ function animate() {
 	if (runTime < 10) {
 		t=animationCounter
 		for (var i=0; i<points.length; ++i) {
+			point = points[i]
+			point.calcF()
 			if(i==0) {
-				points[i].f.strLog('f @ ' + runTime + ': ')
+				point.f.strLog('f @ ' + runTime + ': ')
 			}
-			points[i].render()
+			point.render()
 		}		
 	}
 	cemoCam.renderer.render( scene, camera )
