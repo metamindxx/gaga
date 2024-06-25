@@ -237,7 +237,7 @@ var basisSet = function (p,q,r) {
 				bs.cayley[i][j] =  result
 
 				// let's do manual duals for now.
-				/*/ have we found the dual dual
+				// have we found the dual dual
 				// bl1 * bl2 = +- pss
 				if (result.basis == pss) {
 					if (!symmetricDual) {
@@ -253,7 +253,6 @@ var basisSet = function (p,q,r) {
 						 bl2.basis.dual.unDualMul = undualMultiplier
 					}
 				}
-				*/
 			}
 		}
 

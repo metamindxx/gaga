@@ -128,7 +128,7 @@ var hpgaBasis = function(scene) {
 					for (var i=0; i<pts.length; ++i)  {
 						pt = pts[i]
 						xzd = this.hypXZD(pt)
-						curvePoints.push(new THREE.Vector3(xzd.px, xzd.pd, xzd.pz)) 	
+						curvePoints.push(new THREE.Vector3(-xzd.px, -xzd.pd, -xzd.pz)) 	
 					}
 					const curveGeom = new THREE.BufferGeometry().setFromPoints( curvePoints );
 					const curveMat = new THREE.LineBasicMaterial( { color: mv.opt.color } );
@@ -215,13 +215,13 @@ var hpgaBasis = function(scene) {
 
 	bs.setDual(bs.e, bs.e012, 1)
 
-	bs.setDual(bs.e0, bs.e12, 1)
+	bs.setDual(bs.e0, bs.e12, -1)
 	bs.setDual(bs.e1, bs.e02, -1)
 	bs.setDual(bs.e2, bs.e01, 1)
 
 	bs.setDual(bs.e01, bs.e2, 1)
 	bs.setDual(bs.e02, bs.e1, -1)
-	bs.setDual(bs.e12, bs.e0, 1)
+	bs.setDual(bs.e12, bs.e0, -1)
 
 	bs.setDual(bs.e012, bs.e, 1)
 

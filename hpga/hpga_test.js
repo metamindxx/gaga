@@ -80,7 +80,7 @@ var e2pss = e2.gp(pss).strLog('e2p: ')
 
 
 
-var angle = Math.PI * (3/16)
+var angle = Math.PI * (-11/16)
 console.log('angle: ' + angle)
 
 e0.smul(Math.cos(angle)).add(  
