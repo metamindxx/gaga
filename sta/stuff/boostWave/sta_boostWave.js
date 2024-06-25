@@ -47,23 +47,72 @@ var f = E.add(BI).strLog('f: ')
 **************************/
 var animationCounter = 0
 var start = Date.now()
-var exponent
 
-var range = 1, step = .1, t = 0, f_xt
-var zCoord = MV(-range + 'e_30')
-var zCoordStep = MV(step + 'e_30')
-for (var i=-range; i<range; i+=step) {
-	exponent = i*woc - w*t
-	f_xt = f.gp(I.exp(exponent))
-	zCoord = zCoord.add(zCoordStep)
-	//f_xt.add(zCoord).strLog('f_xt: ')
-	f_xt.render({as: "xyzFrom4Bivec", color: 0xff00ff})
+
+var range = 1
+,	step = .1
+,	t = 0
+,	point
+,	points = []
+
+
+
+var newPoint = function(pos) {
+	var p = {opt: {color: 0xff00ff}}
+	p.calcF = function () {
+		var zVal = this.pos.bVal('e_30')
+		var exponent = zVal*woc - w*t
+		this.f = f.gp( I.exp(exponent) )
+	}
+	p.render = function() {
+
+		var pos = this.pos // position
+		var posXYZ = {x: pos.bVal('e_10'), y: pos.bVal('e_20'), z: pos.bVal('e_30') }
+		var f = this.f
+		var E_XYZ = {x: f.bVal('e_10'), y: f.bVal('e_20'), z: f.bVal('e_30') }
+		if (!this.eVec) {
+			this.eVec = cemo.addVectorToScene([[posXYZ.x, posXYZ.y, posXYZ.z],[posXYZ.x + E_XYZ.x, posXYZ.y + E_XYZ.y, posXYZ.z + E_XYZ.z]], new THREE.MeshBasicMaterial( { color: this.opt.color }), scene, this)
+		} else {
+			this.eVec.position.x = posXYZ.x
+			this.eVec.position.y = posXYZ.y
+			this.eVec.position.z = posXYZ.z
+			this.eVec.ceSetEndFromRoot([E_XYZ.x, E_XYZ.y, E_XYZ.z])
+		}
+		return this
+	}
+
+	p.pos = MV(pos[2].toFixed(2) + 'e_30')
+	p.calcF()
+
+	return p
 }
 
+
+
+for (var i=-range; i<range; i+=step) {
+	point = newPoint([0,0,i]).render()
+	points.push(point)
+}
+/*
+	exponent = i*woc - w*t
+	f_xt = f.gp(I.exp(exponent))
+	zCoord = zCoord.add(zCoordStep).strLog('zCoord: ')
+	f_xt = f_xt.add(zCoord).strLog('f_xt: ')
+	f_xt.render({as: "xyzFrom4Bivec", color: 0xff00ff})
+}
+*/
 function animate() {
 	requestAnimationFrame( animate )
-	animationCounter = (Date.now() - start)/100
-	if (animationCounter < 100) {
+	var runTime = (Date.now() - start)/1000
+	animationCounter = runTime
+	if (runTime < 10) {
+		t=animationCounter
+		for (var i=0; i<points.length; ++i) {
+			if(i==0) {
+				points[i].f.strLog('f @ ' + runTime + ': ')
+			}
+			points[i].render()
+		}		
 	}
 	cemoCam.renderer.render( scene, camera )
 }

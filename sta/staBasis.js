@@ -131,9 +131,9 @@ var staBasis = function(scene) {
 				if (!mv.opt.size) { mv.opt.size = .02 }
 
 				if (mv.opt.as = "xyzFrom4Bivec") {
-					var xyz0 = this.staXYZfrom4Bivec(mv)
-					var xyz1 = {x: 0, y: 0, z: xyz0.z}
-					cemo.addVectorToScene([[xyz1.x, xyz1.y, xyz1.z],[xyz0.x + xyz1.x, xyz0.y + xyz1.y, xyz0.z + xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, mv)
+					var xyz = this.staXYZfrom4Bivec(mv)
+					//var xyz1 = {x: 0, y: 0, z: xyz0.z}
+					cemo.addVectorToScene([[0, 0, xyz.z],[xyz.x, xyz.y, xyz.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, mv)
 				
 				}
 
