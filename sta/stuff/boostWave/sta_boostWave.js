@@ -92,7 +92,18 @@ var newPoint = function(pos) {
 		return this
 	}
 
-	p.pos = MV(pos[2].toFixed(2) + 'e_30')
+	// create the position mv
+	var bits = []
+	for (var i=0; i<3; ++i) {
+		if (pos[i]) {
+			if (pos[i] > 0) {
+				bits.push(' + ' + pos[i].toFixed(4) + 'e_' + (i+1) + '0')
+			} else {
+				bits.push(pos[i].toFixed(4) + 'e_' + (i+1) + '0')
+			}
+		}
+	}
+	p.pos = MV(bits.join(' '))
 	p.calcF()
 
 	return p
@@ -101,7 +112,7 @@ var newPoint = function(pos) {
 
 
 for (var i=-range; i<range; i+=step) {
-	point = newPoint([0,0,i]).render()
+	point = newPoint([0.5,0,i]).render()
 	points.push(point)
 }
 /*
