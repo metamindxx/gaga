@@ -124,17 +124,17 @@ var cemo = {
 		return group
 	}
 
-,	addBivectorToScene: function (position, direction, scene, options, clickParent) {
+,	addBivectorToScene: function (position, direction, size, scene, options, clickParent) {
 	if (!options) { options = {}}
 	if (!options.size) { options.size = .5 }
 	if (!options.color) { options.color = 0x778877 }
 
 	// front
-		var gCircFront = new THREE.CircleGeometry( options.size, 32 );
+		var gCircFront = new THREE.CircleGeometry( size, 32 );
 		var mFront = new THREE.MeshStandardMaterial( {color: options.color, opacity: 0.4, emissive: 0x111111, side: THREE.DoubleSide} );
 		var mshCircFront = new THREE.Mesh( gCircFront, mFront );
 		// back
-		var gCircBack = new THREE.CircleGeometry( options.size * .8, 32 );
+		var gCircBack = new THREE.CircleGeometry( size * .8, 32 );
 		var mBack = new THREE.MeshStandardMaterial( {color: options.color, opacity: 0.6, emissive: 0x111111, side: THREE.BackSide} );
 		//var mBack = new THREE.MeshStandardMaterial( {color: mv.opt.color, wireframe: true} )
 		var mshCircBack = new THREE.Mesh( gCircBack, mBack );
@@ -144,6 +144,7 @@ var cemo = {
 		group.add( mshCircFront );
 		group.add( mshCircBack );
 		mshCircFront.clickParent = clickParent
+		group.originalSize = size
 
 		// need to translate first since it uses object coordinates...
 		// group.translateOnAxis(theAxis, nd)
@@ -151,8 +152,13 @@ var cemo = {
 		group.position.set(position[0], position[1], position[2])
 		scene.add( group );
 
-		group.ceSetDirection = function(direction) {
+		group.ceSetDirection = function(direction, size) {
 			group.lookAt(new THREE.Vector3(group.position.x + direction[0], group.position.y + direction[1], group.position.z + direction[2]))
+			if (size != null) {
+				var sf = size / group.originalSize
+				group.scale.set(sf, sf, sf);
+			}
+			
 		}
 
 		return group

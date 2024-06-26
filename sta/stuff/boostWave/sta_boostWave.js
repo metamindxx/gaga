@@ -76,7 +76,7 @@ var newPoint = function(pos) {
 		var exponent1 = zVal*woc - w*t
 		var f1 = fGlobal.gp( expI4Study(exponent1) )
 		var exponent2 = -exponent1
-		var f2 = fGlobal.gp( expI4Study(exponent2) ).smul(.5)
+		var f2 = fGlobal.gp( expI4Study(exponent2) ).smul(.7)
 
 		//var exponent =  - w*t
 //		this.f = fGlobal.gp( expI4Study(exponent) )
@@ -104,14 +104,15 @@ var newPoint = function(pos) {
 
 		// B field
 		var B_XYZ = {x: -field.bVal('e_23'), y: field.bVal('e_13'), z: -field.bVal('e_12') }
+		var bSize = .2 *  Math.pow(B_XYZ.x*B_XYZ.x + B_XYZ.y*B_XYZ.y + B_XYZ.z*B_XYZ.z, .5)
 		if (!this.bBivec) {
 			// addBivectorToScene: function (position, direction, scene, options, clickParent) {
-			this.bBivec = cemo.addBivectorToScene([posXYZ.x, posXYZ.y, posXYZ.z],[B_XYZ.x, B_XYZ.y, B_XYZ.z], scene, { color: this.opt.color, size: .1 }, this)
+			this.bBivec = cemo.addBivectorToScene([posXYZ.x, posXYZ.y, posXYZ.z],[B_XYZ.x, B_XYZ.y, B_XYZ.z], bSize, scene, { color: this.opt.color }, this)
 		} else {
 //			this.eVec.position.x = posXYZ.x
 //			this.eVec.position.y = posXYZ.y
 //			this.eVec.position.z = posXYZ.z
-			this.bBivec.ceSetDirection([B_XYZ.x, B_XYZ.y, B_XYZ.z])
+			this.bBivec.ceSetDirection([B_XYZ.x, B_XYZ.y, B_XYZ.z], bSize)
 		}
 
 		return this
