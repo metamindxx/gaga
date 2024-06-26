@@ -151,6 +151,10 @@ var cemo = {
 		group.position.set(position[0], position[1], position[2])
 		scene.add( group );
 
+		group.ceSetDirection = function(direction) {
+			group.lookAt(new THREE.Vector3(group.position.x + direction[0], group.position.y + direction[1], group.position.z + direction[2]))
+		}
+
 		return group
 	}
 

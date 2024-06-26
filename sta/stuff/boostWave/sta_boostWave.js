@@ -32,7 +32,7 @@ var g0 = MV('1e_0')
 const loader = new THREE.TextureLoader();
 var dottyMaterial = new THREE.MeshLambertMaterial({map: loader.load("/textures/dots_256.png"), alphaTest: 0.5, side: THREE.BackSide})
 
-var w = 6, c = 4
+var w = 2, c = 1
 var woc = w/c
 
 var B = MV('.5e_10').strLog('B : ')
@@ -111,7 +111,7 @@ var newPoint = function(pos) {
 //			this.eVec.position.x = posXYZ.x
 //			this.eVec.position.y = posXYZ.y
 //			this.eVec.position.z = posXYZ.z
-//			this.bBivec.ceSetEndFromRoot([posXYZ.x + E_XYZ.x, posXYZ.y + E_XYZ.y, posXYZ.z + E_XYZ.z])
+			this.bBivec.ceSetDirection([B_XYZ.x, B_XYZ.y, B_XYZ.z])
 		}
 
 		return this
@@ -138,19 +138,19 @@ var newPoint = function(pos) {
 
 // create some points
 for (var i=-range; i<=range; i+=step) {
-	point = newPoint([0,0,i]) // .render()
+	point = newPoint([-0.5,-0.5,i]) // .render()
 	points.push(point)
 }
 
 // render / animate
-var rendered = false
+//var rendered = false
 function animate() {
 	requestAnimationFrame( animate )
 	var runTime = (Date.now() - start)/1000
 	animationCounter = runTime
-	//if (runTime < .100) {
-	if (!rendered) {
-		rendered = true
+	if (runTime < 100) {
+//	if (!rendered) {
+//		rendered = true
 		t=animationCounter
 		for (var i=0; i<points.length; ++i) {
 			point = points[i]
