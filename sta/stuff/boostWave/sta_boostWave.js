@@ -32,12 +32,12 @@ var g0 = MV('1e_0')
 const loader = new THREE.TextureLoader();
 var dottyMaterial = new THREE.MeshLambertMaterial({map: loader.load("/textures/dots_256.png"), alphaTest: 0.5, side: THREE.BackSide})
 
-var w = 2, c = 4
+var w = 6, c = 4
 var woc = w/c
 
-var B = MV('2e_10').strLog('B : ')
+var B = MV('.5e_10').strLog('B : ')
 var BI = B.gp(I).strLog('BI: ')
-var E = MV('2e_20').strLog('E: ')
+var E = MV('.5e_20').strLog('E: ')
 
 var fGlobal = E.add(BI).strLog('f: ')
 
@@ -49,8 +49,8 @@ var animationCounter = 0
 var start = Date.now()
 
 
-var range = 2
-,	step = .2
+var range = 2.01
+,	step = .1
 ,	t = 0
 ,	point
 ,	points = []
@@ -65,22 +65,34 @@ var expI4Study = function (alpha) {
 	return MV(bits.join(' ') + sa + 'e_1230')
 }
 
-
-
+// POINT def
 var newPoint = function(pos) {
-	var p = {opt: {color: 0xff00ff}}
+	var p = {
+			isA: 'point'
+		,	opt: {color: 0xff00ff}}
 	
 	p.calcF = function () {
 		var zVal = this.pos.bVal('e_30')
-		var exponent = zVal*woc - w*t
-		this.f = fGlobal.gp( expI4Study(exponent) )
+		var exponent1 = zVal*woc - w*t
+		var f1 = fGlobal.gp( expI4Study(exponent1) )
+		var exponent2 = -exponent1
+		var f2 = fGlobal.gp( expI4Study(exponent2) ).smul(.5)
+
+		//var exponent =  - w*t
+//		this.f = fGlobal.gp( expI4Study(exponent) )
+		this.f = f1.add(f2)
+		return this
 	}
 
 	p.render = function() {
 		var pos = this.pos // position
 		var posXYZ = {x: pos.bVal('e_10'), y: pos.bVal('e_20'), z: pos.bVal('e_30') }
-		var f = this.f
-		var E_XYZ = {x: f.bVal('e_10'), y: f.bVal('e_20'), z: f.bVal('e_30') }
+		//this.f.strLog('render f: ')
+		//console.log('is: ' + this.isA)
+		var field = this.f
+
+		// E field
+		var E_XYZ = {x: field.bVal('e_10'), y: field.bVal('e_20'), z: field.bVal('e_30') }
 		if (!this.eVec) {
 			this.eVec = cemo.addVectorToScene([[posXYZ.x, posXYZ.y, posXYZ.z],[posXYZ.x + E_XYZ.x, posXYZ.y + E_XYZ.y, posXYZ.z + E_XYZ.z]], new THREE.MeshBasicMaterial( { color: this.opt.color }), scene, this)
 		} else {
@@ -89,10 +101,23 @@ var newPoint = function(pos) {
 //			this.eVec.position.z = posXYZ.z
 			this.eVec.ceSetEndFromRoot([posXYZ.x + E_XYZ.x, posXYZ.y + E_XYZ.y, posXYZ.z + E_XYZ.z])
 		}
+
+		// B field
+		var B_XYZ = {x: -field.bVal('e_23'), y: field.bVal('e_13'), z: -field.bVal('e_12') }
+		if (!this.bBivec) {
+			// addBivectorToScene: function (position, direction, scene, options, clickParent) {
+			this.bBivec = cemo.addBivectorToScene([posXYZ.x, posXYZ.y, posXYZ.z],[B_XYZ.x, B_XYZ.y, B_XYZ.z], scene, { color: this.opt.color, size: .1 }, this)
+		} else {
+//			this.eVec.position.x = posXYZ.x
+//			this.eVec.position.y = posXYZ.y
+//			this.eVec.position.z = posXYZ.z
+//			this.bBivec.ceSetEndFromRoot([posXYZ.x + E_XYZ.x, posXYZ.y + E_XYZ.y, posXYZ.z + E_XYZ.z])
+		}
+
 		return this
 	}
 
-	// create the position mv
+	// create the position mv from array. eg MV("1e_1 + 2e_2") from pos=[1,2,0]
 	var bits = []
 	for (var i=0; i<3; ++i) {
 		if (pos[i]) {
@@ -104,38 +129,33 @@ var newPoint = function(pos) {
 		}
 	}
 	p.pos = MV(bits.join(' '))
+	
 	p.calcF()
 
 	return p
 }
+// End POINT def
 
-
-
-for (var i=-range; i<range; i+=step) {
-	point = newPoint([0.5,0,i]).render()
+// create some points
+for (var i=-range; i<=range; i+=step) {
+	point = newPoint([0,0,i]) // .render()
 	points.push(point)
 }
-/*
-	exponent = i*woc - w*t
-	f_xt = f.gp(I.exp(exponent))
-	zCoord = zCoord.add(zCoordStep).strLog('zCoord: ')
-	f_xt = f_xt.add(zCoord).strLog('f_xt: ')
-	f_xt.render({as: "xyzFrom4Bivec", color: 0xff00ff})
-}
-*/
+
+// render / animate
+var rendered = false
 function animate() {
 	requestAnimationFrame( animate )
 	var runTime = (Date.now() - start)/1000
 	animationCounter = runTime
-	if (runTime < 10) {
+	//if (runTime < .100) {
+	if (!rendered) {
+		rendered = true
 		t=animationCounter
 		for (var i=0; i<points.length; ++i) {
 			point = points[i]
-			point.calcF()
-			if(i==0) {
-				point.f.strLog('f @ ' + runTime + ': ')
-			}
-			point.render()
+			point.calcF().render()
+			//point.f.strLog('field at point: ')
 		}		
 	}
 	cemoCam.renderer.render( scene, camera )

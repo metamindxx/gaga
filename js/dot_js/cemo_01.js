@@ -124,6 +124,36 @@ var cemo = {
 		return group
 	}
 
+,	addBivectorToScene: function (position, direction, scene, options, clickParent) {
+	if (!options) { options = {}}
+	if (!options.size) { options.size = .5 }
+	if (!options.color) { options.color = 0x778877 }
+
+	// front
+		var gCircFront = new THREE.CircleGeometry( options.size, 32 );
+		var mFront = new THREE.MeshStandardMaterial( {color: options.color, opacity: 0.4, emissive: 0x111111, side: THREE.DoubleSide} );
+		var mshCircFront = new THREE.Mesh( gCircFront, mFront );
+		// back
+		var gCircBack = new THREE.CircleGeometry( options.size * .8, 32 );
+		var mBack = new THREE.MeshStandardMaterial( {color: options.color, opacity: 0.6, emissive: 0x111111, side: THREE.BackSide} );
+		//var mBack = new THREE.MeshStandardMaterial( {color: mv.opt.color, wireframe: true} )
+		var mshCircBack = new THREE.Mesh( gCircBack, mBack );
+		mshCircBack.position.set(0,0,-.001)
+
+		var group = new THREE.Group();
+		group.add( mshCircFront );
+		group.add( mshCircBack );
+		mshCircFront.clickParent = clickParent
+
+		// need to translate first since it uses object coordinates...
+		// group.translateOnAxis(theAxis, nd)
+		group.lookAt(new THREE.Vector3(direction[0], direction[1], direction[2]))
+		group.position.set(position[0], position[1], position[2])
+		scene.add( group );
+
+		return group
+	}
+
 ,	addCylinderToScene: function (coords, Cyl_r, Cyl_l, rotation, mtrl, scene) {
 		var gCyl = new THREE.CylinderGeometry(Cyl_r, Cyl_r, Cyl_l, 128, 20); //CylinderGeometry(radiusTop : Float, radiusBottom : Float, height : Float, radialSegments : Integer, heightSegments : Integer, openEnded : Boolean, thetaStart : Float, thetaLength : Float)
 		var mshCyl = new THREE.Mesh(gCyl, mtrl);
