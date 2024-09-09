@@ -1,0 +1,222 @@
+var apsBasis = function(scene) {
+	var APS = {
+		isA: 'apsBasis'
+	,	bs: null		// basisSet
+	,	scene: scene
+	,	opt: {}
+
+	,	pt: function (x,y,z) {
+			return bs.multiVector(x + 'e_1 ' + y + 'e_2 ' + z + 'e_3')
+		}
+
+		// from page 14 of Normalization__Square_roots_and_the_Exponential_map_in_Clifford_Algebras_less_than_6D.pdf
+		// pga specific
+		/*
+	,	normalizeRotor: function (r) {
+			var e = r.bVal('e_')
+			var e10 = r.bVal('e_01')
+			var e20 = r.bVal('e_02')
+			var e30 = r.bVal('e_03')
+			var e12 = r.bVal('e_12')
+			var e23 = r.bVal('e_23')
+			var e13 = r.bVal('e_13')
+			var e1230 = r.bVal('e_0123')
+			var A = 1/Math.pow( (e*e + e12*e12 + e23*e23 + e13*e13), .5 )
+			var B = (e0123*e - e01*e23 - e02*e13 - e03*e12) *A*A*A
+			var mvResult = this.bs.multiVector('')
+			mvResult.pushBlade(bs.newBlade(A*e, bs.e))
+			mvResult.pushBlade(bs.newBlade(A*e10 + B*e23, bs.e10))
+			mvResult.pushBlade(bs.newBlade(A*e20 + B*e13, bs.e20))
+			mvResult.pushBlade(bs.newBlade(A*e30 + B*e12, bs.e30))
+			mvResult.pushBlade(bs.newBlade(A*e12, bs.e12))
+			mvResult.pushBlade(bs.newBlade(A*e23, bs.e23))
+			mvResult.pushBlade(bs.newBlade(A*e13, bs.e13))
+			mvResult.pushBlade(bs.newBlade(A*e1230 - B*e, bs.e1230))
+			return mvResult
+		}*/
+
+	, 	pointXYZ: function(mv) {
+				return {x: mv.basisSVal('e_1')
+					  , y: mv.basisSVal('e_2')
+					  , z: mv.basisSVal('e_3')}
+		}
+
+	,	renderMV: function (mv, options) {
+			// set some defaults
+			if (options) { Object.keys(options).forEach(k=> mv.opt[k] = options[k]) }
+			if (!mv.opt.color) { mv.opt.color =  0x333333 }
+
+			// what type of object
+			if (mv.grade() == 3) {
+				if (!mv.opt.size) { mv.opt.size = .5 }
+				if (mv.components) {
+					var xyz0 = this.pointXYZ(mv.components[0])
+					var xyz1 = this.pointXYZ(mv.components[1])
+					var xyz2 = this.pointXYZ(mv.components[2])
+
+					// coordinates of triangle
+					var pts = new Array();
+					pts[0] = new THREE.Vector3(xyz0.x, xyz0.y, xyz0.z);
+					pts[1] = new THREE.Vector3(xyz1.x, xyz1.y, xyz1.z);
+					pts[2] = new THREE.Vector3(xyz2.x, xyz2.y, xyz2.z);
+
+					if (mv.renderStuff == null) {
+						mv.renderStuff = {}
+						var rs = mv.renderStuff
+						rs.geom = new THREE.BufferGeometry().setFromPoints(pts);
+						const uvs = [
+							0,0,
+							0,1,
+							1,0
+						];
+						rs.geom.addAttribute( 'uv', new THREE.BufferAttribute( new Float32Array( uvs ), 2 ) );
+						rs.frontMesh = new THREE.Mesh(rs.geom, new THREE.MeshBasicMaterial({color: mv.opt.color, side: THREE.FrontSide}))
+						//var backMesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({color: 0xddaaff, side: THREE.BackSide}))
+						rs.backMesh = new THREE.Mesh(rs.geom, dottyMaterial)
+						scene.add(rs.frontMesh, rs.backMesh)
+					} else {
+						mv.renderStuff.geom.setFromPoints(pts);
+					}
+
+					// create triangle
+					mv.renderStuff.geom.computeVertexNormals();
+
+
+				} else {
+					//** render plane
+					var nx = mv.basisSVal('e_1')
+					var ny = mv.basisSVal('e_2')
+					var nz = mv.basisSVal('e_3')
+					var nd = mv.basisSVal('e_0')
+					var mag = Math.pow(nx*nx + ny*ny + nz*nz, 1/2)
+
+					// normalize
+					nx = nx/mag
+					ny = ny/mag
+					nz = nz/mag
+					nd = -nd/mag
+
+					// front
+					var gCircFront = new THREE.CircleGeometry( mv.opt.size, 32 );
+					var mFront = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.4, emissive: 0x111111, side: THREE.DoubleSide} );
+					var mshCircFront = new THREE.Mesh( gCircFront, mFront );
+					// back
+					var gCircBack = new THREE.CircleGeometry( mv.opt.size * .8, 32 );
+					var mBack = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111, side: THREE.BackSide} );
+					//var mBack = new THREE.MeshStandardMaterial( {color: mv.opt.color, wireframe: true} )
+					var mshCircBack = new THREE.Mesh( gCircBack, mBack );
+					mshCircBack.position.set(0,0,-.001)
+
+					var group = new THREE.Group();
+					group.add( mshCircFront );
+					group.add( mshCircBack );
+					mshCircFront.clickParent = mv
+
+					// need to translate first since it uses object coordinates...
+					// group.translateOnAxis(theAxis, nd)
+					group.lookAt(new THREE.Vector3(nx, ny, nz))
+					group.position.set(nx*nd, ny*nd, nz*nd)
+					scene.add( group );
+				}
+
+
+
+			} else if (mv.grade() == 2) {
+				//** render line
+				if (mv.components) {
+					var p0 = mv.components[0]
+					var xyz0 = this.pointXYZ(p0)
+					var p1 = mv.components[1]
+					var xyz1 = this.pointXYZ(p1)
+					var msh
+					if (xyz0.inf) {
+						msh = cemo.addVectorToScene([[xyz1.x, xyz1.y, xyz1.z],[xyz0.x + xyz1.x, xyz0.y + xyz1.y, xyz0.z + xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, mv)
+					} else if (xyz1.inf) {
+						msh = cemo.addVectorToScene([[xyz0.x, xyz0.y, xyz0.z],[xyz0.x + xyz1.x, xyz0.y + xyz1.y, xyz0.z + xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, mv)
+					} else {
+						msh = cemo.addVectorToScene([[xyz0.x, xyz0.y, xyz0.z],[xyz1.x, xyz1.y, xyz1.z]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, mv)
+					}
+					msh.clickParent = mv
+				} else {
+					// e for euclidian - direction of line
+					var ex =   mv.basisSVal('e_23')
+					,	ey = - mv.basisSVal('e_13')
+					,	ez =   mv.basisSVal('e_12')
+					var mag = Math.pow(ex*ex + ey*ey + ez*ez, 1/2)
+					ex = ex/mag
+					ey = ey/mag
+					ez = ez/mag
+
+					// i for infinite - moment of line
+					var ix = mv.basisSVal('e_01') / mag
+					,	iy = mv.basisSVal('e_02') / mag
+					,	iz = mv.basisSVal('e_03') / mag
+
+					// take the cross product (shh!) to rotate the moment line around the direction line.
+					// the moment line is the correct length and now lies in the plane of the moment's rotation perp to the direction
+					// ie, this is the translation
+					var crossX =  ey*iz - iy*ez
+					,	crossY =  ez*ix - iz*ex
+					,	crossZ =  ex*iy - ix*ey
+
+					cemo.addVectorToScene([[crossX, crossY, crossZ],[crossX + ex, crossY + ey, crossZ + ez]], new THREE.MeshBasicMaterial( { color: mv.opt.color }), scene, mv)
+				}
+
+			// Point
+			} else if (mv.grade() == 1) {
+				if (!mv.opt.size) { mv.opt.size = .1 }
+
+				var xyz = this.pointXYZ(mv)
+
+				// render
+				if (mv.renderStuff == null) {
+					mv.renderStuff = {}
+					var rs = mv.renderStuff
+					rs.geomOut = new THREE.SphereGeometry(mv.opt.size, 9, 9)
+					rs.matOut = new THREE.MeshStandardMaterial( {color: mv.opt.color, opacity: 0.6, emissive: 0x111111, side: THREE.DoubleSide} )
+					rs.meshOut = new THREE.Mesh ( rs.geomOut, rs.matOut )
+
+					scene.add( rs.meshOut )
+
+					rs.meshOut.clickParent = mv
+				}
+
+				mv.renderStuff.meshOut.position.set(xyz.x, xyz.y, xyz.z)
+			}
+
+			if (options && options.renderComponents && mv.components) {
+				var comp
+				for (var i=0; i<mv.components.length; ++i) {
+					mv.components[i].render(options)
+				}
+			}
+
+
+		}
+	}
+
+	APS.bs = bs
+	bs.addBasis('1', +1)
+	bs.addBasis('2', +1)
+	bs.addBasis('3', +1)
+
+	/*
+	// gradeOrder?
+	bs.bladeOrder = ['e_',
+					 'e_0',   'e_1',   'e_2',   'e_3',
+							  'e_01',  'e_02',  'e_03',
+							  'e_23',  'e_13',  'e_12',
+					 'e_123', 'e_013', 'e_023', 'e_012',
+					 'e0123'
+					 ]
+	*/
+
+	// create the cayley table with a symmetric dual
+	APS.bs.createCayley()
+	APS.bs.interpretation = APS
+
+	return APS
+}
+
+
+

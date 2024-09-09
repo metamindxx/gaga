@@ -1,3 +1,10 @@
+var cRed = 0xf00000
+,	cGreen = 0x00f000
+,	cBlue = 0x0000f0
+,	cCyan = 0x00f0f0
+,	cPink = 0xf000f0
+,	cYellow = 0xf0f000
+
 var cemo = {
 	addLineToScene: function (coords, mtrl, scene) {
 		// alert('hello')

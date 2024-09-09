@@ -73,14 +73,13 @@ var newPoint = function(pos) {
 	
 	p.calcF = function () {
 		var zVal = this.pos.bVal('e_30')
-		var exponent1 = zVal*woc - w*t
-		var f1 = fGlobal.gp( expI4Study(exponent1) )
-		var exponent2 = -exponent1
-		var f2 = fGlobal.gp( expI4Study(exponent2) ).smul(.7)
+		var exponent = zVal*woc - w*t
+		var fRight = fGlobal.gp( expI4Study(exponent) )
+		var fLeft = fGlobal.gp( expI4Study(-exponent) ).smul(0)
 
 		//var exponent =  - w*t
 //		this.f = fGlobal.gp( expI4Study(exponent) )
-		this.f = f1.add(f2)
+		this.f = fLeft.add(fRight)
 		return this
 	}
 
@@ -96,9 +95,6 @@ var newPoint = function(pos) {
 		if (!this.eVec) {
 			this.eVec = cemo.addVectorToScene([[posXYZ.x, posXYZ.y, posXYZ.z],[posXYZ.x + E_XYZ.x, posXYZ.y + E_XYZ.y, posXYZ.z + E_XYZ.z]], new THREE.MeshBasicMaterial( { color: this.opt.color }), scene, this)
 		} else {
-//			this.eVec.position.x = posXYZ.x
-//			this.eVec.position.y = posXYZ.y
-//			this.eVec.position.z = posXYZ.z
 			this.eVec.ceSetEndFromRoot([posXYZ.x + E_XYZ.x, posXYZ.y + E_XYZ.y, posXYZ.z + E_XYZ.z])
 		}
 
@@ -109,9 +105,6 @@ var newPoint = function(pos) {
 			// addBivectorToScene: function (position, direction, scene, options, clickParent) {
 			this.bBivec = cemo.addBivectorToScene([posXYZ.x, posXYZ.y, posXYZ.z],[B_XYZ.x, B_XYZ.y, B_XYZ.z], bSize, scene, { color: this.opt.color }, this)
 		} else {
-//			this.eVec.position.x = posXYZ.x
-//			this.eVec.position.y = posXYZ.y
-//			this.eVec.position.z = posXYZ.z
 			this.bBivec.ceSetDirection([B_XYZ.x, B_XYZ.y, B_XYZ.z], bSize)
 		}
 
@@ -138,10 +131,47 @@ var newPoint = function(pos) {
 // End POINT def
 
 // create some points
+var d = .7
 for (var i=-range; i<=range; i+=step) {
-	point = newPoint([-0.5,-0.5,i]) // .render()
+	point = newPoint([d,d,i]) // .render()
+	points.push(point)
+	point = newPoint([d,-d,i]) // .render()
+	points.push(point)
+	point = newPoint([-d,d,i]) // .render()
+	points.push(point)
+	point = newPoint([-d,-d,i]) // .render()
 	points.push(point)
 }
+
+var bracket = function(A, B) {
+	return A.gp(B).add( B.gp(A).smul(-1) ).smul(.5)
+}
+
+var N1 = MV('1e_10 + 1e_13')
+var N2 = MV('1e_20 + 1e_23')
+var J3 = MV('1e_12')
+
+var bN1N2 = bracket(N1, N2).strLog('bN1N2')
+var bJ3N1 = bracket(J3, N1).strLog('bJ3N1')
+var bJ3N2 = bracket(J3, N2).strLog('bJ3N2')
+
+var lag = laGenerators()
+
+var JxyKzt = lag.bracket(lag.Jxy, lag.Kzt)
+JxyKzt = lag.cmul(JxyKzt, lag.i)
+lag.strLog(JxyKzt, 'JxyKzt')
+
+var JxyKyt = lag.bracket(lag.Jxy, lag.Kyt)
+JxyKyt = lag.cmul(JxyKyt, lag.i)
+lag.strLog(JxyKyt, 'JxyKyt')
+
+var JxyJyz = lag.bracket(lag.Jxy, lag.Jyz)
+JxyJyz = lag.cmul(JxyJyz, lag.i)
+lag.strLog(JxyJyz, 'JxyJyz')
+
+var KxtKyt = lag.bracket(lag.Kxt, lag.Kyt)
+KxtKyt = lag.cmul(KxtKyt, lag.i)
+lag.strLog(KxtKyt, 'KxtKyt')
 
 // render / animate
 //var rendered = false
