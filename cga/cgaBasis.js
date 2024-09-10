@@ -161,21 +161,20 @@ var cgaBasis = function(scene) {
 					this.sphMesh.position.z = xyz.z;
 				} else {
 					// plane
-					var phiMag = Math.pow(-this.sq(), 0.5)
-					var phi = this.smul(1/phiMag) // normalise
+					var phiMag = Math.pow(-mv.sq(), 0.5)
+					var phi = mv.smul(1/phiMag) // normalise
 					console.log('phiMag: ' + phiMag)
-					var phiD = cg.I5.gp(phi)
-					var d = (phiD.dot(cg.no).d[0])
+					var phiD = cga.I5.gp(phi)
+					var d = (phiD.scalarProduct(cga.n0))
 					console.log('d: ' + d)
-					var nHat = phiD.sub(cg.ni.smul(d))
-					console.log('nHat: ' + nHat.toString())
+					var nHat = phiD.sub(cga.ni.smul(d))
+					nHat.strLog('nHat: ')
 					//var sphDN = -sphD.dot(cg.ni).d[0]
 					//sphD = sphD.smul(1/sphDN)
 
-
-					var nx = nHat.gbi('ex')
-					,	ny = nHat.gbi('ey')
-					,	nz = nHat.gbi('ez')
+					var nx = nHat.bVal('e_1')
+					,	ny = nHat.bVal('e_2')
+					,	nz = nHat.bVal('e_3')
 					,	nd = d
 					,	mag = Math.pow(nx*nx + ny*ny + nz*nz, 1/2)
 
@@ -185,17 +184,15 @@ var cgaBasis = function(scene) {
 					nz = nz/mag
 					nd = nd/mag
 
-
-
 					if (this.plMat == undefined) {
 						this.plMat = new THREE.MeshStandardMaterial( {color: 0xffff00, emissive: 0x111111, side: THREE.DoubleSide} );
 					}
 					if (this.plGeom == undefined) {
 						this.plGeom = new THREE.PlaneBufferGeometry( 1*mag, 1*mag );
 					}
-					if (this.mesh == undefined) {
-						this.mesh = new THREE.Mesh ( this.plGeom, this.plMat )
-						that.scene.add( this.mesh )
+					if (this.planeMesh == undefined) {
+						this.planeMesh = new THREE.Mesh ( this.plGeom, this.plMat )
+						scene.add( this.planeMesh )
 					}
 					this.plGeom.lookAt(new THREE.Vector3(nx,ny,nz))
 					this.plGeom.translate(-nx*nd, -ny*nd, -nz*nd)

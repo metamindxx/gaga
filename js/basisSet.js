@@ -613,6 +613,21 @@ var basisSet = function (p,q,r) {
 			}
 			return mvResult
 		}
+		mv.sub = function (mv2) {
+			var mvResult = this.copy()
+			var	bladeResult, mv2Blade
+			for (var i=0; i< mv2.blades.length; ++i) {
+				// does the mv2 blade already exist in myResult?
+				mv2Blade = mv2.blades[i]
+				bladeResult = mvResult.bladeIdx[mv2Blade.basis.id]
+				if (bladeResult) {
+					bladeResult.mul -= mv2Blade.mul
+				} else {
+					mvResult.pushBlade(mv2Blade.copy())
+				}
+			}
+			return mvResult
+		}
 		mv.sadd = function (mul) {
 			var mv = this.copy()
 			var scalarBasis = this.bs.bases[0]

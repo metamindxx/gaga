@@ -28,7 +28,6 @@ var dottyMaterial = new THREE.MeshLambertMaterial({map: loader.load("/textures/d
 
 
 var point = function(x,y,z) {
-	//var parseCoord = function()
 	var mvStr = x + 'e_1 + ' + y + 'e_2 +' + z + 'e_3'
 	var x3d = bs.multiVector(mvStr)
 	var infScale = (x*x + y*y + z*z)/2
@@ -36,12 +35,13 @@ var point = function(x,y,z) {
 }
 
 var p1 = point(-2,0,1).render({color: cRed})
-,	p2 = point(1,1,.5).render({color: cBlue})
+,	p2 = point(1,-1,.5).render({color: cBlue})
 //,	p3 = point(1,1,2).render({color: cGreen})
 ,	p3 = point(1,1,2).smul(2).render({color: cGreen})
-,	p4 = point(0,2,0).render({color: cPink})
+,	p4 = point(0,2,-0).render({color: cPink})
 ,	c1 = p1.op(p2.op(p3)).render()
 ,	s1 = c1.op(p4).render()
+,	s2 = c1.op(cga.ni).render()
 
 
 
