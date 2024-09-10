@@ -6,9 +6,9 @@ td { border: 1px solid black;
 	padding-left: 6px;
 	padding-right: 6px;
 	border-spacing: 0px }
-.blade_pos { color: blue; }
-.blade_neg { color: red; }
-.blade_zro { color: #ccc; }
+.blade_pos { font-size: 10pt; color: blue; }
+.blade_neg { font-size: 10pt; color: red; }
+.blade_zro { font-size: 10pt; color: #ccc; }
 
 #info_div	{ z-index: 100; position:fixed; top:0px; left:0px; width: 100%; padding: 8px}
 #points_div_xx	{ z-index: 200; position:absolute; top:0px; left:0px; width: 100%; }

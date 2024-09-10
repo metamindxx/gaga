@@ -438,9 +438,11 @@ var basisSet = function (p,q,r) {
 			var mvResult = bs.multiVector('')
 			var	bladeResult
 			for (var i=0; i< mv1.blades.length; ++i) {
-				for (var j=0; j< mv2.blades.length; ++j) {
-					bladeResult = bs.gpBlades(mv1.blades[i], mv2.blades[j])
-					mvResult.pushBlade(bladeResult)
+				if (mv2.blades) {
+					for (var j=0; j< mv2.blades.length; ++j) {
+						bladeResult = bs.gpBlades(mv1.blades[i], mv2.blades[j])
+						mvResult.pushBlade(bladeResult)
+					}
 				}
 			}
 			return mvResult
@@ -487,6 +489,24 @@ var basisSet = function (p,q,r) {
 				mvResult.blades[i].mul *= Math.pow(-1, g*(g+1)/2)
 			}
 			return mvResult
+		}
+		// the scalar result from the gp
+		mv.scalarProduct = function(rhs) {
+			var bladeSum = 0
+			var rhsBl, thisBlade
+			for (var i=0; i< this.blades.length; ++i) {
+				// if the rhs has the same blade, them contract and add to the bladesum
+				thisBlade = this.blades[i]
+				rhsBlade = rhs.bl(thisBlade.basis.id)
+				if (rhsBlade) {
+					bladeSum += thisBlade.mul * rhsBlade.mul * rhsBlade.basis.sq
+				}
+			}
+			return bladeSum
+		}
+		// the scalar result from the gp
+		mv.sq = function() {
+			return this.scalarProduct(this)
 		}
 		// <mv * ~mv>
 		mv.normSq = function () {
