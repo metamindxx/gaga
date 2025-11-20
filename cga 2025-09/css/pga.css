@@ -1,0 +1,13 @@
+.hidden { display: none; }
+.cayley { font-family: courier; font-size: 12pt }
+table { border-spacing: 1px }
+td { border: 1px solid black;
+	padding-left: 6px;
+	padding-right: 6px;
+	border-spacing: 0px }
+.blade_pos { color: blue; }
+.blade_neg { color: red; }
+.blade_zro { color: #ccc; }
+
+#info_div	{ z-index: 100; position:fixed; top:0px; left:0px; width: 100%; }
+#points_div_xx	{ z-index: 200; position:absolute; top:0px; left:0px; width: 100%; }
