@@ -7,24 +7,25 @@ var camera = cemoCam.camera // main camera
 camera.position.set(2, 4, 4)
 //camera.rotation.z += Math.PI/2
 
-// Lights
+// lights
 scene.add(new THREE.AmbientLight(0x444444));
 var light = new THREE.DirectionalLight(0xffffff, 0.5);
 light.position.set(10, 20, 50);
 scene.add(light);
 
-// axes
+// materials
+const loader = new THREE.TextureLoader();
+var dottyMaterial = new THREE.MeshLambertMaterial({map: loader.load("/textures/dots_256.png"), alphaTest: 0.5, side: THREE.BackSide})
 var mtrlRed   = new THREE.LineBasicMaterial( { color: 0xff0000 } );
 var mtrlGreen = new THREE.LineBasicMaterial( { color: 0x00ff00 } );
 var mtrlBlue  = new THREE.LineBasicMaterial( { color: 0x0000ff } );
+
+// axes
 cemo.addVectorToScene([[0, 0, 0],[1, 0, 0]], mtrlRed, scene)
 cemo.addVectorToScene([[0, 0, 0],[0, 1, 0]], mtrlGreen, scene)
 cemo.addVectorToScene([[0, 0, 0],[0, 0, 1]], mtrlBlue, scene)
 
 var cga = cgaBasis(scene)
-
-const loader = new THREE.TextureLoader();
-var dottyMaterial = new THREE.MeshLambertMaterial({map: loader.load("/textures/dots_256.png"), alphaTest: 0.5, side: THREE.BackSide})
 
 
 var point = function(x,y,z) {
@@ -34,6 +35,7 @@ var point = function(x,y,z) {
 	return cga.n0.add( x3d ).add( cga.ni.smul(infScale) )
 }
 
+/* stuff */
 var p1 = point(-2,0,1).render({color: cRed})
 ,	p2 = point(1,-1,.5).render({color: cBlue})
 //,	p3 = point(1,1,2).render({color: cGreen})

@@ -1,11 +1,19 @@
+// Andrew M. Steane -- An introduction to spinors
+// http://localhost:2024/aps/spinors/
 // scene, camera
 const scene = new THREE.Scene();
+var pi = Math.PI
+,	sqrt = Math.sqrt
+,	cos = Math.cos
+,	sin = Math.sin
 var cemoCam = new CemoVanillaCamera('points_div')
 // var cemoCam = new CemoOrthCamera('points_div')
 cemoCam.init(scene)
 var camera = cemoCam.camera // main camera
-camera.position.set(2, 4, 4)
-//camera.rotation.z += Math.PI/2
+camera.up = {x:0,y:0,z:1}
+camera.position.set(3, 6, 1)
+//camera.rotation.x = Math.PI/2
+camera.lookAt(new THREE.Vector3(0,0,0))
 
 // Lights
 scene.add(new THREE.AmbientLight(0x444444));
@@ -21,7 +29,14 @@ cemo.addVectorToScene([[0, 0, 0],[1, 0, 0]], mtrlRed, scene)
 cemo.addVectorToScene([[0, 0, 0],[0, 1, 0]], mtrlGreen, scene)
 cemo.addVectorToScene([[0, 0, 0],[0, 0, 1]], mtrlBlue, scene)
 
-var pi = Math.PI
+// wire sphere
+var rad = 2, wires = 10
+const wsGeom = new THREE.SphereGeometry( rad, wires, wires );
+wsGeom.rotateX (Math.PI/2)
+const wireframe = new THREE.WireframeGeometry( wsGeom );
+var wireMat = new THREE.LineBasicMaterial( { color: 0xFF9225 , transparent: true, opacity: 0.1, depthTest: false } );
+const wireSphere = new THREE.LineSegments( wireframe , wireMat);
+scene.add( wireSphere );
 
 var aps = apsBasis(scene)
 
@@ -36,11 +51,18 @@ var cn = function (re, im, id) {
 	,	im: im
 	,	id: id
 	,	add: function(c) {
-			return cn(this.re + c.re, this.im + this.im)
+			return cn(this.re + c.re, this.im + c.im)
+		}
+	,	smul: function(m) {
+			return cn(m*this.re, m*this.im)
 		}
 	,	mul: function(c) {
 			return cn(this.re*c.re - this.im*c.im
 				 ,  this.re*c.im + this.im*c.re)
+		}
+	,	conjugateMul: function(c) {
+			return cn(this.re*c.re + this.im*c.im
+				 ,  -this.re*c.im + this.im*c.re)
 		}
 	,	strLog: function() {
 			console.log(this.str())
@@ -48,22 +70,27 @@ var cn = function (re, im, id) {
 		}
 	,	str: function () {
 			var re = this.re.toFixed(2)
+			if (re == 1) { (re = 1)
+			} else if (re == -1) re = -1
 			var im = this.im.toFixed(2)
 			if (re == 0) {
 				if (im == 0) { return '0'
-				} else if (im == 1) { return 'i'                
-				} else if (im == -1) { return '-i'                
+				} else if (im == 1) { return 'i'
+				} else if (im == -1) { return '-i'
 				} else { return '' + im + 'i'
 				}
 			} else {
 				if (im == 0) {
 					return re
-				} else if (im == 1) { re + ' + ' + 'i'
-			} else {
-				var sign = ' +' 
-				if (im < 0) {
-					sign = ' -'
-				}
+				} else if (im == 1) {
+					return re + ' + ' + 'i'
+				} else if (im == -1) {
+					return re + ' - ' + 'i'
+				} else {
+					var sign = ' +'
+					if (im < 0) {
+						sign = ' -'
+					}
 				return re + sign + Math.abs(im) + 'i'
 				}
 			}
@@ -75,26 +102,170 @@ var cnRT = function (r, theta) {
 	return cn(r*Math.cos(theta), r*Math.sin(theta))
 }
 
-var spinor = function() {
+// Andrew M. Steane -- An introduction to spinors
+var spinor = function(r, theta, phi, alpha) {
 	var s = {
-		zP: null  //  | +z >
-	,	zM: null  //  | -z >
-	,	render: function () {
+		a: null
+,		b: null
+,		color: 0x0000ff
+//		zP: null  //  | +z >
+//	,	zM: null  //  | -z >
+	,	render: function(color) {
+			if (color) this.color = color
+			var a = this.a
+			,	b = this.b
+			var rx = a.conjugateMul(b).add( b.conjugateMul(a) ).re
+			,	ry = - (a.conjugateMul(b).add( b.conjugateMul(a).smul(-1) )).im
+			,	rz = a.conjugateMul(a).re - b.conjugateMul(b).re
 
-			this.eVec = cemo.addVectorToScene([[posXYZ.x, posXYZ.y, posXYZ.z],[posXYZ.x + E_XYZ.x, posXYZ.y + E_XYZ.y, posXYZ.z + E_XYZ.z]], new THREE.MeshBasicMaterial( { color: this.opt.color }), scene, this)
+			//console.log('rx: ' + rx)
+			//console.log('ry: ' + ry)
+			//console.log('rz: ' + rz)
+
+			this.eVec = cemo.addVectorToScene([[0,0,0],[2*rx, 2*ry, 2*rz]], new THREE.MeshBasicMaterial( { color: this.color }), scene, this)
+			return this
 		}
+	,	rotate: function (su2) {
+			//this.strLog('before: ')
+			//su2.strLog('su2: ')
+
+			// turn the spin numbers into a 2x2 matrix
+			var spin2x2 = c2x2( this.a, cn(0,0), this.b, cn(0,0) )
+			var transformed2x2 = su2.mul(spin2x2)
+			//transformed2x2.strLog('transformed: ')
+
+			// put the transformed spin numbers back in a & b
+			var sTransformed = spinor (0,0,0,0)
+			sTransformed.a = transformed2x2.d[0][0]
+			sTransformed.b = transformed2x2.d[1][0]
+			//sTransformed.strLog('after: ')
+			return sTransformed
+		}
+	,	strLog: function (label) {
+		if (!label) label = ''
+		console.log(label + 'a: ' + this.a.str() + ', b: ' + this.b.str())
 	}
+	}
+	var sqrtR = sqrt(r)
+	aAmplitude = sqrtR * cos(theta/2)
+	bAmplitude = sqrtR * sin(theta/2)
+	aExponent = (-alpha -phi) / 2
+	bExponent = (-alpha +phi) / 2
+	s.a = cn ( aAmplitude * cos(aExponent), aAmplitude * sin(aExponent))
+	s.b = cn ( bAmplitude * cos(bExponent), bAmplitude * sin(bExponent))
+
 	return s
 }
 
-var upState_zP = cn(1,1).strLog()
-var upState_zM = cn(0,2).strLog()
-var x = upState_zM.mul(upState_zP).strLog().mul(upState_zM).strLog().mul(upState_zM).strLog()
-var sUp = spinor()
-sUp.zP = upState_zP
-sUp.zM = upState_zM
-var y = cnRT(1, 7*pi/4).strLog()
+// complex 2x2 matrix
+var c2x2 = function (a,b,c,d) {
+	var m = {}
+	m.d = [[a,b],[c,d]] // data
+	m.add = function (cm2) {
+		var d1 = this.d
+		var d2 = cm2.d
+		return c2x2( d1[0][0].add(d2[0][0]), d1[0][1].add(d2[0][1]),
+		             d1[1][0].add(d2[1][0]), d1[1][1].add(d2[1][1]) )
+	}
 
+	// cm for complex matrix
+	m.smul = function (m) {
+		var d = this.d
+		return c2x2(d[0][0].smul(m), d[0][1].smul(m), d[1][0].smul(m), d[1][1].smul(m))
+	}
+	m.mul = function (cm2) {
+		var d1 = this.d
+		d2 = cm2.d
+		// cm1[0,0] * cm2[0,0] + cm1[0,1] * cm2[1,0]               cm1[0,0] * cm2[0,1] + cm1[0,1] * cm2[1,1]
+		// cm1[1,0] * cm2[0,0] + cm1[1,1] * cm2[1,0]               cm1[1,0] * cm2[0,1] + cm1[1,1] * cm2[1,1]
+		var a = d1[0][0].mul(d2[0][0]).add( d1[0][1].mul(d2[1][0]) )
+		var b = d1[0][0].mul(d2[0][1]).add( d1[0][1].mul(d2[1][1]) )
+		var c = d1[1][0].mul(d2[0][0]).add( d1[1][1].mul(d2[1][0]) )
+		var d = d1[1][0].mul(d2[0][1]).add( d1[1][1].mul(d2[1][1]) )
+		return c2x2(a,b,c,d)
+	}
+	m.strLog = function(label) {
+		if (!label) {label =''}
+		var d = this.d
+		console.log (label + '[' + d[0][0].str() + ', ' + d[0][1].str() + '] [' + d[1][0].str()  + ', ' + d[1][1].str() + ']')
+		return this
+	}
+	m.det = function() {
+		var d = this.d
+		return d[0][0].mul(d[1][1]).add( d[0][1].mul(d[1][0]).smul(-1) )
+	}
+
+	return m
+}
+
+var SU2 = function(x, y, z) {
+	// the pauli matricies
+	var t1 = c2x2( cn(0,0), cn(1,0) ,
+	               cn(1,0), cn(0,0) )
+
+	var t2 = c2x2( cn(0,0), cn(0,-1) ,
+	               cn(0,1), cn(0, 0) )
+
+	var t3 = c2x2( cn(1,0), cn( 0,0) ,
+	               cn(0,0), cn(-1,0) )
+
+//	t1.mul(t2).strLog('t1 * t2: ')
+//	t3.strLog('t3: ')
+
+//	var a = t1.smul(x).strLog('a: ')
+//	var b = t2.smul(y).strLog('b: ')
+//	var c = t3.smul(z).strLog('c: ')
+//	var d = a.add(b).strLog('d: ')
+//	var e = d.add(c).strLog('e: ')
+	return t1.smul(x).add(t2.smul(y)).add(t3.smul(z))
+}
+
+var rotX = function (halfTheta) {
+	return c2x2( cn( cos(halfTheta), 0 ), cn( 0, sin(halfTheta) ) ,
+	             cn( 0, sin(halfTheta) ), cn(cos(halfTheta), 0) )
+}
+var rotY = function (halfTheta) {
+	return c2x2( cn( cos(halfTheta), 0 ), cn(sin(halfTheta), 0 ) ,
+	             cn(-sin(halfTheta), 0 ), cn(cos(halfTheta), 0) )
+}
+var rotZ = function (halfTheta) {
+	return c2x2( cn( cos(halfTheta), sin(halfTheta) ), cn(0, 0 ) ,
+	             cn(0, 0 )                           , cn( cos(halfTheta), -sin(halfTheta) ) )
+}
+
+
+
+var r1 = SU2(1,1,1)
+
+// var spinor = function(r, theta, phi, alpha) {
+var s1 = spinor(1,0,0,0).render()
+//var xRotation = SU2(.5,0,0).strLog('x rotation: ')
+var xRotation = rotX(pi/8).strLog('x rotation: ')
+console.log('rotation determinant: ' + xRotation.det().str())
+var s2 = s1.rotate(xRotation).render() //.strLog('s2: ')
+var yRotation = rotY(pi/8).strLog('y rotation: ')
+var s1y = s1.rotate(yRotation).render(0x00ff00) //.strLog('s2: ')
+var s2y = s2.rotate(yRotation).render(0xff0000) //.strLog('s2: ')
+s2y = s2y.rotate(rotZ(pi/8)).render(0xff0000) //.strLog('s2: ')
+s2y = s2y.rotate(rotZ(pi/8)).render(0xff0000) //.strLog('s2: ')
+s2y = s2y.rotate(rotZ(pi/8)).render(0xff0000) //.strLog('s2: ')
+s2y = s2y.rotate(rotZ(pi/8)).render(0xff0000) //.strLog('s2: ')
+s2y = s2y.rotate(rotZ(pi/8)).render(0xff0000) //.strLog('s2: ')
+s2y = s2y.rotate(rotZ(pi/8)).render(0xff0000) //.strLog('s2: ')
+s2y = s2y.rotate(rotZ(pi/8)).render(0xff0000) //.strLog('s2: ')
+
+//var upState_zP = cn(1,1).strLog()
+//var upState_zM = cn(0,2).strLog()
+//var x = upState_zM.mul(upState_zP).strLog().mul(upState_zM).strLog().mul(upState_zM).strLog()
+//var sUp = spinor()
+//sUp.zP = upState_zP
+//sUp.zM = upState_zM
+//var y = cnRT(1, 7*pi/4).strLog()
+
+//line.material.depthTest = false;
+//line.material.opacity = 0.1;
+//line.material.transparent = true;
+//line.color = 0x000000
 
 
 

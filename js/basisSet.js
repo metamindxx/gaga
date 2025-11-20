@@ -613,6 +613,7 @@ var basisSet = function (p,q,r) {
 			}
 			return mvResult
 		}
+		// subtract mv2 from mv
 		mv.sub = function (mv2) {
 			var mvResult = this.copy()
 			var	bladeResult, mv2Blade

@@ -52,26 +52,34 @@ var start = Date.now()
 
 var expI4Study = function (alpha) {
 	var bits = []
-	bits.push(Math.cos(alpha) + 'e_')
-	var sa = Math.sin(alpha)
+	bits.push(Math.cos(alpha) + 'e_')  // "cos(alpha) e_"
+	var sa = Math.sin(alpha)           // sa = sin(alpha)
+
+	// add a "+" if sa is positive 
 	if (Math.sign(sa) > 0) {
 		bits.push(' + ')
 	}
+	//  cos(alpha) e_ + sin(alpha) e_1230
 	return MV(bits.join(' ') + sa + 'e_1230')
 }
 
 // POINT def
-var newPoint = function(pos, color, fField) {
+var newPoint = function(pos, color, options) {
 	if (color == null) {color = 0xff00ff}
 	var p = {
 		isA: 'point'
-	,	opt: {color: color}}
-
-	if (fField != null) {
-		this.field = fField
+	,	opt: {color: color}
+	,	render: true
 	}
 
-	p.render = function() {
+	if (options) {
+		p.opt.render = options.render
+	}
+
+	p.renderField = function() {
+		if (!this.opt.render) {
+			return this
+		}
 		var pos = this.pos // position
 		var posXYZ = {x: pos.bVal('e_10'), y: pos.bVal('e_20'), z: pos.bVal('e_30') }
 		//this.f.strLog('render f: ')
@@ -80,7 +88,7 @@ var newPoint = function(pos, color, fField) {
 
 		// E field
 		var E_XYZ = {x: field.bVal('e_10'), y: field.bVal('e_20'), z: field.bVal('e_30') }
-		if (!this.eVec) {
+		if (!this.eVec) { // the graphics (mesh etc) for the Electric bivector
 			this.eVec = cemo.addVectorToScene([[posXYZ.x, posXYZ.y, posXYZ.z],[posXYZ.x + E_XYZ.x, posXYZ.y + E_XYZ.y, posXYZ.z + E_XYZ.z]], new THREE.MeshBasicMaterial( { color: this.opt.color }), scene, this)
 		} else {
 			this.eVec.ceSetEndFromRoot([posXYZ.x + E_XYZ.x, posXYZ.y + E_XYZ.y, posXYZ.z + E_XYZ.z])
@@ -89,7 +97,7 @@ var newPoint = function(pos, color, fField) {
 		// B field
 		var B_XYZ = {x: -field.bVal('e_23'), y: field.bVal('e_13'), z: -field.bVal('e_12') }
 		var bSize = .2 *  Math.pow(B_XYZ.x*B_XYZ.x + B_XYZ.y*B_XYZ.y + B_XYZ.z*B_XYZ.z, .5)
-		if (!this.bBivec) {
+		if (!this.bBivec) { // the graphics (mesh etc) for the Magnetic bivector
 			// addBivectorToScene: function (position, direction, scene, options, clickParent) {
 			this.bBivec = cemo.addBivectorToScene([posXYZ.x, posXYZ.y, posXYZ.z],[B_XYZ.x, B_XYZ.y, B_XYZ.z], bSize, scene, { color: this.opt.color }, this)
 		} else {
@@ -115,7 +123,9 @@ var newPoint = function(pos, color, fField) {
 	p.calcF = function () {
 		var zVal = this.pos.bVal('e_30')
 		var phase = Math.PI/2
+		// var w = 2, c = 1
 		var theta = zVal*woc - w*t
+
 		var tPp = theta + phase
 		var tMp = theta - phase
 		this.fR_plus = fGlobal.gp( expI4Study(-tPp) )
@@ -127,6 +137,13 @@ var newPoint = function(pos, color, fField) {
 		this.fL_minus = fGlobal.gp( expI4Study( tMp) )
 		this.fV_minus = this.fR_minus.smul(+oort).add( this.fL_minus.smul(+oort) )
 		this.fH_minus = this.fR_minus.smul(+oort).add( this.fL_minus.smul(-oort) )
+
+//		this.fRed = fGlobal.gp( expI4Study( tPp) )
+		// tPp = theta + phase
+//		this.fRed = fGlobal.gp( expI4Study( theta + phase) )
+		// theta = zVal*woc - w*t
+	//	this.fRed = fGlobal.gp( expI4Study( zVal*woc - w*t + phase) )
+		this.fRed = fGlobal.gp( expI4Study( w*( zVal/c + t) + phase ) )
 
 		return this
 	}
@@ -147,54 +164,59 @@ var d, dStart = -1, dDelta = 2/3
 //points.push(point)
 for (var i=-range; i<=range; i+=step) {
 	d = dStart
-	point = newPoint([d,1,i], cRed) // .render()
-	point.field = function() { return this.fR_plus }
+	point = newPoint([d,1,i], cRed, {render: true}) // .render()
+	point.field = function() { return this.fRed }
 	points.push(point)
 
 	d += dDelta
-	point = newPoint([d,1,i], cGreen) // .render()
+	point = newPoint([.9,1,i], cGreen, {render: true}) // .render()
 	point.field = function() { return this.fL_plus }
 	points.push(point)
 
 	d += dDelta
-	point = newPoint([d,1,i], cPink) // .render()
+	point = newPoint([d,1,i], cPink, {render: false}) // .render()
 	point.field = function() { return this.fV_plus }
 	points.push(point)
 
 	d += dDelta
-	point = newPoint([d,1,i], cYellow) // .render()
+	point = newPoint([d,1,i], cYellow, {render: false}) // .render()
 	point.field = function() { return this.fH_plus }
 	points.push(point)
 
 
 	d = dStart
-	point = newPoint([d,-1,i], cBlue) // .render()
+	point = newPoint([d,-1,i], cBlue, {render: true}) // .render()
 	point.field = function() { return this.fR_minus }
 	points.push(point)
 
 	d += dDelta
-	point = newPoint([d,-1,i], cCyan) // .render()
+	point = newPoint([d,-1,i], cCyan, {render: false}) // .render()
 	point.field = function() { return this.fL_minus }
 	points.push(point)
 
 	d += dDelta
-	point = newPoint([d,-1,i], cPink) // .render()
+	point = newPoint([d,-1,i], cPink, {render: false}) // .render()
 	point.field = function() { return this.fV_minus }
 	points.push(point)
 
 	d += dDelta
-	point = newPoint([d,-1,i], cYellow) // .render()
+	point = newPoint([d,-1,i], cYellow, {render: false}) // .render()
 	point.field = function() { return this.fH_minus }
 	points.push(point)
 
 	/*
 	point = newPoint([d,-d,i]) // .render()
+	point.field = function() { return this.fR_minus }
 	points.push(point)
 	point = newPoint([-d,d,i]) // .render()
+	point.field = function() { return this.fR_minus }
 	points.push(point)
 	point = newPoint([-d,-d,i]) // .render()
+	point.field = function() { return this.fR_minus }
 	points.push(point)
 	*/
+
+	
 }
 
 var bracket = function(A, B) {
@@ -214,15 +236,16 @@ function animate() {
 		for (var i=0; i<points.length; ++i) {
 			point = points[i]
 			point.calcF()
+			/*
 			if (i%2 == 0) {
 				point.f = point.fV
 			} else {
 				point.f = point.fH
 			}
-			/*
+
 			*/
 
-			point.render()
+			point.renderField()
 			//point.f.strLog('field at point: ')
 		}		
 	}
