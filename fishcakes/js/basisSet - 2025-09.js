@@ -805,9 +805,9 @@ var basisSet = function (p,q,r) {
 // *** rendering
 //--------------
 		mv.render =  function (options) {
-			if (this.bs.interpretation) {
+			if (this.algebra) {
 				// use the interpretation's render routine (eg pga / cga)
-				this.bs.interpretation.renderMV(this, options)
+				this.algebra.renderMV(this, options)
 			} else {
 				alert('no renderer found')
 			}

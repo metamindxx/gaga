@@ -34,6 +34,7 @@ cemo.addVectorToScene([[0, 0, 0],[0, 0, 1]], mtrlBlue, scene)
 var pvga = pvgaBasis(scene)
 var pt = pvga.pt(1,1,1)
 pt.strLog('pt: ')
+pt.render({color: cBlue})
 
 
 

@@ -8,7 +8,11 @@ var pvgaBasis = function(scene) {
 	,	opt: {}
 
 	,	pt: function (x,y,z) {
-			return this.bs.multiVector('1e_p + ' + x + 'e_x + ' + y + 'e_y + ' + z + 'e_z')
+			var mv = this.bs.multiVector('1e_p + ' + x + 'e_x + ' + y + 'e_y + ' + z + 'e_z')
+			mv.bs = this.bs
+			mv.algebra = this
+			return mv
+
 			/*
 			var pt = {
 				isA: 'pt'
