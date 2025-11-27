@@ -23,6 +23,7 @@ var cemoCam = createCemoVanillaCamera("points_div");
 cemoCam.init(scene);
 var camera = cemoCam.camera; // main camera
 camera.position.set(2, 4, 4);
+camera.lookAt(new THREE.Vector3(0, 0, 0));
 //camera.rotation.z += Math.PI/2
 
 // lights
