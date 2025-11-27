@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { createBasisSet } from "./basisSet.js";
 
+// eslint-disable-next-line no-unused-vars
 const UNIT_Z = new THREE.Vector3(0, 0, 1);
 
 export function createCgaBasis(scene, { basisSet } = {}) {
@@ -151,7 +152,7 @@ export function createCgaBasis(scene, { basisSet } = {}) {
 
         if (sphDN > 0.0001) {
           sphD = sphD.smul(1 / sphDN);
-          var rad = Math.pow(sphD.sq(), 0.5);
+          rad = Math.pow(sphD.sq(), 0.5);
         } else {
           isPlane = true;
         }
@@ -179,8 +180,8 @@ export function createCgaBasis(scene, { basisSet } = {}) {
             scene.add(this.sphMesh);
           }
 
-          //var xyz = centre.xyz()
-          var xyz = this.pointXYZ(centre);
+          // xyz = centre.xyz()
+          xyz = this.pointXYZ(centre);
           this.sphMesh.position.x = xyz.x;
           this.sphMesh.position.y = xyz.y;
           this.sphMesh.position.z = xyz.z;
@@ -197,7 +198,7 @@ export function createCgaBasis(scene, { basisSet } = {}) {
           //var sphDN = -sphD.dot(cg.ni).d[0]
           //sphD = sphD.smul(1/sphDN)
 
-          var nx = nHat.bVal("e_1"),
+          let nx = nHat.bVal("e_1"),
             ny = nHat.bVal("e_2"),
             nz = nHat.bVal("e_3"),
             nd = d,
@@ -233,7 +234,7 @@ export function createCgaBasis(scene, { basisSet } = {}) {
           mv.opt.size = 0.1;
         }
 
-        var xyz = this.pointXYZ(mv);
+        xyz = this.pointXYZ(mv);
 
         // render
         if (mv.renderStuff == null) {
@@ -257,8 +258,7 @@ export function createCgaBasis(scene, { basisSet } = {}) {
       }
 
       if (options && options.renderComponents && mv.components) {
-        var comp;
-        for (var i = 0; i < mv.components.length; ++i) {
+        for (let i = 0; i < mv.components.length; ++i) {
           mv.components[i].render(options);
         }
       }

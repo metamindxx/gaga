@@ -32,7 +32,7 @@ light.position.set(10, 20, 50);
 scene.add(light);
 
 // materials
-const loader = new THREE.TextureLoader();
+// const loader = new THREE.TextureLoader();
 // var dottyMaterial = new THREE.MeshLambertMaterial({map: loader.load("/textures/dots_256.png"), alphaTest: 0.5, side: THREE.BackSide})
 var mtrlRed = new THREE.LineBasicMaterial({ color: 0xff0000 });
 var mtrlGreen = new THREE.LineBasicMaterial({ color: 0x00ff00 });
@@ -80,7 +80,10 @@ var p1 = point(-2, 0, 1).render({ color: cRed }),
   p3 = point(1, 1, 2).smul(2).render({ color: cGreen }),
   p4 = point(0, 2, -0).render({ color: cPink }),
   c1 = p1.op(p2.op(p3)).render(),
+  // ignore unused s1 and s2 parameters for now
+  // eslint-disable-next-line no-unused-vars
   s1 = c1.op(p4).render(),
+  // eslint-disable-next-line no-unused-vars
   s2 = c1.op(cga.ni).render();
 
 function buildCircleData(circleMV) {

@@ -34,6 +34,7 @@ function buildCemo(initialConfig = {}) {
     color: 0x0088ff,
     size: 0.1,
   });
+  const mtrlRed = new THREE.MeshStandardMaterial({ color: cRed });
 
   function getParticleMaterial() {
     return shaderMaterialBlue || fallbackParticleMaterial;
@@ -468,16 +469,16 @@ function buildCemo(initialConfig = {}) {
             var newY = position.y + velocity[1] * dt;
             var newZ = position.z + velocity[2] * dt;
 
-            newRadius = Math.pow(Math.pow(newY, 2) + Math.pow(newZ, 2), 0.5);
+            let newRadius = Math.pow(Math.pow(newY, 2) + Math.pow(newZ, 2), 0.5);
 
             if (newRadius < this.r_in || newRadius > this.r_out) {
               // https://gamedev.stackexchange.com/questions/33384/how-to-bounce-a-2d-point-particle-off-of-a-circular-edge
               // new velocity v' = v - [2 (n � v) n]
               // n is the normal vector ~ position vector / radius
               // n . v is dot product
-              nY = position.y / radius;
-              nZ = position.z / radius;
-              nDotV = nY * velocity[1] + nZ * velocity[2];
+              let nY = position.y / radius;
+              let nZ = position.z / radius;
+              let nDotV = nY * velocity[1] + nZ * velocity[2];
               velocity[1] = velocity[1] - 2 * nDotV * nY;
               velocity[2] = velocity[2] - 2 * nDotV * nZ;
               position.y = position.y + velocity[1] * dt;
@@ -506,7 +507,7 @@ function buildCemo(initialConfig = {}) {
     },
 
     addAnodeToScene: function (r, mtrl, scene) {
-      anodeMesh = cemo.addSphereToScene([0, 0, 0], r, mtrl, scene);
+      let anodeMesh = cemo.addSphereToScene([0, 0, 0], r, mtrl, scene);
 
       var ceAnode = {
         isA: "ceAnode",
@@ -575,6 +576,7 @@ function buildCemo(initialConfig = {}) {
           scene,
         ),
       };
+      // eslint-disable-next-line no-unused-vars
       nutrl.update = function (t) {
         this.mesh.position.y += 0.02;
       };
@@ -600,7 +602,7 @@ function buildCemo(initialConfig = {}) {
         new THREE.BufferAttribute(positions, 3),
       );
       geometry.setAttribute("scale", new THREE.BufferAttribute(scales, 1));
-      particles = new THREE.Points(geometry, mtrl);
+      let particles = new THREE.Points(geometry, mtrl);
       scene.add(particles);
       return particles;
     },
@@ -679,7 +681,7 @@ function buildCemo(initialConfig = {}) {
         // cap the velocity at .2 abs on any axis. keep direction the same
         if (maxAbsVi != 0) {
           maxAbsVi = maxAbsVi / velocityCap;
-          for (var i = 0; i < 3; ++i) {
+          for (let i = 0; i < 3; ++i) {
             this.v[i] = this.v[i] / maxAbsVi;
           }
         }
@@ -707,7 +709,7 @@ function buildCemo(initialConfig = {}) {
     addPosTron: function (coords, mtrl, scene) {
       //function (coords, R, mtrl, scene) {
       var postronRadius = 0.03;
-      var velMultiplier = 0.01;
+      // var velMultiplier = 0.01;
 
       var postron = {
         isA: "postron",
@@ -762,12 +764,12 @@ function buildCemo(initialConfig = {}) {
           return;
         }
         if (this.showForce) {
-          var a = 0; // handy for breakpoint
+          // var a = 0; // handy for breakpoint
         }
 
         // update the velocity vector using the force vector
         var velocityCap = 0.1;
-        dims = 3;
+        let dims = 3;
         if (this.isA == "ion") {
           velocityCap = 100;
           dt = 0.001;
@@ -790,7 +792,7 @@ function buildCemo(initialConfig = {}) {
         // cap the velocity at .2 abs on any axis. keep direction the same
         if (maxAbsVi != 0) {
           maxAbsVi = maxAbsVi / velocityCap;
-          for (var i = 0; i < 3; ++i) {
+          for (let i = 0; i < 3; ++i) {
             this.v[i] = this.v[i] / maxAbsVi;
           }
         }
@@ -817,6 +819,7 @@ function buildCemo(initialConfig = {}) {
             this.mesh.position.y,
             this.mesh.position.z,
           ];
+          // eslint-disable-next-line no-unused-vars
           var absForce = Math.pow(
             Math.pow(this.f[0], 2) +
               Math.pow(this.f[1], 2) +
@@ -824,7 +827,7 @@ function buildCemo(initialConfig = {}) {
             0.5,
           );
           var vecEnd = [];
-          for (var i = 0; i < 3; ++i) {
+          for (let i = 0; i < 3; ++i) {
             // vecEnd[i] = vecStart[i] + this.f[i] / absForce
             vecEnd[i] = vecStart[i] + this.f[i] * forceVectorScale;
           }

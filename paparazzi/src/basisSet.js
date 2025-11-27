@@ -2,6 +2,9 @@
 /*********************
  ** basisSet
  *********************/
+
+// ignore unused variables 'p', 'q', 'r' for now
+// eslint-disable-next-line no-unused-vars
 export function createBasisSet(p, q, r) {
   var bs = {
     // basis: e0, e1, e2, ex, ey, ez, et
@@ -28,7 +31,7 @@ export function createBasisSet(p, q, r) {
     var newBasisVectorTemplate = bs.basisSet_basis(id, sq, bases[0].idStr + id);
 
     // what's the new grade?
-    for (var b = 0; b < numBases; ++b) {
+    for (let b = 0; b < numBases; ++b) {
       // create a new blade for each blade existing eg e12
       // the actual vector (the one that gets added to the set) is a child of the scalar and the vectorTemplate
       that.createBasis(bases[b], newBasisVectorTemplate);
@@ -77,14 +80,14 @@ export function createBasisSet(p, q, r) {
 
     // print in order of creation
     if (options && options.order == "creation") {
-      for (var i = 0; i < that.bases.length; ++i) {
+      for (let i = 0; i < that.bases.length; ++i) {
         b = that.bases[i];
         s.push(b.id + ": " + b.idStr);
       }
       // print in grade order
     } else {
-      for (var g = 0; g < that.grades.length; ++g) {
-        for (var i = 0; i < that.grades[g].length; ++i) {
+      for (let g = 0; g < that.grades.length; ++g) {
+        for (let i = 0; i < that.grades[g].length; ++i) {
           b = that.grades[g][i];
           s.push(b.id + ": " + b.idStr + " :" + b.vectorIdxs.join(""));
         }
@@ -107,7 +110,7 @@ export function createBasisSet(p, q, r) {
     b.grade = b.vecStr.length; // 2
 
     var vecBit;
-    for (var i = 0; i < idStr.length; ++i) {
+    for (let i = 0; i < idStr.length; ++i) {
       vecBit = idStr.substr(i, 1);
       if (vecBit != ".") b.vectorIdxs.push(i);
     }
@@ -149,7 +152,7 @@ export function createBasisSet(p, q, r) {
       iB1CopyStart = 0,
       newBladeVectors = "",
       newBasisId = bs.bases[0].id; // the root of the new id will be the scalar basis id
-    for (var i2 = 0; i2 < b2.vectorIdxs.length; ++i2) {
+    for (let i2 = 0; i2 < b2.vectorIdxs.length; ++i2) {
       b2Idx = b2.vectorIdxs[i2];
       moveB1On = false;
 
@@ -157,7 +160,7 @@ export function createBasisSet(p, q, r) {
       if (iB1CopyStart < b1.vectorIdxs.length) {
         // move from right to left of basis 1
         for (
-          var i1 = b1.vectorIdxs.length - 1;
+          let i1 = b1.vectorIdxs.length - 1;
           i1 >= iB1CopyStart && !moveB1On;
           --i1
         ) {
@@ -208,7 +211,7 @@ export function createBasisSet(p, q, r) {
     }
 
     // copy over any unused b1 vectors
-    for (var i1 = iB1CopyStart; i1 < b1.vectorIdxs.length; ++i1) {
+    for (let i1 = iB1CopyStart; i1 < b1.vectorIdxs.length; ++i1) {
       newBladeVectors = newBladeVectors + b1.vectorIdxs[i1];
       newBasisId = newBasisId + bs.grades[1][b1.vectorIdxs[i1]].vecStr;
     }
@@ -270,11 +273,11 @@ export function createBasisSet(p, q, r) {
   bs.createCayley = function (symmetricDual) {
     var result,
       pss = bs.bases[bs.bases.length - 1];
-    for (var i = 0; i < bs.bases.length; ++i) {
+    for (let i = 0; i < bs.bases.length; ++i) {
       bs.cayley[i] = [];
       var bl1 = bs.newBlade(1, bs.bases[i]);
 
-      for (var j = 0; j < bs.bases.length; ++j) {
+      for (let j = 0; j < bs.bases.length; ++j) {
         var bl2 = bs.newBlade(1, bs.bases[j]);
         result = bs.gpBlades(bl1, bl2);
         bs.cayley[i][j] = result;
@@ -301,8 +304,8 @@ export function createBasisSet(p, q, r) {
 
     // order by grade
     bs.gradeOrder = [];
-    for (var g = 0; g < bs.grades.length; ++g) {
-      for (var i = 0; i < bs.grades[g].length; ++i) {
+    for (let g = 0; g < bs.grades.length; ++g) {
+      for (let i = 0; i < bs.grades[g].length; ++i) {
         bs.gradeOrder.push(bs.grades[g][i]);
       }
     }
@@ -321,24 +324,25 @@ export function createBasisSet(p, q, r) {
   bs.cayleyHtml = function (options) {
     var idx = [];
     if (options && options.order) {
-      for (var i = 0; i < options.order.length; ++i)
+      for (let i = 0; i < options.order.length; ++i)
         idx.push(bs.basisById[options.order[i]]);
     } else if (bs.gradeOrder) {
       idx = bs.gradeOrder;
     } else {
       // default to blade order
-      for (var g = 0; g < bs.grades.length; ++g) {
-        for (var i = 0; i < bs.grades[g].length; ++i) idx.push(bs.grades[g][i]);
+      for (let g = 0; g < bs.grades.length; ++g) {
+        for (let i = 0; i < bs.grades[g].length; ++i) idx.push(bs.grades[g][i]);
       }
     }
 
     var s = [];
-    var blade, rowDualBasis;
+    let blade;
+    // let rowDualBasis;
     s.push('<table class="cayley">');
-    for (var i = 0; i < idx.length; ++i) {
-      rowDualBasis = bs.bases[idx[i].bsIdx].dual.basis;
+    for (let i = 0; i < idx.length; ++i) {
+      // rowDualBasis = bs.bases[idx[i].bsIdx].dual.basis;
       s.push("<tr>");
-      for (var j = 0; j < idx.length; ++j) {
+      for (let j = 0; j < idx.length; ++j) {
         blade = bs.cayley[idx[i].bsIdx][idx[j].bsIdx];
         //				if (rowDualBasis.id == blade.basis.id) {
         //					s.push('<td><span style="font-weight: bold">')
@@ -411,7 +415,7 @@ export function createBasisSet(p, q, r) {
       }
       var bl; // blade
       var idx = bs.gradeOrder ? bs.gradeOrder : this.blades;
-      for (var i = 0; i < idx.length; ++i) {
+      for (let i = 0; i < idx.length; ++i) {
         bl = this.bladeIdx[idx[i].id];
 
         // is this blade a member of the mv?
@@ -438,7 +442,7 @@ export function createBasisSet(p, q, r) {
 
         // recalculate grade
         var blade;
-        for (var i = 0; i < this.blades.length; ++i) {
+        for (let i = 0; i < this.blades.length; ++i) {
           blade = this.blades[i];
           if (Math.abs(blade.mul) > 0.0001) {
             if (this.gradeStored == -1) {
@@ -485,9 +489,9 @@ export function createBasisSet(p, q, r) {
       var mv1 = this;
       var mvResult = bs.multiVector("");
       var bladeResult;
-      for (var i = 0; i < mv1.blades.length; ++i) {
+      for (let i = 0; i < mv1.blades.length; ++i) {
         if (mv2.blades) {
-          for (var j = 0; j < mv2.blades.length; ++j) {
+          for (let j = 0; j < mv2.blades.length; ++j) {
             bladeResult = bs.gpBlades(mv1.blades[i], mv2.blades[j]);
             mvResult.pushBlade(bladeResult);
           }
@@ -503,7 +507,7 @@ export function createBasisSet(p, q, r) {
     mv.selectGrade = function (grade) {
       var mv = this;
       var mvResult = bs.multiVector("");
-      for (var i = 0; i < mv.blades.length; ++i) {
+      for (let i = 0; i < mv.blades.length; ++i) {
         if (mv.blades[i].basis.grade == grade) {
           mvResult.pushBlade(mv.blades[i]);
         }
@@ -514,7 +518,7 @@ export function createBasisSet(p, q, r) {
     mv.reverse = function () {
       var mvResult = this.copy(),
         g;
-      for (var i = 0; i < mvResult.blades.length; ++i) {
+      for (let i = 0; i < mvResult.blades.length; ++i) {
         g = mvResult.blades[i].basis.grade;
         mvResult.blades[i].mul *= Math.pow(-1, (g * (g - 1)) / 2);
       }
@@ -523,7 +527,7 @@ export function createBasisSet(p, q, r) {
     mv.involute = function () {
       var mvResult = this.copy(),
         g;
-      for (var i = 0; i < mvResult.blades.length; ++i) {
+      for (let i = 0; i < mvResult.blades.length; ++i) {
         g = mvResult.blades[i].basis.grade;
         mvResult.blades[i].mul *= Math.pow(-1, g);
       }
@@ -532,7 +536,7 @@ export function createBasisSet(p, q, r) {
     mv.conjugate = function () {
       var mvResult = this.copy(),
         g;
-      for (var i = 0; i < mvResult.blades.length; ++i) {
+      for (let i = 0; i < mvResult.blades.length; ++i) {
         g = mvResult.blades[i].basis.grade;
         mvResult.blades[i].mul *= Math.pow(-1, (g * (g + 1)) / 2);
       }
@@ -542,7 +546,7 @@ export function createBasisSet(p, q, r) {
     mv.scalarProduct = function (rhs) {
       var bladeSum = 0;
       var rhsBlade, thisBlade;
-      for (var i = 0; i < this.blades.length; ++i) {
+      for (let i = 0; i < this.blades.length; ++i) {
         // if the rhs has the same blade, them contract and add to the bladesum
         thisBlade = this.blades[i];
         rhsBlade = rhs.bl(thisBlade.basis.id);
@@ -602,7 +606,7 @@ export function createBasisSet(p, q, r) {
 
       var numTerms = 11;
       //console.log(numTerms)
-      for (i = 2; i < numTerms; ++i) {
+      for (let i = 2; i < numTerms; ++i) {
         nPow = nPow.gp(n).smul(1 / i);
         res = res.add(nPow);
       }
@@ -652,7 +656,7 @@ export function createBasisSet(p, q, r) {
     mv.add = function (mv2) {
       var mvResult = this.copy();
       var bladeResult, mv2Blade;
-      for (var i = 0; i < mv2.blades.length; ++i) {
+      for (let i = 0; i < mv2.blades.length; ++i) {
         // does the mv2 blade already exist in myResult?
         mv2Blade = mv2.blades[i];
         bladeResult = mvResult.bladeIdx[mv2Blade.basis.id];
@@ -668,7 +672,7 @@ export function createBasisSet(p, q, r) {
     mv.sub = function (mv2) {
       var mvResult = this.copy();
       var bladeResult, mv2Blade;
-      for (var i = 0; i < mv2.blades.length; ++i) {
+      for (let i = 0; i < mv2.blades.length; ++i) {
         // does the mv2 blade already exist in myResult?
         mv2Blade = mv2.blades[i];
         bladeResult = mvResult.bladeIdx[mv2Blade.basis.id];
@@ -694,11 +698,11 @@ export function createBasisSet(p, q, r) {
     };
     mv.smul = function (mul) {
       var mv = this.copy();
-      for (var i = 0; i < mv.blades.length; ++i) {
+      for (let i = 0; i < mv.blades.length; ++i) {
         mv.blades[i].mul *= mul;
       }
       if (this.components) {
-        for (var i = 0; i < this.components.length; ++i) {
+        for (let i = 0; i < this.components.length; ++i) {
           mv.components.push(this.components[i].smul(mul));
         }
       }
@@ -711,11 +715,11 @@ export function createBasisSet(p, q, r) {
       var mvResult = bs.multiVector("");
       if (mv.components) {
         mvResult.components = [];
-        for (var i = 0; i < mv.components.length; ++i) {
+        for (let i = 0; i < mv.components.length; ++i) {
           mvResult.components.push(mv.components[i].copy());
         }
       }
-      for (var i = 0; i < mv.blades.length; ++i) {
+      for (let i = 0; i < mv.blades.length; ++i) {
         mvResult.pushBlade(mv.blades[i].copy());
       }
       if (this.renderStuff) {
@@ -733,11 +737,11 @@ export function createBasisSet(p, q, r) {
 
       if (copyFrom.components) {
         this.components = [];
-        for (var i = 0; i < copyFrom.components.length; ++i) {
+        for (let i = 0; i < copyFrom.components.length; ++i) {
           this.components.push(copyFrom.components[i].copy());
         }
       }
-      for (var i = 0; i < copyFrom.blades.length; ++i) {
+      for (let i = 0; i < copyFrom.blades.length; ++i) {
         this.pushBlade(copyFrom.blades[i].copy());
       }
     };
@@ -745,7 +749,7 @@ export function createBasisSet(p, q, r) {
       var mv = this;
       var mvResult = bs.multiVector("");
       var dualBlade;
-      for (var i = 0; i < mv.blades.length; ++i) {
+      for (let i = 0; i < mv.blades.length; ++i) {
         dualBlade = mv.blades[i].basis.dual.copy();
         dualBlade.mul *= mv.blades[i].mul;
         mvResult.pushBlade(dualBlade);
@@ -757,7 +761,7 @@ export function createBasisSet(p, q, r) {
       var mvResult = bs.multiVector("");
       var dualBlade;
       var blDual;
-      for (var i = 0; i < mv.blades.length; ++i) {
+      for (let i = 0; i < mv.blades.length; ++i) {
         blDual = mv.blades[i].basis.dual;
         dualBlade = blDual.copy();
         dualBlade.mul = mv.blades[i].mul * blDual.unDualMul;
@@ -811,7 +815,7 @@ export function createBasisSet(p, q, r) {
 
     mv.copyComponents = function (b) {
       if (b.components) {
-        for (var i = 0; i < b.components.length; ++i) {
+        for (let i = 0; i < b.components.length; ++i) {
           this.components.push(b.components[i]);
         }
       } else {
@@ -831,14 +835,14 @@ export function createBasisSet(p, q, r) {
 
       // move the components
       if (this.components) {
-        var comp, newComp;
+        let comp;
         resMV.components = [];
-        for (var i = 0; i < this.components.length; ++i) {
+        for (let i = 0; i < this.components.length; ++i) {
           comp = this.components[i];
           var compCopy = comp.copy();
           compCopy.move(rotor, compCopy);
           resMV.components.push(compCopy);
-          //					newComp = rotor.gp(comp.gp(rotorInverse)).selectGrade(comp.grade())
+          //					let newComp = rotor.gp(comp.gp(rotorInverse)).selectGrade(comp.grade())
           //					resMV.components.push(newComp)
           //					if (comp.opt) { Object.keys(comp.opt).forEach(k=> newComp.opt[k] = comp.opt[k]) }
         }
@@ -872,7 +876,7 @@ export function createBasisSet(p, q, r) {
       var bBits = [];
       var basis, basisId;
       var grade0Id = bs.bases[0].id;
-      for (var i = 0; i < bladesBits.length; ++i) {
+      for (let i = 0; i < bladesBits.length; ++i) {
         if (bladesBits[i] != "") {
           // a - at the start of the string produces an empty bladesBits[0]
           bBits = bladesBits[i].split(grade0Id);

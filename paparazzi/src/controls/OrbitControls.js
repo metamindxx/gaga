@@ -512,6 +512,8 @@ function OrbitControls(object, domElement, options = {}) {
     scope.update();
   }
 
+  // ignore unused event parameter for now
+  // eslint-disable-next-line no-unused-vars
   function handleMouseUp(event) {
     // console.log( 'handleMouseUp' );
   }
@@ -637,6 +639,8 @@ function OrbitControls(object, domElement, options = {}) {
     scope.update();
   }
 
+  // ignore unused event parameter for now
+  // eslint-disable-next-line no-unused-vars
   function handleTouchEnd(event) {
     //console.log( 'handleTouchEnd' );
   }
