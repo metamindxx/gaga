@@ -1,3 +1,4 @@
+import * as THREE from "three";
 /**
  * @author qiao / https://github.com/qiao
  * @author mrdoob / http://mrdoob.com
@@ -13,10 +14,31 @@
 //    Zoom - middle mouse, or mousewheel / touch: two-finger spread or squish
 //    Pan - right mouse, or left mouse + ctrl/meta/shiftKey, or arrow keys / touch: two-finger move
 
-THREE.OrbitControls = function (object, domElement) {
+function OrbitControls(object, domElement, options = {}) {
   this.object = object;
 
-  this.domElement = domElement !== undefined ? domElement : document;
+  const resolvedDocument =
+    (domElement && domElement.ownerDocument) ||
+    options.document ||
+    (typeof document !== "undefined" ? document : undefined);
+
+  this.domElement =
+    domElement !== undefined
+      ? domElement
+      : resolvedDocument !== undefined
+        ? resolvedDocument
+        : null;
+
+  if (!this.domElement) {
+    throw new Error("OrbitControls: A DOM element or document is required");
+  }
+
+  const ownerDocument = resolvedDocument;
+  const eventTarget =
+    options.eventTarget ||
+    (ownerDocument && ownerDocument.defaultView) ||
+    (typeof window !== "undefined" ? window : undefined) ||
+    globalThis;
 
   // Set to false to disable this control
   this.enabled = true;
@@ -125,7 +147,7 @@ THREE.OrbitControls = function (object, domElement) {
       object.up,
       new THREE.Vector3(0, 1, 0),
     );
-    var quatInverse = quat.clone().inverse();
+    var quatInverse = quat.clone().invert();
 
     var lastPosition = new THREE.Vector3();
     var lastQuaternion = new THREE.Quaternion();
@@ -226,10 +248,14 @@ THREE.OrbitControls = function (object, domElement) {
     scope.domElement.removeEventListener("touchend", onTouchEnd, false);
     scope.domElement.removeEventListener("touchmove", onTouchMove, false);
 
-    document.removeEventListener("mousemove", onMouseMove, false);
-    document.removeEventListener("mouseup", onMouseUp, false);
+    if (ownerDocument) {
+      ownerDocument.removeEventListener("mousemove", onMouseMove, false);
+      ownerDocument.removeEventListener("mouseup", onMouseUp, false);
+    }
 
-    window.removeEventListener("keydown", onKeyDown, false);
+    if (eventTarget && eventTarget.removeEventListener) {
+      eventTarget.removeEventListener("keydown", onKeyDown, false);
+    }
 
     //scope.dispatchEvent( { type: 'dispose' } ); // should this be added here?
   };
@@ -327,8 +353,8 @@ THREE.OrbitControls = function (object, domElement) {
 
     return function pan(deltaX, deltaY) {
       var element =
-        scope.domElement === document
-          ? scope.domElement.body
+        ownerDocument && scope.domElement === ownerDocument
+          ? ownerDocument.body
           : scope.domElement;
 
       if (scope.object.isPerspectiveCamera) {
@@ -441,7 +467,9 @@ THREE.OrbitControls = function (object, domElement) {
       .multiplyScalar(scope.rotateSpeed);
 
     var element =
-      scope.domElement === document ? scope.domElement.body : scope.domElement;
+      ownerDocument && scope.domElement === ownerDocument
+        ? ownerDocument.body
+        : scope.domElement;
 
     rotateLeft((2 * Math.PI * rotateDelta.x) / element.clientHeight); // yes, height
 
@@ -562,7 +590,9 @@ THREE.OrbitControls = function (object, domElement) {
       .multiplyScalar(scope.rotateSpeed);
 
     var element =
-      scope.domElement === document ? scope.domElement.body : scope.domElement;
+      ownerDocument && scope.domElement === ownerDocument
+        ? ownerDocument.body
+        : scope.domElement;
 
     rotateLeft((2 * Math.PI * rotateDelta.x) / element.clientHeight); // yes, height
 
@@ -657,9 +687,9 @@ THREE.OrbitControls = function (object, domElement) {
         break;
     }
 
-    if (state !== STATE.NONE) {
-      document.addEventListener("mousemove", onMouseMove, false);
-      document.addEventListener("mouseup", onMouseUp, false);
+    if (state !== STATE.NONE && ownerDocument) {
+      ownerDocument.addEventListener("mousemove", onMouseMove, false);
+      ownerDocument.addEventListener("mouseup", onMouseUp, false);
 
       scope.dispatchEvent(startEvent);
     }
@@ -699,8 +729,10 @@ THREE.OrbitControls = function (object, domElement) {
 
     handleMouseUp(event);
 
-    document.removeEventListener("mousemove", onMouseMove, false);
-    document.removeEventListener("mouseup", onMouseUp, false);
+    if (ownerDocument) {
+      ownerDocument.removeEventListener("mousemove", onMouseMove, false);
+      ownerDocument.removeEventListener("mouseup", onMouseUp, false);
+    }
 
     scope.dispatchEvent(endEvent);
 
@@ -824,17 +856,19 @@ THREE.OrbitControls = function (object, domElement) {
   scope.domElement.addEventListener("touchend", onTouchEnd, false);
   scope.domElement.addEventListener("touchmove", onTouchMove, false);
 
-  window.addEventListener("keydown", onKeyDown, false);
+  if (eventTarget && eventTarget.addEventListener) {
+    eventTarget.addEventListener("keydown", onKeyDown, false);
+  }
 
   // force an update at start
 
   this.update();
-};
+}
 
-THREE.OrbitControls.prototype = Object.create(THREE.EventDispatcher.prototype);
-THREE.OrbitControls.prototype.constructor = THREE.OrbitControls;
+OrbitControls.prototype = Object.create(THREE.EventDispatcher.prototype);
+OrbitControls.prototype.constructor = OrbitControls;
 
-Object.defineProperties(THREE.OrbitControls.prototype, {
+Object.defineProperties(OrbitControls.prototype, {
   center: {
     get: function () {
       console.warn("THREE.OrbitControls: .center has been renamed to .target");
@@ -940,3 +974,6 @@ Object.defineProperties(THREE.OrbitControls.prototype, {
     },
   },
 });
+
+export { OrbitControls };
+export default OrbitControls;

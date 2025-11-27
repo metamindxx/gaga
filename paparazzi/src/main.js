@@ -1,7 +1,25 @@
+import * as THREE from "three";
+import { createCemoVanillaCamera } from "./cameras/cemoVanillaCamera.js";
+// import { createCemoOrthCamera } from "./cameras/cemoOrthCamera.js";
+// import { createCemoQuadCamera } from "./cameras/cemoQuadCamera.js";
+import { createCgaBasis } from "./cgaBasis.js";
+import { createBasisSet } from "./basisSet.js";
+import {
+  createCemoHelpers,
+  cRed,
+  cBlue,
+  cGreen,
+  cPink,
+} from "./dot_js/cemo_01.js";
+
+const bs = createBasisSet();
+
+const cemo = createCemoHelpers();
+
 // scene, camera
 const scene = new THREE.Scene();
-var cemoCam = new CemoVanillaCamera("points_div");
-// var cemoCam = new CemoOrthCamera('points_div')
+var cemoCam = createCemoVanillaCamera("points_div");
+// var cemoCam = createCemoOrthCamera('points_div')
 cemoCam.init(scene);
 var camera = cemoCam.camera; // main camera
 camera.position.set(2, 4, 4);
@@ -46,7 +64,7 @@ cemo.addVectorToScene(
   scene,
 );
 
-var cga = cgaBasis(scene);
+var cga = createCgaBasis(scene, { basisSet: bs });
 
 var point = function (x, y, z) {
   var mvStr = x + "e_1 + " + y + "e_2 +" + z + "e_3";
@@ -159,15 +177,19 @@ function updateRotatingPoints(deltaSeconds) {
 
 //=================================================================================================//
 var bannerDiv = document.getElementById("banner_div");
-bannerDiv.style.fontFamily = "Courier New, Courier";
-bannerDiv.style.position.absolute = true;
-bannerDiv.style.zIndex = 3;
+if (bannerDiv) {
+  bannerDiv.style.fontFamily = "Courier New, Courier";
+  bannerDiv.style.position = "absolute";
+  bannerDiv.style.zIndex = "3";
+}
 //bannerDiv.innerHTML = 'banner! Yey!' // bs.renderHtml()
 
 var infoDiv = document.getElementById("info_div");
-infoDiv.style.fontFamily = "Courier New, Courier";
-infoDiv.style.position.absolute = true;
-infoDiv.style.zIndex = 3;
+if (infoDiv) {
+  infoDiv.style.fontFamily = "Courier New, Courier";
+  infoDiv.style.position = "absolute";
+  infoDiv.style.zIndex = "3";
+}
 //infoDiv.innerHTML = bs.renderHtml({order: 'creation', vectors: true})
 //infoDiv.innerHTML = bs.renderHtml()
 //infoDiv.innerHTML = 'info:'

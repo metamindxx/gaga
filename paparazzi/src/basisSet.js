@@ -2,7 +2,7 @@
 /*********************
  ** basisSet
  *********************/
-var basisSet = function (p, q, r) {
+export function createBasisSet(p, q, r) {
   var bs = {
     // basis: e0, e1, e2, ex, ey, ez, et
     //		- have a basis.sq value of +1, -1, 0
@@ -143,6 +143,7 @@ var basisSet = function (p, q, r) {
     // start with left vector of right blade and move it across vectors of left blade from right to left
     var b2Idx,
       b1Idx,
+      j,
       moveB1On,
       sign = 1,
       iB1CopyStart = 0,
@@ -355,7 +356,7 @@ var basisSet = function (p, q, r) {
 
   // s = 1e2 + 4e12 - 5e23
   bs.multiVector = function (s) {
-    var bs = window.bs;
+    var bs = this;
     var mv = {
       isA: "mv",
       bs: bs,
@@ -540,7 +541,7 @@ var basisSet = function (p, q, r) {
     // the scalar result from the gp
     mv.scalarProduct = function (rhs) {
       var bladeSum = 0;
-      var rhsBl, thisBlade;
+      var rhsBlade, thisBlade;
       for (var i = 0; i < this.blades.length; ++i) {
         // if the rhs has the same blade, them contract and add to the bladesum
         thisBlade = this.blades[i];
@@ -889,21 +890,11 @@ var basisSet = function (p, q, r) {
     return mv;
   };
 
+  const scalarBasis = bs.basisSet_basis("e_", 1, "");
+  bs.bases.push(scalarBasis);
+  bs.grades[0] = [scalarBasis];
+  bs.e = scalarBasis;
+  bs.basisById[scalarBasis.id] = scalarBasis;
+
   return bs;
-};
-
-// kick it off
-if (window.bs) {
-  alert("woops");
-  //	return
-} else {
-  window.bs = basisSet();
 }
-
-var bs = window.bs;
-
-// create the scalar basis
-bs.bases.push(bs.basisSet_basis("e_", 1, ""));
-bs.grades[0] = [bs.bases[0]];
-bs.e = bs.bases[0];
-bs.basisById[bs.bases[0].id] = bs.bases[0];

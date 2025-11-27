@@ -1,5 +1,11 @@
-var cgaBasis = function (scene) {
-  var CGA = {
+import * as THREE from "three";
+import { createBasisSet } from "./basisSet.js";
+
+const UNIT_Z = new THREE.Vector3(0, 0, 1);
+
+export function createCgaBasis(scene, { basisSet } = {}) {
+  const bs = basisSet ?? createBasisSet();
+  const cga = {
     isA: "cgaBasis",
     bs: null, // basisSet
     scene: scene,
@@ -106,28 +112,37 @@ var cgaBasis = function (scene) {
         nz = nz / mag;
         //				nd = nd/mag
 
+        var normal = new THREE.Vector3(nx, ny, nz);
         var xyz = this.pointXYZ(cent);
 
-        if (this.material == undefined) {
+        if (this.material === undefined) {
           this.material = new THREE.LineBasicMaterial({ color: 0x0000ff });
         }
-        if (this.geometry == undefined) {
+        if (this.geometry === undefined) {
+          // function buildUnitCircleGeometry(segments = DEFAULT_CIRCLE_SEGMENTS) {
+          //   const path = new THREE.Path();
+          //   path.absarc(0, 0, 1, 0, Math.PI * 2, false);
+          //   const vectors = path.getSpacedPoints(segments).map((pt) => {
+          //     return new THREE.Vector3(pt.x, pt.y, 0);
+          //   });
+          //   return new THREE.BufferGeometry().setFromPoints(vectors);
+          // }
+          // this.geometry = buildUnitCircleGeometry();
+
           // this.geometry = new THREE.SphereGeometry(.1,.1,.1)
           this.geometry = new THREE.CircleGeometry(rad, 64);
+          console.log(this.geometry);
           // Remove center vertex
-          this.geometry.vertices.shift();
+          // TODO: delete center vertex properly
+          // this.geometry.vertices.shift();
         }
-        if (this.mesh == undefined) {
+        if (this.mesh === undefined) {
           this.mesh = new THREE.LineLoop(this.geometry, this.material);
           scene.add(this.mesh);
         }
 
-        this.geometry.lookAt(new THREE.Vector3(nx, ny, nz));
-        //				this.geometry.translate(xyz.x, xyz.y, xyz.z)
-
-        this.mesh.position.x = xyz.x;
-        this.mesh.position.y = xyz.y;
-        this.mesh.position.z = xyz.z;
+        this.geometry.lookAt(normal);
+        this.mesh.position.set(xyz.x, xyz.y, xyz.z);
       } else if (mv.grade() == 4) {
         var isPlane = false;
         var sphD = cga.I5.gp(mv); // dual sph in I5
@@ -157,8 +172,7 @@ var cgaBasis = function (scene) {
             });
           }
           if (this.sphGeom == undefined) {
-            // this.geometry = new THREE.SphereGeometry(.1,.1,.1)
-            this.sphGeom = new THREE.SphereBufferGeometry(rad, 50, 50);
+            this.sphGeom = new THREE.SphereGeometry(rad, 50, 50);
           }
           if (this.sphMesh == undefined) {
             this.sphMesh = new THREE.Mesh(this.sphGeom, this.sphMat);
@@ -203,7 +217,7 @@ var cgaBasis = function (scene) {
             });
           }
           if (this.plGeom == undefined) {
-            this.plGeom = new THREE.PlaneBufferGeometry(1 * mag, 1 * mag);
+            this.plGeom = new THREE.PlaneGeometry(1 * mag, 1 * mag);
           }
           if (this.planeMesh == undefined) {
             this.planeMesh = new THREE.Mesh(this.plGeom, this.plMat);
@@ -251,16 +265,16 @@ var cgaBasis = function (scene) {
     },
   };
 
-  CGA.bs = bs;
+  cga.bs = bs;
   bs.addBasis("1", +1);
   bs.addBasis("2", +1);
   bs.addBasis("3", +1);
   bs.addBasis("p", +1);
   bs.addBasis("m", -1);
 
-  CGA.n0 = bs.multiVector("0.5e_m - 0.5e_p");
-  CGA.ni = bs.multiVector("  1e_m +   1e_p");
-  CGA.I5 = bs.multiVector("1e_123pm");
+  cga.n0 = bs.multiVector("0.5e_m - 0.5e_p");
+  cga.ni = bs.multiVector("  1e_m +   1e_p");
+  cga.I5 = bs.multiVector("1e_123pm");
   /*
 	// gradeOrder?
 	bs.bladeOrder = ['e_',
@@ -273,8 +287,8 @@ var cgaBasis = function (scene) {
 	*/
 
   // create the cayley table with a symmetric dual
-  CGA.bs.createCayley();
-  CGA.bs.interpretation = CGA;
+  cga.bs.createCayley();
+  cga.bs.interpretation = cga;
 
-  return CGA;
-};
+  return cga;
+}

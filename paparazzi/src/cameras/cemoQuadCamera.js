@@ -1,69 +1,110 @@
-function CemoQuadCamera() {
-  cemoCamera = {
+import * as THREE from "three";
+import { OrbitControls } from "../controls/OrbitControls.js";
+
+export function createCemoQuadCamera(options = {}) {
+  const ownerDocument =
+    options.document ||
+    (typeof document !== "undefined" ? document : undefined);
+
+  if (!ownerDocument) {
+    throw new Error("createCemoQuadCamera requires a document reference");
+  }
+
+  const defaultView =
+    options.window ||
+    (ownerDocument && ownerDocument.defaultView) ||
+    (typeof window !== "undefined" ? window : undefined);
+
+  const attachmentTarget =
+    options.container || ownerDocument.body || ownerDocument.documentElement;
+
+  const getSize =
+    typeof options.getSize === "function"
+      ? options.getSize
+      : () => {
+          if (
+            options.size &&
+            typeof options.size.width === "number" &&
+            typeof options.size.height === "number"
+          ) {
+            return options.size;
+          }
+
+          if (defaultView) {
+            return {
+              width: defaultView.innerWidth,
+              height: defaultView.innerHeight,
+            };
+          }
+
+          return { width: 1200, height: 800 };
+        };
+
+  const eventTarget = options.eventTarget || defaultView || globalThis;
+
+  const cemoCamera = {
     init: function (scene) {
-      /* add this to the dom
-				<table>
-					<tr>
-						<td>
-							<canvas id="canvas_01"></canvas>
-						</td>
-						<td>
-							<canvas id="canvas_02"></canvas>
-							<canvas id="canvas_03"></canvas>
-							<canvas id="canvas_04"></canvas>
-						</td>
-					</tr>
-				</table>
-			*/
-
-      var domNode = document.createElement("div");
-      domNode.innerHTML =
-        '<table><tr><td><canvas id="canvas_01"></canvas></td><td><canvas id="canvas_02"></canvas><canvas id="canvas_03"></canvas><canvas id="canvas_04"></canvas></td></tr></table>';
-      document.body.appendChild(domNode);
-
-      while (!document.getElementById("canvas_01")) {
-        // wait for the elements to appear
-        var a = 0;
-      }
-      this.canvas_01 = document.getElementById("canvas_01");
-      this.canvas_02 = document.getElementById("canvas_02");
-      this.canvas_03 = document.getElementById("canvas_03");
-      this.canvas_04 = document.getElementById("canvas_04");
-
       this.scene = scene;
 
-      //RENDERER
-      var scaleWin = 0.45;
-      var splitLeftRight = 0.7;
-      var splitMargin = 50;
-      var rightVertRenderers = 3;
-      var wiw = window.innerWidth;
-      var wih = window.innerHeight;
-      var rndr_w, rndr_h;
-      console.log("wiw: " + wiw);
-      console.log("wih: " + wih);
+      const size = getSize();
+      const wiw = Math.max(
+        1,
+        size && typeof size.width === "number" ? size.width : 1,
+      );
+      const wih = Math.max(
+        1,
+        size && typeof size.height === "number" ? size.height : 1,
+      );
 
-      //renderer
-      var renderer = new THREE.WebGLRenderer({
-        canvas: canvas_01,
+      const layoutHost = ownerDocument.createElement("div");
+      layoutHost.innerHTML =
+        '<table><tr><td><canvas id="canvas_01"></canvas></td><td><canvas id="canvas_02"></canvas><canvas id="canvas_03"></canvas><canvas id="canvas_04"></canvas></td></tr></table>';
+
+      if (attachmentTarget && attachmentTarget.appendChild) {
+        attachmentTarget.appendChild(layoutHost);
+      }
+
+      this.canvas_01 = ownerDocument.getElementById("canvas_01");
+      this.canvas_02 = ownerDocument.getElementById("canvas_02");
+      this.canvas_03 = ownerDocument.getElementById("canvas_03");
+      this.canvas_04 = ownerDocument.getElementById("canvas_04");
+
+      const validateCanvas = (canvas, id) => {
+        if (!canvas) {
+          throw new Error(`createCemoQuadCamera could not find ${id}`);
+        }
+        return canvas;
+      };
+
+      const canvasMain = validateCanvas(this.canvas_01, "canvas_01");
+      const canvas02 = validateCanvas(this.canvas_02, "canvas_02");
+      const canvas03 = validateCanvas(this.canvas_03, "canvas_03");
+      const canvas04 = validateCanvas(this.canvas_04, "canvas_04");
+
+      const splitLeftRight = 0.7;
+      const splitMargin = 50;
+      const rightVertRenderers = 3;
+
+      let rndr_w = wiw * splitLeftRight;
+      let rndr_h = wih;
+      const mainRndrScreenRatio = rndr_w / rndr_h;
+      this.rndr_w = rndr_w;
+
+      const renderer = new THREE.WebGLRenderer({
+        canvas: canvasMain,
         antialias: true,
       });
       renderer.setClearColor(0x000000);
-      rndr_w = wiw * splitLeftRight;
-      rndr_h = wih;
-      var mainRndrScreenRatio = rndr_w / rndr_h;
-      this.rndr_w = rndr_w;
       renderer.setPixelRatio(mainRndrScreenRatio);
       renderer.setSize(rndr_w, rndr_h);
       this.renderer = renderer;
 
-      var rndr_w = wiw * (1 - splitLeftRight) - splitMargin;
-      var rndr_h = wih / rightVertRenderers; // - splitMargin
-      var orthoRndrScreenRatio = rndr_w / rndr_h;
+      rndr_w = wiw * (1 - splitLeftRight) - splitMargin;
+      rndr_h = wih / rightVertRenderers;
+      const orthoRndrScreenRatio = rndr_w / rndr_h;
 
-      //rndr_02
-      var rndr_02 = new THREE.WebGLRenderer({
-        canvas: canvas_02,
+      const rndr_02 = new THREE.WebGLRenderer({
+        canvas: canvas02,
         antialias: true,
       });
       rndr_02.setClearColor(0x000000);
@@ -71,9 +112,8 @@ function CemoQuadCamera() {
       rndr_02.setSize(rndr_w, rndr_h);
       this.rndr_02 = rndr_02;
 
-      // rndr_03
-      var rndr_03 = new THREE.WebGLRenderer({
-        canvas: canvas_03,
+      const rndr_03 = new THREE.WebGLRenderer({
+        canvas: canvas03,
         antialias: true,
       });
       rndr_03.setClearColor(0x000000);
@@ -81,9 +121,8 @@ function CemoQuadCamera() {
       rndr_03.setSize(rndr_w, rndr_h);
       this.rndr_03 = rndr_03;
 
-      // rndr_04
-      var rndr_04 = new THREE.WebGLRenderer({
-        canvas: canvas_04,
+      const rndr_04 = new THREE.WebGLRenderer({
+        canvas: canvas04,
         antialias: true,
       });
       rndr_04.setClearColor(0x000000);
@@ -99,8 +138,8 @@ function CemoQuadCamera() {
       );
       this.camera.position.set(0, 10, 10);
 
-      var wSpan = 6;
-      var camOrth_01 = new THREE.OrthographicCamera(
+      const wSpan = 6;
+      const camOrth_01 = new THREE.OrthographicCamera(
         -wSpan,
         wSpan,
         wSpan / orthoRndrScreenRatio,
@@ -112,7 +151,7 @@ function CemoQuadCamera() {
       camOrth_01.lookAt(new THREE.Vector3(0, 0, 0));
       this.camOrth_01 = camOrth_01;
 
-      var camOrth_02 = new THREE.OrthographicCamera(
+      const camOrth_02 = new THREE.OrthographicCamera(
         -wSpan,
         wSpan,
         wSpan / orthoRndrScreenRatio,
@@ -124,7 +163,7 @@ function CemoQuadCamera() {
       camOrth_02.lookAt(new THREE.Vector3(0, 0, 0));
       this.camOrth_02 = camOrth_02;
 
-      var camOrth_03 = new THREE.OrthographicCamera(
+      const camOrth_03 = new THREE.OrthographicCamera(
         -wSpan,
         wSpan,
         wSpan / orthoRndrScreenRatio,
@@ -136,11 +175,10 @@ function CemoQuadCamera() {
       camOrth_03.lookAt(new THREE.Vector3(0, 0, 0));
       this.camOrth_03 = camOrth_03;
 
-      //Controls
-      this.controls = new THREE.OrbitControls(
-        this.camera,
-        this.renderer.domElement,
-      ); //controls update in the render loop, rotate and pan camera with mouse, mouse control doesn't leak into menus.
+      this.controls = new OrbitControls(this.camera, this.renderer.domElement, {
+        document: ownerDocument,
+        eventTarget,
+      });
     },
 
     render: function () {

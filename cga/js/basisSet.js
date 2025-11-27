@@ -654,6 +654,7 @@ var basisSet = function (p,q,r) {
 
 			return mv
 		}
+		// deep copy
 		mv.copy = function () {
 			var mv = this
 			var mvResult = bs.multiVector('')
@@ -678,10 +679,10 @@ var basisSet = function (p,q,r) {
 			// clear the old blade info
 			this.blades = []
 			this.bladeIdx = []
-			
+
 			if (copyFrom.components) {
 				this.components = []
-				for (var i=0; i<copyFrom.components.length; ++i) {	
+				for (var i=0; i<copyFrom.components.length; ++i) {
 					this.components.push(copyFrom.components[i].copy())
 				}
 			}
@@ -771,6 +772,7 @@ var basisSet = function (p,q,r) {
 			}
 		}
 
+		// move here VVV
 		mv.move = function(rotor, target) {
 			var rotorInverse = rotor.reverse()
 
