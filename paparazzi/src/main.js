@@ -68,9 +68,8 @@ cemo.addVectorToScene(
 var cga = createCgaBasis(scene, { basisSet: bs });
 
 var point = function (x, y, z) {
-  var mvStr = x + "e_1 + " + y + "e_2 +" + z + "e_3";
-  var x3d = bs.multiVector(mvStr);
-  var infScale = (x * x + y * y + z * z) / 2;
+  let x3d = bs.multiVector({ e_1: x, e_2: y, e_3: z });
+  let infScale = (x * x + y * y + z * z) / 2;
   return cga.n0.add(x3d).add(cga.ni.smul(infScale));
 };
 

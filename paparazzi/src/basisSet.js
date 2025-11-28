@@ -868,25 +868,37 @@ export function createBasisSet(p, q, r) {
       return this;
     };
 
-    // process the mv string
-    if (s.trim().length > 0) {
-      s = s.replace(/-/g, "+-");
-      s = s.replace(/ /g, "");
-      var bladesBits = s.split("+");
-      var bBits = [];
-      var basis, basisId;
-      var grade0Id = bs.bases[0].id;
-      for (let i = 0; i < bladesBits.length; ++i) {
-        if (bladesBits[i] != "") {
-          // a - at the start of the string produces an empty bladesBits[0]
-          bBits = bladesBits[i].split(grade0Id);
-          basisId = grade0Id + bBits[1];
-          basis = bs.basisById[basisId];
-          if (!basis) {
-            console.log("!***** Basis not found: " + basisId + "(" + s + ")");
-          } else {
-            mv.pushBlade(bs.newBlade(bBits[0] - 0, basis));
+    if (typeof s === "string") {
+      // process the mv string
+      if (s.trim().length > 0) {
+        s = s.replace(/-/g, "+-");
+        s = s.replace(/ /g, "");
+        let bladesBits = s.split("+");
+        let bBits = [];
+        let basis, basisId;
+        let grade0Id = bs.bases[0].id;
+        for (let i = 0; i < bladesBits.length; ++i) {
+          if (bladesBits[i] != "") {
+            // a - at the start of the string produces an empty bladesBits[0]
+            bBits = bladesBits[i].split(grade0Id);
+            basisId = grade0Id + bBits[1];
+            basis = bs.basisById[basisId];
+            if (!basis) {
+              console.log("!***** Basis not found: " + basisId + "(" + s + ")");
+            } else {
+              mv.pushBlade(bs.newBlade(bBits[0] - 0, basis));
+            }
           }
+        }
+      }
+    } else if (typeof s === "object") {
+      // assume s is an object with blade keys eg { e_01: 2, e_23: -5 }
+      for (const [basisId, value] of Object.entries(s)) {
+        let basis = bs.basisById[basisId];
+        if (!basis) {
+          console.log("!***** Basis not found: " + basisId);
+        } else {
+          mv.pushBlade(bs.newBlade(value - 0, basis));
         }
       }
     }

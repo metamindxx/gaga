@@ -13,7 +13,7 @@ export function createCgaBasis(scene, { basisSet } = {}) {
     opt: {},
 
     pt: function (x, y, z) {
-      return bs.multiVector(x + "e_1 " + y + "e_2 " + z + "e_3");
+      return bs.multiVector({ e_1: x, e_2: y, e_3: z });
     },
 
     // from page 14 of Normalization__Square_roots_and_the_Exponential_map_in_Clifford_Algebras_less_than_6D.pdf
@@ -272,9 +272,9 @@ export function createCgaBasis(scene, { basisSet } = {}) {
   bs.addBasis("p", +1);
   bs.addBasis("m", -1);
 
-  cga.n0 = bs.multiVector("0.5e_m - 0.5e_p");
-  cga.ni = bs.multiVector("  1e_m +   1e_p");
-  cga.I5 = bs.multiVector("1e_123pm");
+  cga.n0 = bs.multiVector({ e_m: 0.5, e_p: -0.5 });
+  cga.ni = bs.multiVector({ e_m: 1, e_p: 1 });
+  cga.I5 = bs.multiVector({ e_123pm: 1 });
   /*
 	// gradeOrder?
 	bs.bladeOrder = ['e_',
