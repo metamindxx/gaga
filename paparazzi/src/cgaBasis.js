@@ -1,16 +1,30 @@
 import * as THREE from "three";
 import { createBasisSet } from "./basisSet.js";
 
-// eslint-disable-next-line no-unused-vars
-const UNIT_Z = new THREE.Vector3(0, 0, 1);
+const DEFAULT_CIRCLE_SEGMENTS = 64;
 
-export function createCgaBasis(scene, { basisSet } = {}) {
+function buildCircleOutlineGeometry(radius, segments = DEFAULT_CIRCLE_SEGMENTS) {
+  const safeRadius = radius > 0 ? radius : 1e-4;
+  const path = new THREE.Path();
+  path.absarc(0, 0, safeRadius, 0, Math.PI * 2, false);
+  const points = path
+    .getSpacedPoints(segments)
+    .map((pt) => new THREE.Vector3(pt.x, pt.y, 0));
+  return new THREE.BufferGeometry().setFromPoints(points);
+}
+
+export function createCgaBasis(scene, options = {}) {
+  const { basisSet, cemo } = options;
   const bs = basisSet ?? createBasisSet();
   const cga = {
     isA: "cgaBasis",
-    bs: null, // basisSet
+    bs: bs, // basisSet
     scene: scene,
     opt: {},
+    cemo,
+    n0: bs.multiVector(),
+    ni: bs.multiVector(),
+    I5: bs.multiVector(),
 
     pt: function (x, y, z) {
       return bs.multiVector({ e_1: x, e_2: y, e_3: z });
@@ -120,22 +134,7 @@ export function createCgaBasis(scene, { basisSet } = {}) {
           this.material = new THREE.LineBasicMaterial({ color: 0x0000ff });
         }
         if (this.geometry === undefined) {
-          // function buildUnitCircleGeometry(segments = DEFAULT_CIRCLE_SEGMENTS) {
-          //   const path = new THREE.Path();
-          //   path.absarc(0, 0, 1, 0, Math.PI * 2, false);
-          //   const vectors = path.getSpacedPoints(segments).map((pt) => {
-          //     return new THREE.Vector3(pt.x, pt.y, 0);
-          //   });
-          //   return new THREE.BufferGeometry().setFromPoints(vectors);
-          // }
-          // this.geometry = buildUnitCircleGeometry();
-
-          // this.geometry = new THREE.SphereGeometry(.1,.1,.1)
-          this.geometry = new THREE.CircleGeometry(rad, 64);
-          console.log(this.geometry);
-          // Remove center vertex
-          // TODO: delete center vertex properly
-          // this.geometry.vertices.shift();
+          this.geometry = buildCircleOutlineGeometry(rad);
         }
         if (this.mesh === undefined) {
           this.mesh = new THREE.LineLoop(this.geometry, this.material);
