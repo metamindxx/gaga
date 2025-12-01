@@ -3,6 +3,7 @@ import { createCemoVanillaCamera } from "./cameras/cemoVanillaCamera.js";
 // import { createCemoOrthCamera } from "./cameras/cemoOrthCamera.js";
 // import { createCemoQuadCamera } from "./cameras/cemoQuadCamera.js";
 import { createCgaBasis } from "./cgaBasis.js";
+import { createPgaBasis } from "./pgaBasis.js";
 import { createBasisSet } from "./basisSet.js";
 import {
   createCemoHelpers,
@@ -12,7 +13,8 @@ import {
   cPink,
 } from "./dot_js/cemo_01.js";
 
-const bs = createBasisSet();
+const cgaBs = createBasisSet();
+const pgaBs = createBasisSet();
 
 const cemo = createCemoHelpers();
 
@@ -65,10 +67,12 @@ cemo.addVectorToScene(
   scene,
 );
 
-var cga = createCgaBasis(scene, { basisSet: bs });
+// ================
+// CGA demo objects
+var cga = createCgaBasis(scene, { basisSet: cgaBs, cemo });
 
 var point = function (x, y, z) {
-  let x3d = bs.multiVector({ e_1: x, e_2: y, e_3: z });
+  let x3d = cgaBs.multiVector({ e_1: x, e_2: y, e_3: z });
   let infScale = (x * x + y * y + z * z) / 2;
   return cga.n0.add(x3d).add(cga.ni.smul(infScale));
 };
@@ -178,7 +182,32 @@ function updateRotatingPoints(deltaSeconds) {
   }
 }
 
-//=================================================================================================//
+// ================
+// PGA demo objects
+var pga = createPgaBasis(scene, { basisSet: pgaBs, cemo });
+const PGA_OFFSET = new THREE.Vector3(0, 0, 0); // todo: this doesn't translate properly
+const pointA = pga
+  .pt(PGA_OFFSET.x + 0.4, PGA_OFFSET.y + 1.1, PGA_OFFSET.z - 0.2)
+  .render({ color: 0xf5a623, size: 0.14 });
+const pointB = pga
+  .pt(PGA_OFFSET.x - 0.8, PGA_OFFSET.y - 0.4, PGA_OFFSET.z + 0.9)
+  .render({ color: 0x14f0ff, size: 0.14 });
+const pointC = pga
+  .pt(PGA_OFFSET.x + 0.6, PGA_OFFSET.y + 0.2, PGA_OFFSET.z + 1.4)
+  .render({ color: 0x88ff88, size: 0.14 });
+
+const lineAB = pointA.join(pointB);
+lineAB.render({
+  color: 0xff00ff,
+  length: 5,
+});
+
+const planeABC = lineAB.join(pointC);
+pga.logMV(planeABC, { label: "planeABC" });
+planeABC.render({ color: 0x3366cc, size: 7 });
+
+// ================
+// HTML overlays
 var bannerDiv = document.getElementById("banner_div");
 if (bannerDiv) {
   bannerDiv.style.fontFamily = "Courier New, Courier";
@@ -205,9 +234,9 @@ bladeOrder = ['e_',
 				          'e_23',  'e_13',  'e_12',
 				 'e_123', 'e_130', 'e_230', 'e_120',
 			 'e_1230']
-infoDiv.innerHTML = bs.cayleyHtml({order: bladeOrder})
+infoDiv.innerHTML = cgaBs.cayleyHtml({order: bladeOrder})
 */
-//infoDiv.innerHTML = bs.cayleyHtml()
+//infoDiv.innerHTML = cgaBs.cayleyHtml()
 
 /**************************
  **	animate
