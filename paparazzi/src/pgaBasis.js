@@ -1,9 +1,30 @@
-var pgaBasis = function (scene) {
+import * as THREE from "three";
+import { createBasisSet } from "./basisSet.js";
+import { createCemoVanillaCamera } from "./cameras/cemoVanillaCamera.js";
+
+const DEFAULT_BACK_MATERIAL = new THREE.MeshStandardMaterial({
+  color: 0xddaaff,
+  opacity: 0.6,
+  emissive: 0x111111,
+  transparent: true,
+  side: THREE.BackSide,
+});
+
+export function createPgaBasis(scene, options = {}) {
+  const bs = options.basisSet ?? createBasisSet();
+  const cemo = options.cemo ?? createCemoVanillaCamera();
+  const dottyMaterial = options.dottyMaterial ?? DEFAULT_BACK_MATERIAL;
+
+  const I3 = bs.multiVector();
+  const I4 = bs.multiVector();
+
   var PB = {
     isA: "pgaBasis",
-    bs: null, // basisSet
+    bs: bs, // basisSet
     scene: scene,
     opt: {},
+    I3,
+    I4,
 
     pt: function (x, y, z) {
       var mvResult = bs.multiVector("");
@@ -24,26 +45,26 @@ var pgaBasis = function (scene) {
     // pga specific
     /*
 	,	normalizeRotor: function (r) {
-			var e = r.bVal('e_')
-			var e10 = r.bVal('e_01')
-			var e20 = r.bVal('e_02')
-			var e30 = r.bVal('e_03')
-			var e12 = r.bVal('e_12')
-			var e23 = r.bVal('e_23')
-			var e13 = r.bVal('e_13')
-			var e1230 = r.bVal('e_0123')
-			var A = 1/Math.pow( (e*e + e12*e12 + e23*e23 + e13*e13), .5 )
-			var B = (e0123*e - e01*e23 - e02*e13 - e03*e12) *A*A*A
-			var mvResult = this.bs.multiVector('')
-			mvResult.pushBlade(bs.newBlade(A*e, bs.e))
-			mvResult.pushBlade(bs.newBlade(A*e10 + B*e23, bs.e10))
-			mvResult.pushBlade(bs.newBlade(A*e20 + B*e13, bs.e20))
-			mvResult.pushBlade(bs.newBlade(A*e30 + B*e12, bs.e30))
-			mvResult.pushBlade(bs.newBlade(A*e12, bs.e12))
-			mvResult.pushBlade(bs.newBlade(A*e23, bs.e23))
-			mvResult.pushBlade(bs.newBlade(A*e13, bs.e13))
-			mvResult.pushBlade(bs.newBlade(A*e1230 - B*e, bs.e1230))
-			return mvResult
+        var e = r.bVal('e_')
+        var e10 = r.bVal('e_01')
+        var e20 = r.bVal('e_02')
+        var e30 = r.bVal('e_03')
+        var e12 = r.bVal('e_12')
+        var e23 = r.bVal('e_23')
+        var e13 = r.bVal('e_13')
+        var e1230 = r.bVal('e_0123')
+        var A = 1/Math.pow( (e*e + e12*e12 + e23*e23 + e13*e13), .5 )
+        var B = (e0123*e - e01*e23 - e02*e13 - e03*e12) *A*A*A
+        var mvResult = this.bs.multiVector('')
+        mvResult.pushBlade(bs.newBlade(A*e, bs.e))
+        mvResult.pushBlade(bs.newBlade(A*e10 + B*e23, bs.e10))
+        mvResult.pushBlade(bs.newBlade(A*e20 + B*e13, bs.e20))
+        mvResult.pushBlade(bs.newBlade(A*e30 + B*e12, bs.e30))
+        mvResult.pushBlade(bs.newBlade(A*e12, bs.e12))
+        mvResult.pushBlade(bs.newBlade(A*e23, bs.e23))
+        mvResult.pushBlade(bs.newBlade(A*e13, bs.e13))
+        mvResult.pushBlade(bs.newBlade(A*e1230 - B*e, bs.e1230))
+        return mvResult
 		}*/
 
     pointXYZ: function (mv) {
@@ -99,7 +120,7 @@ var pgaBasis = function (scene) {
             var rs = mv.renderStuff;
             rs.geom = new THREE.BufferGeometry().setFromPoints(pts);
             const uvs = [0, 0, 0, 1, 1, 0];
-            rs.geom.addAttribute(
+            rs.geom.setAttribute(
               "uv",
               new THREE.BufferAttribute(new Float32Array(uvs), 2),
             );
@@ -166,11 +187,15 @@ var pgaBasis = function (scene) {
         }
       } else if (mv.grade() == 2) {
         //** render line
-        if (mv.components) {
-          var p0 = mv.components[0];
-          var xyz0 = this.pointXYZ(p0);
-          var p1 = mv.components[1];
-          var xyz1 = this.pointXYZ(p1);
+        if (
+          mv.components &&
+          cemo &&
+          typeof cemo.addVectorToScene === "function"
+        ) {
+          const p0 = mv.components[0];
+          const xyz0 = this.pointXYZ(p0);
+          const p1 = mv.components[1];
+          const xyz1 = this.pointXYZ(p1);
           if (xyz0.inf) {
             cemo.addVectorToScene(
               [
@@ -199,12 +224,12 @@ var pgaBasis = function (scene) {
               scene,
             );
           }
-        } else {
+        } else if (cemo && typeof cemo.addVectorToScene === "function") {
           // e for euclidian - direction of line
           var ex = mv.basisSVal("e_23"),
             ey = -mv.basisSVal("e_13"),
             ez = mv.basisSVal("e_12");
-          var mag = Math.pow(ex * ex + ey * ey + ez * ez, 1 / 2);
+          const mag = Math.pow(ex * ex + ey * ey + ez * ez, 1 / 2);
           ex = ex / mag;
           ey = ey / mag;
           ez = ez / mag;
@@ -248,20 +273,22 @@ var pgaBasis = function (scene) {
             z: -mv.basisSVal("e_012"),
           };
 
-          i0 = Math.pow(xyz.x * xyz.x + xyz.y * xyz.y + xyz.z * xyz.z, 0.5);
-          ex = ex / i0;
-          ey = ey / i0;
-          ez = ez / i0;
+          // i0 = Math.pow(xyz.x * xyz.x + xyz.y * xyz.y + xyz.z * xyz.z, 0.5);
+          // ex = ex / i0;
+          // ey = ey / i0;
+          // ez = ez / i0;
           i0 = 1;
-          cemo.addVectorToScene(
-            [
-              [xyz.x, xyz.y, xyz.z],
-              [2 * xyz.x, 2 * xyz.y, 2 * xyz.z],
-            ],
-            new THREE.MeshBasicMaterial({ color: mv.opt.color }),
-            scene,
-            true,
-          );
+          if (cemo && typeof cemo.addVectorToScene === "function") {
+            cemo.addVectorToScene(
+              [
+                [xyz.x, xyz.y, xyz.z],
+                [2 * xyz.x, 2 * xyz.y, 2 * xyz.z],
+              ],
+              new THREE.MeshBasicMaterial({ color: mv.opt.color }),
+              scene,
+              true,
+            );
+          }
         } else {
           xyz = this.pointXYZ(mv);
         }
@@ -269,7 +296,7 @@ var pgaBasis = function (scene) {
         // outside
         if (mv.renderStuff == null) {
           mv.renderStuff = {};
-          var rs = mv.renderStuff;
+          const rs = mv.renderStuff;
           rs.geomOut = new THREE.SphereGeometry(mv.opt.size, 9, 9);
           rs.matOut = new THREE.MeshStandardMaterial({
             color: mv.opt.color,
@@ -298,10 +325,17 @@ var pgaBasis = function (scene) {
       }
 
       if (options && options.renderComponents && mv.components) {
-        var comp;
         for (var i = 0; i < mv.components.length; ++i) {
           mv.components[i].render(options);
         }
+      }
+    },
+
+    logMV: function (mv, options) {
+      if (options && options.label) {
+        mv.strLog(options.label + ": ");
+      } else {
+        mv.strLog();
       }
     },
   };
@@ -313,19 +347,19 @@ var pgaBasis = function (scene) {
   bs.addBasis("3", +1);
 
   /*
-	// gradeOrder?
-	bs.bladeOrder = ['e_',
-					 'e_0',   'e_1',   'e_2',   'e_3',
-							  'e_01',  'e_02',  'e_03',
-							  'e_23',  'e_13',  'e_12',
-					 'e_123', 'e_013', 'e_023', 'e_012',
-					 'e0123'
-					 ]
-	*/
+  // gradeOrder?
+  bs.bladeOrder = ['e_',
+                   'e_0',   'e_1',   'e_2',   'e_3',
+                                    'e_01',  'e_02',  'e_03',
+                                    'e_23',  'e_13',  'e_12',
+                   'e_123', 'e_013', 'e_023', 'e_012',
+                   'e0123'
+                  ]
+  */
 
   // create the cayley table with a symmetric dual
-  PB.bs.createCayley();
-  PB.bs.interpretation = PB;
+  bs.createCayley();
+  bs.interpretation = PB;
 
   // copy the ganja dual map
   bs.setDual(bs.e, bs.e0123, 1);
@@ -349,5 +383,8 @@ var pgaBasis = function (scene) {
 
   bs.setDual(bs.e0123, bs.e, 1);
 
+  PB.I3.pushBlade(bs.newBlade(1, bs.e123));
+  PB.I4.pushBlade(bs.newBlade(1, bs.e0123));
+
   return PB;
-};
+}
