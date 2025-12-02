@@ -75,7 +75,7 @@ export function createPgaBasis(scene, options = {}) {
         i0 = mv.basisSVal("e_123");
 
       var infinite = false;
-      if (i0 < 0.0001) {
+      if (Math.abs(i0) < 0.0001) {
         infinite = true;
         var iMag = Math.pow(ex * ex + ey * ey + ez * ez, 1 / 2);
         return {
