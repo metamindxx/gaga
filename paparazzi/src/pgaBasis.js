@@ -18,7 +18,262 @@ export function createPgaBasis(scene, options = {}) {
   const I3 = bs.multiVector();
   const I4 = bs.multiVector();
 
-  var PB = {
+  // Converts a multivector into a Vector3 unless the point sits at infinity.
+  function buildVector3(mv) {
+    if (!mv) {
+      return null;
+    }
+
+    const xyz = PB.pointXYZ(mv);
+    if (xyz.inf) {
+      return null;
+    }
+
+    return new THREE.Vector3(xyz.x, xyz.y, xyz.z);
+  }
+
+  // Get first color from options or multivectors
+  function resolveColor(options, ...mvs) {
+    if (options.color) {
+      return options.color;
+    }
+    for (const mv of mvs) {
+      if (mv?.opt?.color) {
+        return mv.opt.color;
+      }
+    }
+    return 0x333333;
+  }
+
+  const renderer = {
+    // Triangles are a list of points and get rendered with a solid front face and a dotty back face
+    triangle(mv0, mv1, mv2, options = {}) {
+      const xyz0 = PB.pointXYZ(mv0);
+      const xyz1 = PB.pointXYZ(mv1);
+      const xyz2 = PB.pointXYZ(mv2);
+
+      const pts = [
+        new THREE.Vector3(xyz0.x, xyz0.y, xyz0.z),
+        new THREE.Vector3(xyz1.x, xyz1.y, xyz1.z),
+        new THREE.Vector3(xyz2.x, xyz2.y, xyz2.z),
+      ];
+
+      const geom = new THREE.BufferGeometry().setFromPoints(pts);
+      const uvs = [0, 0, 0, 1, 1, 0];
+      geom.setAttribute(
+        "uv",
+        new THREE.BufferAttribute(new Float32Array(uvs), 2),
+      );
+      const color = resolveColor(options, mv0, mv1, mv2);
+      const frontMaterial = new THREE.MeshBasicMaterial({
+        color,
+        side: THREE.FrontSide,
+      });
+      const frontMesh = new THREE.Mesh(geom, frontMaterial);
+      const backMesh = new THREE.Mesh(geom, dottyMaterial);
+      scene.add(frontMesh, backMesh);
+
+      geom.computeVertexNormals();
+    },
+    // Grade-1 blades (planes) get visualized with two concentric discs
+    plane(mv) {
+      if (!mv.opt.size) {
+        mv.opt.size = 0.5;
+      }
+
+      let nx = mv.basisSVal("e_1");
+      let ny = mv.basisSVal("e_2");
+      let nz = mv.basisSVal("e_3");
+      let nd = mv.basisSVal("e_0");
+      const mag = Math.pow(nx * nx + ny * ny + nz * nz, 1 / 2);
+
+      nx = nx / mag;
+      ny = ny / mag;
+      nz = nz / mag;
+      nd = -nd / mag;
+
+      const gCircFront = new THREE.CircleGeometry(mv.opt.size, 32);
+      const mFront = new THREE.MeshStandardMaterial({
+        color: mv.opt.color,
+        opacity: 0.4,
+        emissive: 0x111111,
+        side: THREE.DoubleSide,
+      });
+      const mshCircFront = new THREE.Mesh(gCircFront, mFront);
+
+      const gCircBack = new THREE.CircleGeometry(mv.opt.size * 0.8, 32);
+      const mBack = new THREE.MeshStandardMaterial({
+        color: mv.opt.color,
+        opacity: 0.6,
+        emissive: 0x111111,
+        side: THREE.BackSide,
+      });
+      const mshCircBack = new THREE.Mesh(gCircBack, mBack);
+      mshCircBack.position.set(0, 0, -0.001);
+
+      const group = new THREE.Group();
+      group.add(mshCircFront);
+      group.add(mshCircBack);
+      group.lookAt(new THREE.Vector3(nx, ny, nz));
+      group.position.set(nx * nd, ny * nd, nz * nd);
+      scene.add(group);
+      console.log("added plane", group);
+    },
+    // Lists of points are drawn as poly-lines
+    lineSegments(points, options = {}) {
+      if (!Array.isArray(points) || points.length < 2) {
+        return;
+      }
+
+      const vec3s = points.map((mv) => buildVector3(mv));
+      const segmentCount = vec3s.length - 1;
+      const positions = new Float32Array(segmentCount * 6);
+      const colors = new Float32Array(segmentCount * 6);
+
+      for (let i = 0; i < segmentCount; i += 1) {
+        const start = vec3s[i];
+        const end = vec3s[i + 1];
+        if (!start || !end) {
+          console.warn("skipping invalid segment", i, start, end);
+          continue;
+        }
+        const offset = i * 6;
+        positions[offset + 0] = start.x;
+        positions[offset + 1] = start.y;
+        positions[offset + 2] = start.z;
+        positions[offset + 3] = end.x;
+        positions[offset + 4] = end.y;
+        positions[offset + 5] = end.z;
+
+        const color = new THREE.Color(
+          resolveColor(options, points[i], points[i + 1]),
+        );
+        colors[offset + 0] = color.r;
+        colors[offset + 1] = color.g;
+        colors[offset + 2] = color.b;
+        colors[offset + 3] = color.r;
+        colors[offset + 4] = color.g;
+        colors[offset + 5] = color.b;
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(positions, 3),
+      );
+      geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+
+      const material = new THREE.LineBasicMaterial({ vertexColors: true });
+      scene.add(new THREE.LineSegments(geometry, material));
+    },
+    // Grade-2 blades (lines) are rendered as vectors pointing along the line
+    line(mv) {
+      if (!(cemo && typeof cemo.addVectorToScene === "function")) {
+        return;
+      }
+
+      let ex = mv.basisSVal("e_23"),
+        ey = -mv.basisSVal("e_13"),
+        ez = mv.basisSVal("e_12");
+      const mag = Math.pow(ex * ex + ey * ey + ez * ez, 1 / 2);
+      ex /= mag;
+      ey /= mag;
+      ez /= mag;
+
+      const ix = mv.basisSVal("e_01") / mag,
+        iy = mv.basisSVal("e_02") / mag,
+        iz = mv.basisSVal("e_03") / mag;
+
+      const crossX = ey * iz - iy * ez,
+        crossY = ez * ix - iz * ex,
+        crossZ = ex * iy - ix * ey;
+
+      cemo.addVectorToScene(
+        [
+          [crossX, crossY, crossZ],
+          [crossX + ex, crossY + ey, crossZ + ez],
+        ],
+        new THREE.MeshBasicMaterial({ color: mv.opt.color }),
+        scene,
+      );
+    },
+    // Points are rendered as shells while Ideals are rendered as vectors
+    point(mv) {
+      if (!mv.opt.size) {
+        mv.opt.size = 0.1;
+      }
+
+      let i0 = mv.basisSVal("e_123");
+      let xyz;
+      if (Math.abs(i0) < 0.001) {
+        mv.opt.size *= 0.2;
+        xyz = {
+          x: -mv.basisSVal("e_023"),
+          y: mv.basisSVal("e_013"),
+          z: -mv.basisSVal("e_012"),
+        };
+        i0 = 1;
+        if (cemo && typeof cemo.addVectorToScene === "function") {
+          cemo.addVectorToScene(
+            [
+              [xyz.x, xyz.y, xyz.z],
+              [2 * xyz.x, 2 * xyz.y, 2 * xyz.z],
+            ],
+            new THREE.MeshBasicMaterial({ color: mv.opt.color }),
+            scene,
+            true,
+          );
+        }
+      } else {
+        xyz = PB.pointXYZ(mv);
+      }
+
+      if (mv.renderStuff == null) {
+        mv.renderStuff = {};
+        const rs = mv.renderStuff;
+        rs.geomOut = new THREE.SphereGeometry(mv.opt.size, 9, 9);
+        rs.matOut = new THREE.MeshStandardMaterial({
+          color: mv.opt.color,
+          opacity: 0.6,
+          emissive: 0x111111,
+        });
+        rs.meshOut = new THREE.Mesh(rs.geomOut, rs.matOut);
+
+        const insideSize = (1 + Math.sign(i0) * -0.1) * mv.opt.size;
+        rs.geomIn = new THREE.SphereGeometry(insideSize, 5, 5);
+        rs.matIn = new THREE.MeshStandardMaterial({
+          color: mv.opt.color,
+          wireframe: true,
+        });
+        rs.meshIn = new THREE.Mesh(rs.geomIn, rs.matIn);
+
+        rs.renderGroup = new THREE.Group();
+        rs.renderGroup.add(rs.meshOut);
+        rs.renderGroup.add(rs.meshIn);
+        scene.add(rs.renderGroup);
+      }
+
+      mv.renderStuff.renderGroup.position.set(xyz.x, xyz.y, xyz.z);
+    },
+    // Rendering entry point for `basis.renderMV(list)`
+    //   length 1 -> render MV directly
+    //   length 3 -> treat as triangle
+    //   everything else -> poly-line through consecutive points
+    list(mvs, options = {}) {
+      if (mvs.length === 1) {
+        // Render a single MV
+        mvs[0].render(options);
+      } else if (mvs.length === 3) {
+        // Render a triangle
+        renderer.triangle(mvs[0], mvs[1], mvs[2], options);
+      } else {
+        // Render line segments
+        renderer.lineSegments(mvs, options);
+      }
+    },
+  };
+
+  const PB = {
     isA: "pgaBasis",
     bs: bs, // basisSet
     scene: scene,
@@ -26,7 +281,7 @@ export function createPgaBasis(scene, options = {}) {
     I3,
     I4,
 
-    pt: function (x, y, z) {
+    pt(x, y, z) {
       var mvResult = bs.multiVector("");
       mvResult.pushBlade(bs.newBlade(-1, bs.e123));
       if (x) {
@@ -67,7 +322,7 @@ export function createPgaBasis(scene, options = {}) {
         return mvResult
 		}*/
 
-    pointXYZ: function (mv) {
+    pointXYZ(mv) {
       // z,y,x,1 == d[11], d[12], d[13], d[14]
       var ex = -mv.basisSVal("e_023"),
         ey = mv.basisSVal("e_013"),
@@ -90,8 +345,16 @@ export function createPgaBasis(scene, options = {}) {
       }
     },
 
-    renderMV: function (mv, options) {
+    renderMV(mv, options) {
+      if (mv?.isA !== "mv") {
+        return renderer.list(mv, options);
+      }
+
+      options = options ?? {};
       // set some defaults
+      if (!mv.opt) {
+        mv.opt = {};
+      }
       if (options) {
         Object.keys(options).forEach((k) => (mv.opt[k] = options[k]));
       }
@@ -99,243 +362,13 @@ export function createPgaBasis(scene, options = {}) {
         mv.opt.color = 0x333333;
       }
 
-      // what type of object
-      if (mv.grade() == 1) {
-        if (!mv.opt.size) {
-          mv.opt.size = 0.5;
-        }
-        if (mv.components) {
-          var xyz0 = this.pointXYZ(mv.components[0]);
-          var xyz1 = this.pointXYZ(mv.components[1]);
-          var xyz2 = this.pointXYZ(mv.components[2]);
-
-          // coordinates of triangle
-          var pts = new Array();
-          pts[0] = new THREE.Vector3(xyz0.x, xyz0.y, xyz0.z);
-          pts[1] = new THREE.Vector3(xyz1.x, xyz1.y, xyz1.z);
-          pts[2] = new THREE.Vector3(xyz2.x, xyz2.y, xyz2.z);
-
-          if (mv.renderStuff == null) {
-            mv.renderStuff = {};
-            var rs = mv.renderStuff;
-            rs.geom = new THREE.BufferGeometry().setFromPoints(pts);
-            const uvs = [0, 0, 0, 1, 1, 0];
-            rs.geom.setAttribute(
-              "uv",
-              new THREE.BufferAttribute(new Float32Array(uvs), 2),
-            );
-            rs.frontMesh = new THREE.Mesh(
-              rs.geom,
-              new THREE.MeshBasicMaterial({
-                color: mv.opt.color,
-                side: THREE.FrontSide,
-              }),
-            );
-            //var backMesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({color: 0xddaaff, side: THREE.BackSide}))
-            rs.backMesh = new THREE.Mesh(rs.geom, dottyMaterial);
-            scene.add(rs.frontMesh, rs.backMesh);
-          } else {
-            mv.renderStuff.geom.setFromPoints(pts);
-          }
-
-          // create triangle
-          mv.renderStuff.geom.computeVertexNormals();
-        } else {
-          //** render plane
-          var nx = mv.basisSVal("e_1");
-          var ny = mv.basisSVal("e_2");
-          var nz = mv.basisSVal("e_3");
-          var nd = mv.basisSVal("e_0");
-          var mag = Math.pow(nx * nx + ny * ny + nz * nz, 1 / 2);
-
-          // normalize
-          nx = nx / mag;
-          ny = ny / mag;
-          nz = nz / mag;
-          nd = -nd / mag;
-
-          // front
-          var gCircFront = new THREE.CircleGeometry(mv.opt.size, 32);
-          var mFront = new THREE.MeshStandardMaterial({
-            color: mv.opt.color,
-            opacity: 0.4,
-            emissive: 0x111111,
-            side: THREE.DoubleSide,
-          });
-          var mshCircFront = new THREE.Mesh(gCircFront, mFront);
-          // back
-          var gCircBack = new THREE.CircleGeometry(mv.opt.size * 0.8, 32);
-          var mBack = new THREE.MeshStandardMaterial({
-            color: mv.opt.color,
-            opacity: 0.6,
-            emissive: 0x111111,
-            side: THREE.BackSide,
-          });
-          //var mBack = new THREE.MeshStandardMaterial( {color: mv.opt.color, wireframe: true} )
-          var mshCircBack = new THREE.Mesh(gCircBack, mBack);
-          mshCircBack.position.set(0, 0, -0.001);
-
-          var group = new THREE.Group();
-          group.add(mshCircFront);
-          group.add(mshCircBack);
-
-          // need to translate first since it uses object coordinates...
-          // group.translateOnAxis(theAxis, nd)
-          group.lookAt(new THREE.Vector3(nx, ny, nz));
-          group.position.set(nx * nd, ny * nd, nz * nd);
-          scene.add(group);
-        }
-      } else if (mv.grade() == 2) {
-        //** render line
-        if (
-          mv.components &&
-          cemo &&
-          typeof cemo.addVectorToScene === "function"
-        ) {
-          const p0 = mv.components[0];
-          const xyz0 = this.pointXYZ(p0);
-          const p1 = mv.components[1];
-          const xyz1 = this.pointXYZ(p1);
-          if (xyz0.inf) {
-            cemo.addVectorToScene(
-              [
-                [xyz1.x, xyz1.y, xyz1.z],
-                [xyz0.x + xyz1.x, xyz0.y + xyz1.y, xyz0.z + xyz1.z],
-              ],
-              new THREE.MeshBasicMaterial({ color: mv.opt.color }),
-              scene,
-            );
-          } else if (xyz1.inf) {
-            cemo.addVectorToScene(
-              [
-                [xyz0.x, xyz0.y, xyz0.z],
-                [xyz0.x + xyz1.x, xyz0.y + xyz1.y, xyz0.z + xyz1.z],
-              ],
-              new THREE.MeshBasicMaterial({ color: mv.opt.color }),
-              scene,
-            );
-          } else {
-            cemo.addVectorToScene(
-              [
-                [xyz0.x, xyz0.y, xyz0.z],
-                [xyz1.x, xyz1.y, xyz1.z],
-              ],
-              new THREE.MeshBasicMaterial({ color: mv.opt.color }),
-              scene,
-            );
-          }
-        } else if (cemo && typeof cemo.addVectorToScene === "function") {
-          // e for euclidian - direction of line
-          var ex = mv.basisSVal("e_23"),
-            ey = -mv.basisSVal("e_13"),
-            ez = mv.basisSVal("e_12");
-          const mag = Math.pow(ex * ex + ey * ey + ez * ez, 1 / 2);
-          ex = ex / mag;
-          ey = ey / mag;
-          ez = ez / mag;
-
-          // i for infinite - moment of line
-          var ix = mv.basisSVal("e_01") / mag,
-            iy = mv.basisSVal("e_02") / mag,
-            iz = mv.basisSVal("e_03") / mag;
-
-          // take the cross product (shh!) to rotate the moment line around the direction line.
-          // the moment line is the correct length and now lies in the plane of the moment's rotation perp to the direction
-          // ie, this is the translation
-          var crossX = ey * iz - iy * ez,
-            crossY = ez * ix - iz * ex,
-            crossZ = ex * iy - ix * ey;
-
-          cemo.addVectorToScene(
-            [
-              [crossX, crossY, crossZ],
-              [crossX + ex, crossY + ey, crossZ + ez],
-            ],
-            new THREE.MeshBasicMaterial({ color: mv.opt.color }),
-            scene,
-          );
-        }
-      } else if (mv.grade() == 3) {
-        if (!mv.opt.size) {
-          mv.opt.size = 0.1;
-        }
-
-        // z,y,x,1 == d[11], d[12], d[13], d[14]
-        var i0 = mv.basisSVal("e_123");
-        var xyz;
-        // is ideal point?
-        if (Math.abs(i0) < 0.001) {
-          mv.opt.size *= 0.2;
-          // put the point a distance of 1 away from the origin and put an arrow pointing to infinity
-          xyz = {
-            x: -mv.basisSVal("e_023"),
-            y: mv.basisSVal("e_013"),
-            z: -mv.basisSVal("e_012"),
-          };
-
-          // i0 = Math.pow(xyz.x * xyz.x + xyz.y * xyz.y + xyz.z * xyz.z, 0.5);
-          // ex = ex / i0;
-          // ey = ey / i0;
-          // ez = ez / i0;
-          i0 = 1;
-          if (cemo && typeof cemo.addVectorToScene === "function") {
-            cemo.addVectorToScene(
-              [
-                [xyz.x, xyz.y, xyz.z],
-                [2 * xyz.x, 2 * xyz.y, 2 * xyz.z],
-              ],
-              new THREE.MeshBasicMaterial({ color: mv.opt.color }),
-              scene,
-              true,
-            );
-          }
-        } else {
-          xyz = this.pointXYZ(mv);
-        }
-
-        // outside
-        if (mv.renderStuff == null) {
-          mv.renderStuff = {};
-          const rs = mv.renderStuff;
-          rs.geomOut = new THREE.SphereGeometry(mv.opt.size, 9, 9);
-          rs.matOut = new THREE.MeshStandardMaterial({
-            color: mv.opt.color,
-            opacity: 0.6,
-            emissive: 0x111111,
-          });
-          rs.meshOut = new THREE.Mesh(rs.geomOut, rs.matOut);
-
-          // inside
-          var insideSize = (1 + Math.sign(i0) * -0.1) * mv.opt.size; // +- 10% of outside size
-          //var insideSize = 1.2 * mv.opt.size  // +- 20% of outside size
-          rs.geomIn = new THREE.SphereGeometry(insideSize, 5, 5);
-          rs.matIn = new THREE.MeshStandardMaterial({
-            color: mv.opt.color,
-            wireframe: true,
-          });
-          rs.meshIn = new THREE.Mesh(rs.geomIn, rs.matIn);
-
-          rs.renderGroup = new THREE.Group();
-          rs.renderGroup.add(rs.meshOut);
-          rs.renderGroup.add(rs.meshIn);
-          scene.add(rs.renderGroup);
-        }
-
-        mv.renderStuff.renderGroup.position.set(xyz.x, xyz.y, xyz.z);
-      }
-
-      if (options && options.renderComponents && mv.components) {
-        for (var i = 0; i < mv.components.length; ++i) {
-          mv.components[i].render(options);
-        }
-      }
-    },
-
-    logMV: function (mv, options) {
-      if (options && options.label) {
-        mv.strLog(options.label + ": ");
-      } else {
-        mv.strLog();
+      let grade = mv.grade();
+      if (grade === 1) {
+        renderer.plane(mv);
+      } else if (grade === 2) {
+        renderer.line(mv);
+      } else if (grade === 3) {
+        renderer.point(mv);
       }
     },
   };

@@ -185,7 +185,7 @@ function updateRotatingPoints(deltaSeconds) {
 // ================
 // PGA demo objects
 var pga = createPgaBasis(scene, { basisSet: pgaBs, cemo });
-const PGA_OFFSET = new THREE.Vector3(0, 0, 0); // todo: this doesn't translate properly
+const PGA_OFFSET = new THREE.Vector3(0, 4, 0);
 const pointA = pga
   .pt(PGA_OFFSET.x + 0.4, PGA_OFFSET.y + 1.1, PGA_OFFSET.z - 0.2)
   .render({ color: 0xf5a623, size: 0.14 });
@@ -203,8 +203,16 @@ lineAB.render({
 });
 
 const planeABC = lineAB.join(pointC);
-pga.logMV(planeABC, { label: "planeABC" });
+planeABC.strLog("planeABC");
 planeABC.render({ color: 0x3366cc, size: 7 });
+
+const polylinePoints = [
+  pga.pt(PGA_OFFSET.x + 0, PGA_OFFSET.y + 0, PGA_OFFSET.z + 0),
+  pga.pt(PGA_OFFSET.x - 1, PGA_OFFSET.y + 0, PGA_OFFSET.z + 1),
+  pga.pt(PGA_OFFSET.x + 0, PGA_OFFSET.y + 1, PGA_OFFSET.z + 2),
+  pga.pt(PGA_OFFSET.x + 0, PGA_OFFSET.y + 0, PGA_OFFSET.z + 3),
+];
+pga.renderMV(polylinePoints, { color: 0xffaa00 });
 
 // ================
 // HTML overlays
