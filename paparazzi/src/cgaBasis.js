@@ -2,8 +2,18 @@ import * as THREE from "three";
 import { createBasisSet } from "./basisSet.js";
 
 const DEFAULT_CIRCLE_SEGMENTS = 64;
+const DEFAULT_BACK_MATERIAL = new THREE.MeshStandardMaterial({
+  color: 0xddaaff,
+  opacity: 0.6,
+  emissive: 0x111111,
+  transparent: true,
+  side: THREE.BackSide,
+});
 
-function buildCircleOutlineGeometry(radius, segments = DEFAULT_CIRCLE_SEGMENTS) {
+function buildCircleOutlineGeometry(
+  radius,
+  segments = DEFAULT_CIRCLE_SEGMENTS,
+) {
   const safeRadius = radius > 0 ? radius : 1e-4;
   const path = new THREE.Path();
   path.absarc(0, 0, safeRadius, 0, Math.PI * 2, false);
@@ -13,9 +23,128 @@ function buildCircleOutlineGeometry(radius, segments = DEFAULT_CIRCLE_SEGMENTS) 
   return new THREE.BufferGeometry().setFromPoints(points);
 }
 
+function resolveColor(options = {}, ...mvs) {
+  if (options.color) {
+    return options.color;
+  }
+  for (const mv of mvs) {
+    if (mv?.opt?.color) {
+      return mv.opt.color;
+    }
+  }
+  return 0x333333;
+}
+
+function createRenderer({ scene, dottyMaterial, pointXYZ }) {
+  function buildVector3(mv) {
+    if (!mv) {
+      return null;
+    }
+    const xyz = pointXYZ(mv) ?? {};
+    if (
+      !Number.isFinite(xyz.x) ||
+      !Number.isFinite(xyz.y) ||
+      !Number.isFinite(xyz.z)
+    ) {
+      return null;
+    }
+    return new THREE.Vector3(xyz.x, xyz.y, xyz.z);
+  }
+
+  return {
+    triangle(mv0, mv1, mv2, options = {}) {
+      const pts = [mv0, mv1, mv2].map((mv) => buildVector3(mv));
+      if (pts.some((pt) => !pt)) {
+        console.warn("triangle requires finite points", pts);
+        return;
+      }
+
+      const geom = new THREE.BufferGeometry().setFromPoints(pts);
+      const uvs = [0, 0, 0, 1, 1, 0];
+      geom.setAttribute(
+        "uv",
+        new THREE.BufferAttribute(new Float32Array(uvs), 2),
+      );
+      const color = resolveColor(options, mv0, mv1, mv2);
+      const frontMaterial = new THREE.MeshBasicMaterial({
+        color,
+        side: THREE.FrontSide,
+      });
+      const frontMesh = new THREE.Mesh(geom, frontMaterial);
+      const backMesh = new THREE.Mesh(geom, dottyMaterial);
+      scene.add(frontMesh, backMesh);
+
+      geom.computeVertexNormals();
+    },
+
+    lineSegments(points, options = {}) {
+      if (!Array.isArray(points) || points.length < 2) {
+        return;
+      }
+
+      const vec3s = points.map((mv) => buildVector3(mv));
+      const segmentCount = vec3s.length - 1;
+      const positions = new Float32Array(segmentCount * 6);
+      const colors = new Float32Array(segmentCount * 6);
+
+      for (let i = 0; i < segmentCount; i += 1) {
+        const start = vec3s[i];
+        const end = vec3s[i + 1];
+        if (!start || !end) {
+          console.warn("skipping invalid segment", i, start, end);
+          continue;
+        }
+        const offset = i * 6;
+        positions[offset + 0] = start.x;
+        positions[offset + 1] = start.y;
+        positions[offset + 2] = start.z;
+        positions[offset + 3] = end.x;
+        positions[offset + 4] = end.y;
+        positions[offset + 5] = end.z;
+
+        const color = new THREE.Color(
+          resolveColor(options, points[i], points[i + 1]),
+        );
+        colors[offset + 0] = color.r;
+        colors[offset + 1] = color.g;
+        colors[offset + 2] = color.b;
+        colors[offset + 3] = color.r;
+        colors[offset + 4] = color.g;
+        colors[offset + 5] = color.b;
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(positions, 3),
+      );
+      geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+
+      const material = new THREE.LineBasicMaterial({ vertexColors: true });
+      scene.add(new THREE.LineSegments(geometry, material));
+    },
+
+    list(mvs, options = {}) {
+      if (!Array.isArray(mvs) || mvs.length === 0) {
+        return;
+      }
+
+      if (mvs.length === 1) {
+        mvs[0]?.render(options);
+      } else if (mvs.length === 3) {
+        this.triangle(mvs[0], mvs[1], mvs[2], options);
+      } else {
+        this.lineSegments(mvs, options);
+      }
+    },
+  };
+}
+
 export function createCgaBasis(scene, options = {}) {
-  const { basisSet, cemo } = options;
+  const { basisSet, cemo, dottyMaterial: customBackMaterial } = options;
   const bs = basisSet ?? createBasisSet();
+  const dottyMaterial = customBackMaterial ?? DEFAULT_BACK_MATERIAL;
+  let renderer;
   const cga = {
     isA: "cgaBasis",
     bs: bs, // basisSet
@@ -79,12 +208,21 @@ export function createCgaBasis(scene, options = {}) {
       };
     },
     renderMV: function (mv, options) {
-      // set some defaults
-      if (options) {
-        Object.keys(options).forEach((k) => (mv.opt[k] = options[k]));
+      if (!mv) {
+        return;
       }
+
+      if (mv?.isA !== "mv") {
+        return renderer.list(mv, options);
+      }
+
+      options = options ?? {};
+      if (!mv.opt) {
+        mv.opt = {};
+      }
+      Object.assign(mv.opt, options);
       if (!mv.opt.color) {
-        mv.opt.color = 0x333333;
+        mv.opt.color = resolveColor(options, mv);
       }
 
       // what type of object
@@ -263,6 +401,12 @@ export function createCgaBasis(scene, options = {}) {
       }
     },
   };
+
+  renderer = createRenderer({
+    scene,
+    dottyMaterial,
+    pointXYZ: (mv) => cga.pointXYZ(mv),
+  });
 
   cga.bs = bs;
   bs.addBasis("1", +1);
