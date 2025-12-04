@@ -69,117 +69,79 @@ cemo.addVectorToScene(
 
 // ================
 // CGA demo objects
-var cga = createCgaBasis(scene, { basisSet: cgaBs, cemo });
 
+var cga = createCgaBasis(scene, { basisSet: cgaBs, cemo });
 var point = function (x, y, z) {
   let x3d = cgaBs.multiVector({ e_1: x, e_2: y, e_3: z });
   let infScale = (x * x + y * y + z * z) / 2;
   return cga.n0.add(x3d).add(cga.ni.smul(infScale));
 };
 
-/* stuff */
-var p1 = point(-2, 0, 1).render({ color: cRed }),
-  p2 = point(1, -1, 0.5).render({ color: cBlue }),
-  //,	p3 = point(1,1,2).render({color: cGreen})
-  p3 = point(1, 1, 2).smul(2).render({ color: cGreen }),
-  p4 = point(0, 2, -0).render({ color: cPink }),
-  c1 = p1.op(p2.op(p3)).render(),
-  // ignore unused s1 and s2 parameters for now
-  // eslint-disable-next-line no-unused-vars
-  s1 = c1.op(p4).render(),
-  // eslint-disable-next-line no-unused-vars
-  s2 = c1.op(cga.ni).render();
+const pt1 = point(-2, 0, 1);
+const pt2 = point(1, -1, 0.5);
+const pt3 = point(1, 1, 2).smul(2);
+const pt4 = point(0, 2, 0);
+const c1 = pt1.op(pt2.op(pt3));
+const s1 = c1.op(pt4);
+const s2 = c1.op(cga.ni);
 
-function buildCircleData(circleMV) {
-  var Ic = circleMV.op(cga.ni);
-  var IcSize = Math.pow(Math.abs(Ic.sq()), 0.5);
-  if (!IcSize) {
-    return null;
-  }
-  Ic = Ic.smul(1 / IcSize);
-  var circDual = circleMV.gp(Ic);
-  var cdDotNi = circDual.scalarProduct(cga.ni);
-  if (!cdDotNi) {
-    return null;
-  }
-  circDual = circDual.smul(-1 / cdDotNi);
-  var centreMV = circDual.gp(circDual.gp(cga.ni).smul(0.5).sadd(1));
-  var centreXYZ = cga.pointXYZ(centreMV);
-  var radius = Math.pow(circDual.sq(), 0.5);
-  var Icd = cga.I5.gp(Ic);
-  var nx = Icd.bVal("e_1");
-  var ny = Icd.bVal("e_2");
-  var nz = Icd.bVal("e_3");
-  var normal = new THREE.Vector3(nx, ny, nz);
-  if (normal.lengthSq() === 0) {
-    normal.set(0, 0, 1);
-  }
-  normal.normalize();
-  return {
-    centreMV: centreMV,
-    centreVec: new THREE.Vector3(centreXYZ.x, centreXYZ.y, centreXYZ.z),
-    radius: radius,
-    normal: normal,
-  };
-}
+// ok, I have 4 points, a circle and 2 spheres.
+// now to find the line through the circle centre perpendicular to the circle
+// and use that to build a rotor to spin the circle about its centre
 
-var circleData = buildCircleData(c1);
-var tangent1 = new THREE.Vector3(1, 0, 0);
-var tangent2 = new THREE.Vector3(0, 1, 0);
-if (circleData) {
-  if (Math.abs(tangent1.dot(circleData.normal)) > 0.9) {
-    tangent1.set(0, 1, 0);
-  }
-  tangent1
-    .sub(
-      circleData.normal.clone().multiplyScalar(tangent1.dot(circleData.normal)),
-    )
-    .normalize();
-  tangent2 = new THREE.Vector3()
-    .crossVectors(circleData.normal, tangent1)
-    .normalize();
-}
+// build circle centre
+const c1Centre = c1.dual()
+  .gp(cga.ni)
+  .smul(0.5)
+  .sadd(1)
+  .dual();
+c1Centre.strLog("c1Centre");
 
-function phaseForPoint(mv) {
-  if (!circleData || !circleData.radius) {
-    return 0;
-  }
-  var xyz = cga.pointXYZ(mv);
-  var rel = new THREE.Vector3(xyz.x, xyz.y, xyz.z).sub(circleData.centreVec);
-  var cosTheta = rel.dot(tangent1) / circleData.radius;
-  var sinTheta = rel.dot(tangent2) / circleData.radius;
-  return Math.atan2(sinTheta, cosTheta);
-}
+// build circle centre normal
+const c1Normal = c1.dual().gp(cga.ni).dual();
+c1Normal.strLog("c1Normal");
 
-var rotatingPoints = circleData
-  ? [
-      { mv: p1, phase: phaseForPoint(p1) },
-      { mv: p2, phase: phaseForPoint(p2) },
-      { mv: p3, phase: phaseForPoint(p3) },
-    ]
-  : [];
-
-var rotationSpeed = Math.PI / 8;
-
-function updateRotatingPoints(deltaSeconds) {
-  if (!circleData || !circleData.radius) {
-    return;
+let cgaRotorPhase = 0;
+const CGA_ROTATION_SPEED = Math.PI/4000;
+// let start = Date.now();
+let step = 0;
+function updateCgaRotor(_deltaSeconds) {
+  let totalElapsedSeconds = (Date.now() - start) / 1000;
+  cgaRotorPhase = totalElapsedSeconds * CGA_ROTATION_SPEED;
+  // build rotor for rotation about circle centre normal (without translation)
+  const rotor = c1Normal.smul(cgaRotorPhase).exp(1);
+  // apply rotor about circle centre
+  rotor.gp(pt1).gp(rotor.reverse()).render({ color: cRed, size: 0.12 });
+  rotor.gp(pt2).gp(rotor.reverse()).render({ color: cGreen, size: 0.12 });
+  rotor.gp(pt3).gp(rotor.reverse()).render({ color: cBlue, size: 0.12 });
+  // print first few iterations
+  if (step++ < 4) {
+    rotor.strLog("rotor");
+    pt1.strLog("rotated pt1");
   }
-  for (var i = 0; i < rotatingPoints.length; ++i) {
-    var rp = rotatingPoints[i];
-    rp.phase += deltaSeconds * rotationSpeed;
-    var pos = circleData.centreVec
-      .clone()
-      .add(
-        tangent1.clone().multiplyScalar(circleData.radius * Math.cos(rp.phase)),
-      )
-      .add(
-        tangent2.clone().multiplyScalar(circleData.radius * Math.sin(rp.phase)),
-      );
-    var updated = point(pos.x, pos.y, pos.z);
-    rp.mv.updateCopy(updated);
-    rp.mv.render();
-  }
+  // cgaRotorPhase += deltaSeconds * CGA_ROTATION_SPEED;
+  // const rotor = cgaRotationMotor.evaluate(
+  //   cgaRotorPhase * 0.5,
+  //   cgaReusableRotor,
+  // );
+
+  // build rotor from generator
+  // const rotor = c1.smul(cgaRotorPhase).exp(1);
+  // rotor.strLog("rotor");
+  // const combinedRotor = cgaTranslateFromCentre
+  //   .gp(rotor.gp(cgaTranslateToCentre))
+  //   .normalize();
+  // for (let i = 0; i < cgaRotatingPoints.length; ++i) {
+  //   // apply rotor to each point
+  //   // let pt = cgaRotatingPoints[i];
+  //   // let updatedPt = rotor.gp(pt).gp(rotor.reverse());
+  //   // cgaRotatingPoints[i] = updatedPt;
+
+  //   // apply rotor about circle centre
+  //   cgaReferencePoints[i].move(rotor, cgaRotatingPoints[i]);
+  //   cgaRotatingPoints[i].render();
+  // }
+
 }
 
 // ================
@@ -188,23 +150,23 @@ var pga = createPgaBasis(scene, { basisSet: pgaBs, cemo });
 const PGA_OFFSET = new THREE.Vector3(0, 4, 0);
 const pointA = pga
   .pt(PGA_OFFSET.x + 0.4, PGA_OFFSET.y + 1.1, PGA_OFFSET.z - 0.2)
-  .render({ color: 0xf5a623, size: 0.14 });
+  // .render({ color: 0xf5a623, size: 0.14 });
 const pointB = pga
   .pt(PGA_OFFSET.x - 0.8, PGA_OFFSET.y - 0.4, PGA_OFFSET.z + 0.9)
-  .render({ color: 0x14f0ff, size: 0.14 });
+  // .render({ color: 0x14f0ff, size: 0.14 });
 const pointC = pga
   .pt(PGA_OFFSET.x + 0.6, PGA_OFFSET.y + 0.2, PGA_OFFSET.z + 1.4)
-  .render({ color: 0x88ff88, size: 0.14 });
+  // .render({ color: 0x88ff88, size: 0.14 });
 
 const lineAB = pointA.join(pointB);
-lineAB.render({
-  color: 0xff00ff,
-  length: 5,
-});
+// lineAB.render({
+//   color: 0xff00ff,
+//   length: 5,
+// });
 
 const planeABC = lineAB.join(pointC);
 planeABC.strLog("planeABC");
-planeABC.render({ color: 0x3366cc, size: 7 });
+// planeABC.render({ color: 0x3366cc, size: 7 });
 
 const polylinePoints = [
   pga.pt(PGA_OFFSET.x + 0, PGA_OFFSET.y + 0, PGA_OFFSET.z + 0),
@@ -212,7 +174,7 @@ const polylinePoints = [
   pga.pt(PGA_OFFSET.x + 0, PGA_OFFSET.y + 1, PGA_OFFSET.z + 2),
   pga.pt(PGA_OFFSET.x + 0, PGA_OFFSET.y + 0, PGA_OFFSET.z + 3),
 ];
-pga.renderMV(polylinePoints, { color: 0xffaa00 });
+// pga.renderMV(polylinePoints, { color: 0xffaa00 });
 
 // ================
 // HTML overlays
@@ -257,7 +219,7 @@ function animate() {
   var now = Date.now();
   var deltaSeconds = (now - lastFrameTime) / 1000;
   lastFrameTime = now;
-  updateRotatingPoints(deltaSeconds);
+  updateCgaRotor(deltaSeconds);
 
   cemoCam.renderer.render(scene, camera);
 }
