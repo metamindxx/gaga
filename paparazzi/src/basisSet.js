@@ -597,12 +597,32 @@ export function createBasisSet(p, q, r) {
         .normalize();
     };
 
+    // helper function to calculate the taylor series. used by exp() and motor()
+    function taylorSeries(n, sq, numTerms = 11) {
+      let nPow = sq.smul(0.5); // n^2 / 2!
+      // collect even and odd terms separately to reduce lookup costs in .add()
+      // (since even and odd terms tend to be in orthogonal subspaces and there
+      //  is no additional cost when they're not orthogonal)
+      let even_terms = nPow.add(1); // 1 + n^2 / 2!
+      let odd_terms = n; // n
+
+      for (let i = 3; i < numTerms; ++i) {
+        nPow = nPow.gp(n).smul(1 / i); // n^i / i!
+        if (i & 1 === 0) { // even
+          even_terms = even_terms.add(nPow);
+        } else { // odd
+          odd_terms = odd_terms.add(nPow);
+        }
+      }
+      return even_terms.add(odd_terms);
+    };
+
     // exp(alpha * mv.normalized) = 1 + alpha * mv/1 + alpha^2 * mv^2/2! + alpha^3 * mv^3/3!
     mv.exp = function (alpha) {
       alpha = (alpha % (Math.PI * 2)) - Math.PI;
       var n = this.smul(alpha);
       const sq = n.gp(n);
-      if (sq.grade() == 0) {
+      if (sq.grade() <= 0) { // mv that is all zeros has a grade of -1
         const sq_val = sq.basisSVal("e_");
         if (sq_val < 0) {
           // n is a bivector with negative square -> use trig functions
@@ -622,23 +642,7 @@ export function createBasisSet(p, q, r) {
         }
       }
 
-      let nPow = sq.smul(0.5); // n^2 / 2!
-      // collect even and odd terms separately to reduce lookup costs in .add()
-      // (since even and odd terms tend to be in orthogonal subspaces and there
-      //  is no additional cost when they're not orthogonal)
-      let even_terms = nPow.add(1); // 1 + n^2 / 2!
-      let odd_terms = n; // n
-
-      const numTerms = 11; // sum up to n^10 / 10!
-      for (let i = 3; i < numTerms; ++i) {
-        nPow = nPow.gp(n).smul(1 / i); // n^i / i!
-        if (i & 1 === 0) { // even
-          even_terms = even_terms.add(nPow);
-        } else { // odd
-          odd_terms = odd_terms.add(nPow);
-        }
-      }
-      return even_terms.add(odd_terms);
+      return taylorSeries(n, sq);
     };
 
     // enki's exponential
@@ -679,6 +683,43 @@ export function createBasisSet(p, q, r) {
       mvResult.pushBlade(bs.newBlade(s * B[5], bs.e23));
       mvResult.pushBlade(bs.newBlade(m * s, bs.e0123));
       return mvResult;
+    };
+
+    // create a motor factory function for this bivector
+    // caches the type of motor based on the square of the bivector
+    // returns a function that takes an angle alpha and returns exp(alpha * mv)
+    // mv.motor()(alpha) is equivalent to mv.exp(alpha) but the mv.motor()
+    // function is optimized for repeated calls with different alphas
+    mv.motor = function () {
+      const sq = this.gp(this);
+      if (sq.grade() <= 0) { // mv that is all zeros has a grade of -1
+        // square is a scalar -> use a closed form solution
+        const sq_val = sq.basisSVal("e_");
+        if (sq_val < 0) {
+          // euclidean -> use euclidean functions
+          const norm = Math.sqrt(-sq_val);
+          return (alpha) => {
+            const theta = alpha * norm;
+            return this.smul(Math.sin(theta)).sadd(Math.cos(theta));
+          }
+        } else if (sq_val > 0) {
+          // hyperbolic -> use hyperbolic functions
+          const norm = Math.sqrt(sq_val);
+          return (alpha) => {
+            const theta = alpha * norm;
+            return this.smul(Math.sinh(theta)).sadd(Math.cosh(theta));
+          }
+        } else {
+          // degenerate -> use for exp(a*x) = 1 + a*x
+          return (alpha) => this.smul(alpha).sadd(1);
+        }
+      } else {
+        // general case -> use series expansion
+        return (alpha) => {
+          const n = this.smul(alpha);
+          return taylorSeries(n, n.gp(n));
+        }
+      }
     };
 
     mv.add = function (mv2) {
