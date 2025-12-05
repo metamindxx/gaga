@@ -274,11 +274,13 @@ cemo.addVectorToScene(axisEndpoints, new THREE.LineBasicMaterial({ color: 0xffaa
 let angle = 0;
 const SPEED = Math.PI / 400;
 
+const cgaMotor = rotBivector.motor();
+
 function animate() {
   angle += SPEED;
 
   // [Miller 3.7] Build rotor: R = exp(B * theta) where B is the rotation bivector
-  const R = rotBivector.smul(angle).exp(1);
+  const R = cgaMotor(angle);
 
   // [Miller 4.2.1] Construct Motor M = T * R * T_inv
   // T translates origin -> center
