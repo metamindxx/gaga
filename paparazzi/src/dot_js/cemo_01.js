@@ -13,16 +13,16 @@ const absCharge = 1.6e-19 * chargeMultiplier;
 const massMultiplier = 1e30;
 const mass = 9.1e-31 * massMultiplier;
 const ep0 = 8.854e-12;
-const qqBy4PiE0 = absCharge * absCharge / (4 * Math.PI * ep0);
+const qqBy4PiE0 = (absCharge * absCharge) / (4 * Math.PI * ep0);
 
 const cemoOptions = {
-  distanceMultiplier,
-  chargeMultiplier,
-  absCharge,
-  massMultiplier,
-  mass,
-  ep0,
-  qqBy4PiE0,
+  distanceMultiplier
+  , chargeMultiplier
+  , absCharge
+  , massMultiplier
+  , mass
+  , ep0
+  , qqBy4PiE0
 };
 
 function buildCemo(initialConfig = {}) {
@@ -31,8 +31,8 @@ function buildCemo(initialConfig = {}) {
   let forceVectorScale = initialConfig.vectorScale ?? 0.1;
 
   const fallbackParticleMaterial = new THREE.PointsMaterial({
-    color: 0x0088ff,
-    size: 0.1,
+    color: 0x0088ff
+    , size: 0.1
   });
   const mtrlRed = new THREE.MeshStandardMaterial({ color: cRed });
 
@@ -61,8 +61,8 @@ function buildCemo(initialConfig = {}) {
   }
 
   const cemo = {
-    configureEnvironment,
-    addLineToScene: function (coords, mtrl, scene) {
+    configureEnvironment
+    , addLineToScene: function (coords, mtrl, scene) {
       // alert('hello')
       console.log("hello");
 
@@ -72,17 +72,17 @@ function buildCemo(initialConfig = {}) {
       let lEnd = coords[1];
 
       let gLn = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(lStart[0], lStart[1], lStart[2]),
-        new THREE.Vector3(lEnd[0], lEnd[1], lEnd[2]),
+        new THREE.Vector3(lStart[0], lStart[1], lStart[2])
+        , new THREE.Vector3(lEnd[0], lEnd[1], lEnd[2])
       ]);
 
       var ln = new THREE.Line(gLn, mtrl);
       scene.add(ln);
 
       return ln;
-    },
+    }
 
-    addSphereToScene: function (coords, R, mtrl, scene) {
+    , addSphereToScene: function (coords, R, mtrl, scene) {
       var gSph = new THREE.SphereGeometry(R, 50, 50);
       var mshSph = new THREE.Mesh(gSph, mtrl);
       mshSph.position.x = coords[0];
@@ -90,9 +90,9 @@ function buildCemo(initialConfig = {}) {
       mshSph.position.z = coords[2];
       scene.add(mshSph);
       return mshSph;
-    },
+    }
 
-    addConeToScene: function (coords, radius, length, rotation, mtrl, scene) {
+    , addConeToScene: function (coords, radius, length, rotation, mtrl, scene) {
       var gCne = new THREE.CylinderGeometry(0, radius, length, 20, 1); //(radiusTop, radiusBottom, height, radiusSegments, heightSegments, openEnded, thetaStart, thetaLength)
       var mshCne = new THREE.Mesh(gCne, mtrl);
       mshCne.position.x = coords[0];
@@ -103,26 +103,28 @@ function buildCemo(initialConfig = {}) {
       mshCne.rotation.z = rotation[2];
       scene.add(mshCne);
       return mshCne;
-    },
-    addVectorToScene: function (coords, mtrl, scene, clickParent, isDouble) {
+    }
+    , addVectorToScene: function (coords, mtrl, scene, clickParent, isDouble) {
       let lStart = [0.0, 0.0, 0.0];
       let lEnd = [0.0, 1.0, 0.0];
 
       // ConeBufferGeometry(radius : Float, height : Float, radialSegments : Integer, heightSegments : Integer, openEnded : Boolean, thetaStart : Float, thetaLength : Float)
       var cnHeight = 0.2;
       var gCone = new THREE.ConeGeometry(cnHeight / 4, cnHeight, 4);
-      gCone.applyMatrix4(new THREE.Matrix4().makeTranslation(0, -cnHeight / 2, 0));
+      gCone.applyMatrix4(
+        new THREE.Matrix4().makeTranslation(0, -cnHeight / 2, 0)
+      );
       var mCone = new THREE.Mesh(gCone, mtrl);
       mCone.position.y = 1;
 
       var gLn = new THREE.BufferGeometry();
       var verts = new Float32Array([
-        lStart[0],
-        lStart[1],
-        lStart[2],
-        lEnd[0],
-        lEnd[1],
-        lEnd[2],
+        lStart[0]
+        , lStart[1]
+        , lStart[2]
+        , lEnd[0]
+        , lEnd[1]
+        , lEnd[2]
       ]);
       gLn.setAttribute("position", new THREE.BufferAttribute(verts, 3));
 
@@ -137,7 +139,7 @@ function buildCemo(initialConfig = {}) {
       if (isDouble) {
         var gCone2 = new THREE.ConeGeometry(cnHeight / 4, cnHeight, 4);
         gCone2.applyMatrix4(
-          new THREE.Matrix4().makeTranslation(0, -cnHeight / 2, 0),
+          new THREE.Matrix4().makeTranslation(0, -cnHeight / 2, 0)
         );
         var mCone2 = new THREE.Mesh(gCone2, mtrl);
         mCone2.position.y = 1 - cnHeight * 0.6;
@@ -155,15 +157,15 @@ function buildCemo(initialConfig = {}) {
       group.ceSetEndFromRoot = function (coords) {
         //group.scale = 2
         var vectorFromRoot = [
-          coords[0] - this.position.x,
-          coords[1] - this.position.y,
-          coords[2] - this.position.z,
+          coords[0] - this.position.x
+          , coords[1] - this.position.y
+          , coords[2] - this.position.z
         ];
         var len = Math.pow(
           Math.pow(vectorFromRoot[0], 2) +
             Math.pow(vectorFromRoot[1], 2) +
-            Math.pow(vectorFromRoot[2], 2),
-          0.5,
+            Math.pow(vectorFromRoot[2], 2)
+          , 0.5
         );
         this.scale.set(len, len, len);
 
@@ -171,9 +173,9 @@ function buildCemo(initialConfig = {}) {
         // the vector starts out pointing along the Y axis
         var myVector = new THREE.Vector3(0.0, 1.0, 0.0);
         var targetVector = new THREE.Vector3(
-          vectorFromRoot[0],
-          vectorFromRoot[1],
-          vectorFromRoot[2],
+          vectorFromRoot[0]
+          , vectorFromRoot[1]
+          , vectorFromRoot[2]
         );
 
         // Normalize vectors to make sure they have a length of 1
@@ -201,15 +203,15 @@ function buildCemo(initialConfig = {}) {
       group.ceSetEndFromRoot(coords[1]);
 
       return group;
-    },
+    }
 
-    addBivectorToScene: function (
-      position,
-      direction,
-      size,
-      scene,
-      options,
-      clickParent,
+    , addBivectorToScene: function (
+      position
+      , direction
+      , size
+      , scene
+      , options
+      , clickParent
     ) {
       if (!options) {
         options = {};
@@ -224,19 +226,19 @@ function buildCemo(initialConfig = {}) {
       // front
       var gCircFront = new THREE.CircleGeometry(size, 32);
       var mFront = new THREE.MeshStandardMaterial({
-        color: options.color,
-        opacity: 0.4,
-        emissive: 0x111111,
-        side: THREE.DoubleSide,
+        color: options.color
+        , opacity: 0.4
+        , emissive: 0x111111
+        , side: THREE.DoubleSide
       });
       var mshCircFront = new THREE.Mesh(gCircFront, mFront);
       // back
       var gCircBack = new THREE.CircleGeometry(size * 0.8, 32);
       var mBack = new THREE.MeshStandardMaterial({
-        color: options.color,
-        opacity: 0.6,
-        emissive: 0x111111,
-        side: THREE.BackSide,
+        color: options.color
+        , opacity: 0.6
+        , emissive: 0x111111
+        , side: THREE.BackSide
       });
       //var mBack = new THREE.MeshStandardMaterial( {color: mv.opt.color, wireframe: true} )
       var mshCircBack = new THREE.Mesh(gCircBack, mBack);
@@ -257,10 +259,10 @@ function buildCemo(initialConfig = {}) {
       group.ceSetDirection = function (direction, size) {
         group.lookAt(
           new THREE.Vector3(
-            group.position.x + direction[0],
-            group.position.y + direction[1],
-            group.position.z + direction[2],
-          ),
+            group.position.x + direction[0]
+            , group.position.y + direction[1]
+            , group.position.z + direction[2]
+          )
         );
         if (size != null) {
           var sf = size / group.originalSize;
@@ -269,9 +271,9 @@ function buildCemo(initialConfig = {}) {
       };
 
       return group;
-    },
+    }
 
-    addCylinderToScene: function (coords, Cyl_r, Cyl_l, rotation, mtrl, scene) {
+    , addCylinderToScene: function (coords, Cyl_r, Cyl_l, rotation, mtrl, scene) {
       var gCyl = new THREE.CylinderGeometry(Cyl_r, Cyl_r, Cyl_l, 128, 20); //CylinderGeometry(radiusTop : Float, radiusBottom : Float, height : Float, radialSegments : Integer, heightSegments : Integer, openEnded : Boolean, thetaStart : Float, thetaLength : Float)
       var mshCyl = new THREE.Mesh(gCyl, mtrl);
       //var cylinder_bsp = new ThreeBSP (mshCyl_o);
@@ -287,8 +289,8 @@ function buildCemo(initialConfig = {}) {
       mshCyl.rotation.z = rotation[2];
       scene.add(mshCyl);
       return mshCyl;
-    },
-    addTorusToScene: function (coords, r, tor_r, rotation, mtrl, scene) {
+    }
+    , addTorusToScene: function (coords, r, tor_r, rotation, mtrl, scene) {
       var gTor = new THREE.TorusGeometry(tor_r, r, 128, 96); //TorusGeometry(radius : Float, tube : Float, radialSegments : Integer, tubularSegments : Integer, arc : Float)
       var mshTor = new THREE.Mesh(gTor, mtrl);
       mshTor.position.x = coords[0];
@@ -299,10 +301,12 @@ function buildCemo(initialConfig = {}) {
       mshTor.rotation.z = rotation[2];
       scene.add(mshTor);
       return mshTor;
-    },
-    addFieldLineToScene: function (magnets, mtrl, scene) {
+    }
+    , addFieldLineToScene: function (magnets, mtrl, scene) {
       const makeCurve = (pointTriplet) =>
-        new THREE.SplineCurve(pointTriplet.map(([x, y]) => new THREE.Vector3(x, y, 0)));
+        new THREE.SplineCurve(
+          pointTriplet.map(([x, y]) => new THREE.Vector3(x, y, 0))
+        );
 
       const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
 
@@ -316,30 +320,30 @@ function buildCemo(initialConfig = {}) {
       };
       const definitions = [
         [
-          [-10, 0],
-          [0, 0],
-          [10, 0],
-        ],
-        [
-          [-10, 1],
-          [0, 0.1],
-          [10, 1],
-        ],
-        [
-          [-10, -1],
-          [0, -0.1],
-          [10, -1],
-        ],
-        [
-          [-10, 2],
-          [0, 0.2],
-          [10, 2],
-        ],
-        [
-          [-10, -2],
-          [0, -0.2],
-          [10, -2],
-        ],
+          [-10, 0]
+          , [0, 0]
+          , [10, 0]
+        ]
+        , [
+          [-10, 1]
+          , [0, 0.1]
+          , [10, 1]
+        ]
+        , [
+          [-10, -1]
+          , [0, -0.1]
+          , [10, -1]
+        ]
+        , [
+          [-10, 2]
+          , [0, 0.2]
+          , [10, 2]
+        ]
+        , [
+          [-10, -2]
+          , [0, -0.2]
+          , [10, -2]
+        ]
       ];
 
       let lastSpline = null;
@@ -348,16 +352,16 @@ function buildCemo(initialConfig = {}) {
       });
 
       return lastSpline;
-    },
+    }
 
-    addThickCylinderToScene: function (
-      coords,
-      Cyl_r_in,
-      Cyl_r_out,
-      Cyl_len,
-      rotation,
-      mtrl,
-      scene,
+    , addThickCylinderToScene: function (
+      coords
+      , Cyl_r_in
+      , Cyl_r_out
+      , Cyl_len
+      , rotation
+      , mtrl
+      , scene
     ) {
       /*		//CylinderGeometry(radiusTop : Float,
 		                   radiusBottom : Float,
@@ -373,24 +377,24 @@ function buildCemo(initialConfig = {}) {
       var gCylInr, mshCylInr;
       if (Cyl_r_in > 0) {
         gCylInr = new THREE.CylinderGeometry(
-          Cyl_r_in,
-          Cyl_r_in,
-          Cyl_len,
-          128,
-          20,
-          true,
+          Cyl_r_in
+          , Cyl_r_in
+          , Cyl_len
+          , 128
+          , 20
+          , true
         );
         mshCylInr = new THREE.Mesh(gCylInr, mtrl);
         groupMsh.add(mshCylInr);
       }
 
       var gCylOut = new THREE.CylinderGeometry(
-        Cyl_r_out,
-        Cyl_r_out,
-        Cyl_len,
-        128,
-        20,
-        true,
+        Cyl_r_out
+        , Cyl_r_out
+        , Cyl_len
+        , 128
+        , 20
+        , true
       );
       var mshCylOut = new THREE.Mesh(gCylOut, mtrl);
 
@@ -427,13 +431,13 @@ function buildCemo(initialConfig = {}) {
 
       scene.add(groupMsh);
       var ceCyl = {
-        isA: "ceCyl",
-        mesh: groupMsh,
-        r_in: Cyl_r_in,
-        r_out: Cyl_r_out,
-        len: Cyl_len,
-        halfLen: Cyl_len / 2,
-        moveContainedParticle: function (position, velocity, dt) {
+        isA: "ceCyl"
+        , mesh: groupMsh
+        , r_in: Cyl_r_in
+        , r_out: Cyl_r_out
+        , len: Cyl_len
+        , halfLen: Cyl_len / 2
+        , moveContainedParticle: function (position, velocity, dt) {
           // assumes cyl's axis is lying along x axis
           var contained = true;
           if (!this.leftPos) {
@@ -462,14 +466,17 @@ function buildCemo(initialConfig = {}) {
 
           // place it on the radius
           var radius = Math.pow(
-            Math.pow(position.y, 2) + Math.pow(position.z, 2),
-            0.5,
+            Math.pow(position.y, 2) + Math.pow(position.z, 2)
+            , 0.5
           );
           if (radius >= this.r_in && radius < this.r_out) {
             var newY = position.y + velocity[1] * dt;
             var newZ = position.z + velocity[2] * dt;
 
-            let newRadius = Math.pow(Math.pow(newY, 2) + Math.pow(newZ, 2), 0.5);
+            let newRadius = Math.pow(
+              Math.pow(newY, 2) + Math.pow(newZ, 2)
+              , 0.5
+            );
 
             if (newRadius < this.r_in || newRadius > this.r_out) {
               // https://gamedev.stackexchange.com/questions/33384/how-to-bounce-a-2d-point-particle-off-of-a-circular-edge
@@ -492,8 +499,8 @@ function buildCemo(initialConfig = {}) {
           }
 
           return contained;
-        },
-        placeInside: function (mesh) {
+        }
+        , placeInside: function (mesh) {
           // assumes cyl's axis is lying along x axis
           mesh.position.x =
             this.mesh.position.x - this.halfLen + Math.random() * this.len;
@@ -501,19 +508,19 @@ function buildCemo(initialConfig = {}) {
           var r = this.r_in + Math.random() * (this.r_out - this.r_in);
           mesh.position.y = r * Math.cos(theta);
           mesh.position.z = r * Math.sin(theta);
-        },
+        }
       };
       return ceCyl;
-    },
+    }
 
-    addAnodeToScene: function (r, mtrl, scene) {
+    , addAnodeToScene: function (r, mtrl, scene) {
       let anodeMesh = cemo.addSphereToScene([0, 0, 0], r, mtrl, scene);
 
       var ceAnode = {
-        isA: "ceAnode",
-        mesh: anodeMesh,
-        r: r,
-        moveContainedParticle: function (position, velocity, dt) {
+        isA: "ceAnode"
+        , mesh: anodeMesh
+        , r: r
+        , moveContainedParticle: function (position, velocity, dt) {
           // move it, then bring it back to the radius of the anode
           var contained = true;
 
@@ -521,8 +528,8 @@ function buildCemo(initialConfig = {}) {
           var newY = position.y + velocity[1] * dt;
           var newZ = position.z + velocity[2] * dt;
           var newR = Math.pow(
-            Math.pow(newX, 2) + Math.pow(newY, 2) + Math.pow(newZ, 2),
-            0.5,
+            Math.pow(newX, 2) + Math.pow(newY, 2) + Math.pow(newZ, 2)
+            , 0.5
           );
           var scale = this.r / newR;
           position.x = newX * scale;
@@ -530,8 +537,8 @@ function buildCemo(initialConfig = {}) {
           position.z = newZ * scale;
 
           return contained;
-        },
-        placeInside: function (mesh) {
+        }
+        , placeInside: function (mesh) {
           // assumes cyl's axis is lying along x axis
           var theta = Math.random() * 2 * Math.PI;
           var phi = Math.random() * 2 * Math.PI;
@@ -539,23 +546,23 @@ function buildCemo(initialConfig = {}) {
           var rCosTheta = r * Math.cos(theta);
           mesh.position.y = rCosTheta * Math.sin(phi);
           mesh.position.x = rCosTheta * Math.cos(phi);
-        },
+        }
       };
       ceAnode.mesh.cemoParent = ceAnode;
       return ceAnode;
-    },
+    }
 
-    addIon: function (posNeg, mtrl, scene) {
+    , addIon: function (posNeg, mtrl, scene) {
       //function (coords, R, mtrl, scene) {
       var ionRadius = 0.05;
       var ion = {
         mesh: cemo.addSphereToScene(
-          [posNeg * 10, Math.random() - 0.5, Math.random() - 0.5],
-          ionRadius,
-          mtrl,
-          scene,
-        ),
-        posNeg: posNeg,
+          [posNeg * 10, Math.random() - 0.5, Math.random() - 0.5]
+          , ionRadius
+          , mtrl
+          , scene
+        )
+        , posNeg: posNeg
       };
       ion.update = function (t) {
         this.mesh.position.x =
@@ -563,18 +570,18 @@ function buildCemo(initialConfig = {}) {
       };
 
       return ion;
-    },
+    }
 
-    addNutrl: function (posNeg, mtrl, scene) {
+    , addNutrl: function (posNeg, mtrl, scene) {
       //function (coords, R, mtrl, scene) {
       var ionRadius = 0.05;
       var nutrl = {
         mesh: cemo.addSphereToScene(
-          [Math.random() - 0.5, -1, Math.random() - 0.5],
-          ionRadius,
-          mtrl,
-          scene,
-        ),
+          [Math.random() - 0.5, -1, Math.random() - 0.5]
+          , ionRadius
+          , mtrl
+          , scene
+        )
       };
       // eslint-disable-next-line no-unused-vars
       nutrl.update = function (t) {
@@ -582,9 +589,9 @@ function buildCemo(initialConfig = {}) {
       };
 
       return nutrl;
-    },
+    }
 
-    addBufferVertexBlobToScene: function (coords, r, mtrl, scene) {
+    , addBufferVertexBlobToScene: function (coords, r, mtrl, scene) {
       var numParticles = 1;
 
       var positions = new Float32Array(numParticles * 3);
@@ -598,37 +605,37 @@ function buildCemo(initialConfig = {}) {
 
       var geometry = new THREE.BufferGeometry();
       geometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(positions, 3),
+        "position"
+        , new THREE.BufferAttribute(positions, 3)
       );
       geometry.setAttribute("scale", new THREE.BufferAttribute(scales, 1));
       let particles = new THREE.Points(geometry, mtrl);
       scene.add(particles);
       return particles;
-    },
+    }
 
-    addEtron: function (coords, mtrl, scene) {
+    , addEtron: function (coords, mtrl, scene) {
       //function (coords, R, mtrl, scene) {
       var etrnRadius = 0.03;
       var velMultiplier = 0.1;
 
       var etrn = {
-        isA: "etrn",
+        isA: "etrn"
         //		,	mesh: cemo.addSphereToScene(coords, etrnRadius, mtrl, scene)
-        charge: -absCharge,
-        mesh: cemo.addBufferVertexBlobToScene(
-          coords,
-          etrnRadius,
-          getParticleMaterial(),
-          scene,
-        ),
+        , charge: -absCharge
+        , mesh: cemo.addBufferVertexBlobToScene(
+          coords
+          , etrnRadius
+          , getParticleMaterial()
+          , scene
+        )
         //		,	mesh: dot
-        v: [
-          (0.5 - Math.random()) * velMultiplier,
-          (0.5 - Math.random()) * velMultiplier,
-          (0.5 - Math.random()) * velMultiplier,
-        ],
-        f: [0.0, 0.0, 0.0],
+        , v: [
+          (0.5 - Math.random()) * velMultiplier
+          , (0.5 - Math.random()) * velMultiplier
+          , (0.5 - Math.random()) * velMultiplier
+        ]
+        , f: [0.0, 0.0, 0.0]
         //		,	posNeg: posNeg
       };
 
@@ -689,9 +696,9 @@ function buildCemo(initialConfig = {}) {
         if (this.container) {
           if (
             this.container.moveContainedParticle(
-              this.mesh.position,
-              this.v,
-              dt,
+              this.mesh.position
+              , this.v
+              , dt
             ) == false
           ) {
             this.container.placeInside(this.mesh);
@@ -704,22 +711,27 @@ function buildCemo(initialConfig = {}) {
       };
 
       return etrn;
-    },
+    }
 
-    addPosTron: function (coords, mtrl, scene) {
+    , addPosTron: function (coords, mtrl, scene) {
       //function (coords, R, mtrl, scene) {
       var postronRadius = 0.03;
       // var velMultiplier = 0.01;
 
       var postron = {
-        isA: "postron",
+        isA: "postron"
         //		,	mesh: cemo.addSphereToScene(coords, postronRadius, mtrlRed, scene)
-        mesh: cemo.addBufferVertexBlobToScene(coords, postronRadius, mtrl, scene),
+        , mesh: cemo.addBufferVertexBlobToScene(
+          coords
+          , postronRadius
+          , mtrl
+          , scene
+        )
         //		,	mesh: particles
-        charge: absCharge,
-        v: [0, 0, 0],
-        f: [0.0, 0.0, 0.0],
-        selected: false,
+        , charge: absCharge
+        , v: [0, 0, 0]
+        , f: [0.0, 0.0, 0.0]
+        , selected: false
       };
 
       postron.mesh.cemoParent = postron;
@@ -800,9 +812,9 @@ function buildCemo(initialConfig = {}) {
         if (this.container) {
           if (
             this.container.moveContainedParticle(
-              this.mesh.position,
-              this.v,
-              dt,
+              this.mesh.position
+              , this.v
+              , dt
             ) == false
           ) {
             this.container.placeInside(this.mesh);
@@ -815,16 +827,16 @@ function buildCemo(initialConfig = {}) {
 
         if (this.showForce) {
           var vecStart = [
-            this.mesh.position.x,
-            this.mesh.position.y,
-            this.mesh.position.z,
+            this.mesh.position.x
+            , this.mesh.position.y
+            , this.mesh.position.z
           ];
           // eslint-disable-next-line no-unused-vars
           var absForce = Math.pow(
             Math.pow(this.f[0], 2) +
               Math.pow(this.f[1], 2) +
-              Math.pow(this.f[2], 2),
-            0.5,
+              Math.pow(this.f[2], 2)
+            , 0.5
           );
           var vecEnd = [];
           for (let i = 0; i < 3; ++i) {
@@ -834,9 +846,9 @@ function buildCemo(initialConfig = {}) {
 
           if (!this.forceVector) {
             this.forceVector = cemo.addVectorToScene(
-              [vecStart, vecEnd],
-              mtrlRed,
-              scene,
+              [vecStart, vecEnd]
+              , mtrlRed
+              , scene
             );
           } else {
             this.forceVector.position.x = this.mesh.position.x;
@@ -853,14 +865,14 @@ function buildCemo(initialConfig = {}) {
       };
 
       return postron;
-    },
-    calculateMutualForce: function (p1, p2) {
+    }
+    , calculateMutualForce: function (p1, p2) {
       var pos1 = p1.mesh.position;
       var pos2 = p2.mesh.position;
       var v3Distance = [
-        (pos1.x - pos2.x) * distanceMultiplier,
-        (pos1.y - pos2.y) * distanceMultiplier,
-        (pos1.z - pos2.z) * distanceMultiplier,
+        (pos1.x - pos2.x) * distanceMultiplier
+        , (pos1.y - pos2.y) * distanceMultiplier
+        , (pos1.z - pos2.z) * distanceMultiplier
       ];
 
       var distance_sq =
@@ -872,12 +884,12 @@ function buildCemo(initialConfig = {}) {
         // v3Distance = [0.001, 0.001, 0.001]
       }
       var distance = Math.pow(distance_sq, 0.5);
-      var f = (p1.charge * p2.charge / (4 * Math.PI * ep0)) / distance_sq;
+      var f = (p1.charge * p2.charge) / (4 * Math.PI * ep0) / distance_sq;
 
       var v3F = [
-        (f * v3Distance[0]) / distance,
-        (f * v3Distance[1]) / distance,
-        (f * v3Distance[2]) / distance,
+        (f * v3Distance[0]) / distance
+        , (f * v3Distance[1]) / distance
+        , (f * v3Distance[2]) / distance
       ];
 
       // add to the sum of forces on this particle
@@ -889,7 +901,7 @@ function buildCemo(initialConfig = {}) {
       p2.f[0] -= v3F[0];
       p2.f[1] -= v3F[1];
       p2.f[2] -= v3F[2];
-    },
+    }
   };
 
   return cemo;

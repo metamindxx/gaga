@@ -27,9 +27,9 @@ export function createCemoOrthCamera(divId, options = {}) {
   const container =
     options.container ||
     resolveContainer(
-      divId,
-      ownerDocument,
-      ownerDocument ? ownerDocument.body : null,
+      divId
+      , ownerDocument
+      , ownerDocument ? ownerDocument.body : null
     );
 
   const getSize =
@@ -46,8 +46,8 @@ export function createCemoOrthCamera(divId, options = {}) {
 
           if (defaultView) {
             return {
-              width: defaultView.innerWidth,
-              height: defaultView.innerHeight,
+              width: defaultView.innerWidth
+              , height: defaultView.innerHeight
             };
           }
 
@@ -69,12 +69,12 @@ export function createCemoOrthCamera(divId, options = {}) {
 
       const size = getSize();
       const width = Math.max(
-        1,
-        size && typeof size.width === "number" ? size.width : 1,
+        1
+        , size && typeof size.width === "number" ? size.width : 1
       );
       const height = Math.max(
-        1,
-        size && typeof size.height === "number" ? size.height : 1,
+        1
+        , size && typeof size.height === "number" ? size.height : 1
       );
 
       this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -93,30 +93,30 @@ export function createCemoOrthCamera(divId, options = {}) {
       const hSpan = wSpan * (height / width || 1);
 
       this.camera = new THREE.OrthographicCamera(
-        hOffset + wSpan / -2,
-        hOffset + wSpan / 2,
-        vOffset + hSpan / 2,
-        vOffset + hSpan / -2,
-        0.1,
-        100,
+        hOffset + wSpan / -2
+        , hOffset + wSpan / 2
+        , vOffset + hSpan / 2
+        , vOffset + hSpan / -2
+        , 0.1
+        , 100
       );
 
       //Controls
       this.controls = new OrbitControls(this.camera, this.renderer.domElement, {
-        document: ownerDocument,
-        eventTarget,
+        document: ownerDocument
+        , eventTarget
       });
-    },
+    }
 
-    setPosition: function (x, y, z) {
+    , setPosition: function (x, y, z) {
       this.camera.position.set(x, y, z);
       this.controls.update();
-    },
+    }
 
-    render: function () {
+    , render: function () {
       this.controls.update();
       this.renderer.render(this.scene, this.camera);
-    },
+    }
   };
 
   return cemoCamera;

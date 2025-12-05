@@ -3,11 +3,11 @@ import { createBasisSet } from "./basisSet.js";
 import { createCemoVanillaCamera } from "./cameras/cemoVanillaCamera.js";
 
 const DEFAULT_BACK_MATERIAL = new THREE.MeshStandardMaterial({
-  color: 0xddaaff,
-  opacity: 0.6,
-  emissive: 0x111111,
-  transparent: true,
-  side: THREE.BackSide,
+  color: 0xddaaff
+  , opacity: 0.6
+  , emissive: 0x111111
+  , transparent: true
+  , side: THREE.BackSide
 });
 
 export function createPgaBasis(scene, options = {}) {
@@ -53,30 +53,30 @@ export function createPgaBasis(scene, options = {}) {
       const xyz2 = PB.pointXYZ(mv2);
 
       const pts = [
-        new THREE.Vector3(xyz0.x, xyz0.y, xyz0.z),
-        new THREE.Vector3(xyz1.x, xyz1.y, xyz1.z),
-        new THREE.Vector3(xyz2.x, xyz2.y, xyz2.z),
+        new THREE.Vector3(xyz0.x, xyz0.y, xyz0.z)
+        , new THREE.Vector3(xyz1.x, xyz1.y, xyz1.z)
+        , new THREE.Vector3(xyz2.x, xyz2.y, xyz2.z)
       ];
 
       const geom = new THREE.BufferGeometry().setFromPoints(pts);
       const uvs = [0, 0, 0, 1, 1, 0];
       geom.setAttribute(
-        "uv",
-        new THREE.BufferAttribute(new Float32Array(uvs), 2),
+        "uv"
+        , new THREE.BufferAttribute(new Float32Array(uvs), 2)
       );
       const color = resolveColor(options, mv0, mv1, mv2);
       const frontMaterial = new THREE.MeshBasicMaterial({
-        color,
-        side: THREE.FrontSide,
+        color
+        , side: THREE.FrontSide
       });
       const frontMesh = new THREE.Mesh(geom, frontMaterial);
       const backMesh = new THREE.Mesh(geom, dottyMaterial);
       scene.add(frontMesh, backMesh);
 
       geom.computeVertexNormals();
-    },
+    }
     // Grade-1 blades (planes) get visualized with two concentric discs
-    plane(mv) {
+    , plane(mv) {
       if (!mv.opt.size) {
         mv.opt.size = 0.5;
       }
@@ -94,19 +94,19 @@ export function createPgaBasis(scene, options = {}) {
 
       const gCircFront = new THREE.CircleGeometry(mv.opt.size, 32);
       const mFront = new THREE.MeshStandardMaterial({
-        color: mv.opt.color,
-        opacity: 0.4,
-        emissive: 0x111111,
-        side: THREE.DoubleSide,
+        color: mv.opt.color
+        , opacity: 0.4
+        , emissive: 0x111111
+        , side: THREE.DoubleSide
       });
       const mshCircFront = new THREE.Mesh(gCircFront, mFront);
 
       const gCircBack = new THREE.CircleGeometry(mv.opt.size * 0.8, 32);
       const mBack = new THREE.MeshStandardMaterial({
-        color: mv.opt.color,
-        opacity: 0.6,
-        emissive: 0x111111,
-        side: THREE.BackSide,
+        color: mv.opt.color
+        , opacity: 0.6
+        , emissive: 0x111111
+        , side: THREE.BackSide
       });
       const mshCircBack = new THREE.Mesh(gCircBack, mBack);
       mshCircBack.position.set(0, 0, -0.001);
@@ -118,9 +118,9 @@ export function createPgaBasis(scene, options = {}) {
       group.position.set(nx * nd, ny * nd, nz * nd);
       scene.add(group);
       console.log("added plane", group);
-    },
+    }
     // Lists of points are drawn as poly-lines
-    lineSegments(points, options = {}) {
+    , lineSegments(points, options = {}) {
       if (!Array.isArray(points) || points.length < 2) {
         return;
       }
@@ -146,7 +146,7 @@ export function createPgaBasis(scene, options = {}) {
         positions[offset + 5] = end.z;
 
         const color = new THREE.Color(
-          resolveColor(options, points[i], points[i + 1]),
+          resolveColor(options, points[i], points[i + 1])
         );
         colors[offset + 0] = color.r;
         colors[offset + 1] = color.g;
@@ -158,47 +158,47 @@ export function createPgaBasis(scene, options = {}) {
 
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(positions, 3),
+        "position"
+        , new THREE.BufferAttribute(positions, 3)
       );
       geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 
       const material = new THREE.LineBasicMaterial({ vertexColors: true });
       scene.add(new THREE.LineSegments(geometry, material));
-    },
+    }
     // Grade-2 blades (lines) are rendered as vectors pointing along the line
-    line(mv) {
+    , line(mv) {
       if (!(cemo && typeof cemo.addVectorToScene === "function")) {
         return;
       }
 
-      let ex = mv.basisSVal("e_23"),
-        ey = -mv.basisSVal("e_13"),
-        ez = mv.basisSVal("e_12");
+      let ex = mv.basisSVal("e_23")
+        , ey = -mv.basisSVal("e_13")
+        , ez = mv.basisSVal("e_12");
       const mag = Math.pow(ex * ex + ey * ey + ez * ez, 1 / 2);
       ex /= mag;
       ey /= mag;
       ez /= mag;
 
-      const ix = mv.basisSVal("e_01") / mag,
-        iy = mv.basisSVal("e_02") / mag,
-        iz = mv.basisSVal("e_03") / mag;
+      const ix = mv.basisSVal("e_01") / mag
+        , iy = mv.basisSVal("e_02") / mag
+        , iz = mv.basisSVal("e_03") / mag;
 
-      const crossX = ey * iz - iy * ez,
-        crossY = ez * ix - iz * ex,
-        crossZ = ex * iy - ix * ey;
+      const crossX = ey * iz - iy * ez
+        , crossY = ez * ix - iz * ex
+        , crossZ = ex * iy - ix * ey;
 
       cemo.addVectorToScene(
         [
-          [crossX, crossY, crossZ],
-          [crossX + ex, crossY + ey, crossZ + ez],
-        ],
-        new THREE.MeshBasicMaterial({ color: mv.opt.color }),
-        scene,
+          [crossX, crossY, crossZ]
+          , [crossX + ex, crossY + ey, crossZ + ez]
+        ]
+        , new THREE.MeshBasicMaterial({ color: mv.opt.color })
+        , scene
       );
-    },
+    }
     // Points are rendered as shells while Ideals are rendered as vectors
-    point(mv) {
+    , point(mv) {
       if (!mv.opt.size) {
         mv.opt.size = 0.1;
       }
@@ -208,20 +208,20 @@ export function createPgaBasis(scene, options = {}) {
       if (Math.abs(i0) < 0.001) {
         mv.opt.size *= 0.2;
         xyz = {
-          x: -mv.basisSVal("e_023"),
-          y: mv.basisSVal("e_013"),
-          z: -mv.basisSVal("e_012"),
+          x: -mv.basisSVal("e_023")
+          , y: mv.basisSVal("e_013")
+          , z: -mv.basisSVal("e_012")
         };
         i0 = 1;
         if (cemo && typeof cemo.addVectorToScene === "function") {
           cemo.addVectorToScene(
             [
-              [xyz.x, xyz.y, xyz.z],
-              [2 * xyz.x, 2 * xyz.y, 2 * xyz.z],
-            ],
-            new THREE.MeshBasicMaterial({ color: mv.opt.color }),
-            scene,
-            true,
+              [xyz.x, xyz.y, xyz.z]
+              , [2 * xyz.x, 2 * xyz.y, 2 * xyz.z]
+            ]
+            , new THREE.MeshBasicMaterial({ color: mv.opt.color })
+            , scene
+            , true
           );
         }
       } else {
@@ -233,17 +233,17 @@ export function createPgaBasis(scene, options = {}) {
         const rs = mv.renderStuff;
         rs.geomOut = new THREE.SphereGeometry(mv.opt.size, 9, 9);
         rs.matOut = new THREE.MeshStandardMaterial({
-          color: mv.opt.color,
-          opacity: 0.6,
-          emissive: 0x111111,
+          color: mv.opt.color
+          , opacity: 0.6
+          , emissive: 0x111111
         });
         rs.meshOut = new THREE.Mesh(rs.geomOut, rs.matOut);
 
         const insideSize = (1 + Math.sign(i0) * -0.1) * mv.opt.size;
         rs.geomIn = new THREE.SphereGeometry(insideSize, 5, 5);
         rs.matIn = new THREE.MeshStandardMaterial({
-          color: mv.opt.color,
-          wireframe: true,
+          color: mv.opt.color
+          , wireframe: true
         });
         rs.meshIn = new THREE.Mesh(rs.geomIn, rs.matIn);
 
@@ -254,12 +254,12 @@ export function createPgaBasis(scene, options = {}) {
       }
 
       mv.renderStuff.renderGroup.position.set(xyz.x, xyz.y, xyz.z);
-    },
+    }
     // Rendering entry point for `basis.renderMV(list)`
     //   length 1 -> render MV directly
     //   length 3 -> treat as triangle
     //   everything else -> poly-line through consecutive points
-    list(mvs, options = {}) {
+    , list(mvs, options = {}) {
       if (mvs.length === 1) {
         // Render a single MV
         mvs[0].render(options);
@@ -270,18 +270,18 @@ export function createPgaBasis(scene, options = {}) {
         // Render line segments
         renderer.lineSegments(mvs, options);
       }
-    },
+    }
   };
 
   const PB = {
-    isA: "pgaBasis",
-    bs: bs, // basisSet
-    scene: scene,
-    opt: {},
-    I3,
-    I4,
+    isA: "pgaBasis"
+    , bs: bs // basisSet
+    , scene: scene
+    , opt: {}
+    , I3
+    , I4
 
-    pt(x, y, z) {
+    , pt(x, y, z) {
       var mvResult = bs.multiVector("");
       mvResult.pushBlade(bs.newBlade(-1, bs.e123));
       if (x) {
@@ -294,7 +294,7 @@ export function createPgaBasis(scene, options = {}) {
         mvResult.pushBlade(bs.newBlade(z, bs.e012));
       }
       return mvResult;
-    },
+    }
 
     // from page 14 of Normalization__Square_roots_and_the_Exponential_map_in_Clifford_Algebras_less_than_6D.pdf
     // pga specific
@@ -322,30 +322,30 @@ export function createPgaBasis(scene, options = {}) {
         return mvResult
 		}*/
 
-    pointXYZ(mv) {
+    , pointXYZ(mv) {
       // z,y,x,1 == d[11], d[12], d[13], d[14]
-      var ex = -mv.basisSVal("e_023"),
-        ey = mv.basisSVal("e_013"),
-        ez = -mv.basisSVal("e_012"),
-        i0 = mv.basisSVal("e_123");
+      var ex = -mv.basisSVal("e_023")
+        , ey = mv.basisSVal("e_013")
+        , ez = -mv.basisSVal("e_012")
+        , i0 = mv.basisSVal("e_123");
 
       var infinite = false;
       if (Math.abs(i0) < 0.0001) {
         infinite = true;
         var iMag = Math.pow(ex * ex + ey * ey + ez * ez, 1 / 2);
         return {
-          x: ex / iMag,
-          y: ey / iMag,
-          z: ez / iMag,
-          i: 0,
-          inf: infinite,
+          x: ex / iMag
+          , y: ey / iMag
+          , z: ez / iMag
+          , i: 0
+          , inf: infinite
         };
       } else {
         return { x: ex / i0, y: ey / i0, z: ez / i0, i: 1, inf: infinite };
       }
-    },
+    }
 
-    renderMV(mv, options) {
+    , renderMV(mv, options) {
       if (mv?.isA !== "mv") {
         return renderer.list(mv, options);
       }
@@ -370,7 +370,7 @@ export function createPgaBasis(scene, options = {}) {
       } else if (grade === 3) {
         renderer.point(mv);
       }
-    },
+    }
   };
 
   PB.bs = bs;

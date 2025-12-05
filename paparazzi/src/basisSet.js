@@ -9,23 +9,23 @@ export function createBasisSet(p, q, r) {
   var bs = {
     // basis: e0, e1, e2, ex, ey, ez, et
     //		- have a basis.sq value of +1, -1, 0
-    isA: "basisSet",
-    bases: [],
-    basisIdx: {},
-    basisById: {},
-    grades: [[]], // an array of the grades. Initiate grades[0] with []
-    cayley: [],
-    gradeOrder: null, // index of blades ordered by grade
-    interpretation: null, // eg. pga, cga
+    isA: "basisSet"
+    , bases: []
+    , basisIdx: {}
+    , basisById: {}
+    , grades: [[]] // an array of the grades. Initiate grades[0] with []
+    , cayley: []
+    , gradeOrder: null // index of blades ordered by grade
+    , interpretation: null // eg. pga, cga
   };
 
   // eg adding e2 will also add e12
   bs.addBasis = function (id, sq) {
-    var that = bs,
+    var that = bs
       //		,	grades = bs.grades
       //		,	basis
-      bases = bs.bases,
-      numBases = bs.bases.length;
+      , bases = bs.bases
+      , numBases = bs.bases.length;
 
     // create new basis eg e2
     var newBasisVectorTemplate = bs.basisSet_basis(id, sq, bases[0].idStr + id);
@@ -51,9 +51,9 @@ export function createBasisSet(p, q, r) {
 
     // 	bs.basisSet_basis = function (id, sq, idStr) {
     var newBasis = bs.basisSet_basis(
-      baseBasis.id + newBasisVectorTemplate.id,
-      newBasisVectorTemplate.sq,
-      baseBasis.idStr + newBasisVectorTemplate.id,
+      baseBasis.id + newBasisVectorTemplate.id
+      , newBasisVectorTemplate.sq
+      , baseBasis.idStr + newBasisVectorTemplate.id
     );
 
     // add it to the indexes
@@ -100,12 +100,12 @@ export function createBasisSet(p, q, r) {
   // create the basis
   bs.basisSet_basis = function (id, sq, idStr) {
     var b = {
-      id: id, // "e_13"
-      sq: sq, // -1
-      idStr: idStr, // ".1.3."
-      vecStr: idStr.replace(/\./g, ""), // "13"
-      vectorIdxs: [], // [1,3]
-      bsIdx: 0, // what is my index in bs.bases (which keys into the cayley table)
+      id: id // "e_13"
+      , sq: sq // -1
+      , idStr: idStr // ".1.3."
+      , vecStr: idStr.replace(/\./g, "") // "13"
+      , vectorIdxs: [] // [1,3]
+      , bsIdx: 0 // what is my index in bs.bases (which keys into the cayley table)
     };
     b.grade = b.vecStr.length; // 2
 
@@ -120,15 +120,15 @@ export function createBasisSet(p, q, r) {
 
   // eg adding e2 will also add e12
   bs.gpBlades = function (blade1, blade2, options) {
-    var b1 = blade1.basis,
-      b2 = blade2.basis;
+    var b1 = blade1.basis
+      , b2 = blade2.basis;
 
     // have we already worked this out?
     if (bs.cayley[b1.bsIdx] && bs.cayley[b1.bsIdx][b2.bsIdx]) {
       var resultBlade = bs.cayley[b1.bsIdx][b2.bsIdx];
       var result = bs.newBlade(
-        resultBlade.mul * blade1.mul * blade2.mul,
-        resultBlade.basis,
+        resultBlade.mul * blade1.mul * blade2.mul
+        , resultBlade.basis
       );
       if (options && options.log) {
         console.log(
@@ -137,21 +137,21 @@ export function createBasisSet(p, q, r) {
             " * " +
             blade2.s() +
             " = " +
-            result.s(),
+            result.s()
         );
       }
       return result;
     }
 
     // start with left vector of right blade and move it across vectors of left blade from right to left
-    var b2Idx,
-      b1Idx,
-      j,
-      moveB1On,
-      sign = 1,
-      iB1CopyStart = 0,
-      newBladeVectors = "",
-      newBasisId = bs.bases[0].id; // the root of the new id will be the scalar basis id
+    var b2Idx
+      , b1Idx
+      , j
+      , moveB1On
+      , sign = 1
+      , iB1CopyStart = 0
+      , newBladeVectors = ""
+      , newBasisId = bs.bases[0].id; // the root of the new id will be the scalar basis id
     for (let i2 = 0; i2 < b2.vectorIdxs.length; ++i2) {
       b2Idx = b2.vectorIdxs[i2];
       moveB1On = false;
@@ -217,8 +217,8 @@ export function createBasisSet(p, q, r) {
     }
 
     var newBlade = bs.newBlade(
-      sign * blade1.mul * blade2.mul,
-      bs.basisById[newBasisId],
+      sign * blade1.mul * blade2.mul
+      , bs.basisById[newBasisId]
     );
     if (options && options.log) {
       console.log(
@@ -231,7 +231,7 @@ export function createBasisSet(p, q, r) {
           bs.bases[0].id +
           newBladeVectors +
           " or " +
-          newBlade.s(),
+          newBlade.s()
       );
     }
     return newBlade;
@@ -240,8 +240,8 @@ export function createBasisSet(p, q, r) {
   bs.newBlade = function (mul, bss) {
     // multivector-sub_blade eg -5 e23
     var bl = {
-      mul: mul, // 	- the multiplier
-      basis: bss, //	- the basis
+      mul: mul // 	- the multiplier
+      , basis: bss //	- the basis
     };
     bl.smul = function (n) {
       this.mul *= n;
@@ -271,8 +271,8 @@ export function createBasisSet(p, q, r) {
   };
 
   bs.createCayley = function (symmetricDual) {
-    var result,
-      pss = bs.bases[bs.bases.length - 1];
+    var result
+      , pss = bs.bases[bs.bases.length - 1];
     for (let i = 0; i < bs.bases.length; ++i) {
       bs.cayley[i] = [];
       var bl1 = bs.newBlade(1, bs.bases[i]);
@@ -362,12 +362,12 @@ export function createBasisSet(p, q, r) {
   bs.multiVector = function (s) {
     var bs = this;
     var mv = {
-      isA: "mv",
-      bs: bs,
-      gradeStored: -1,
-      opt: {},
-      blades: [],
-      bladeIdx: {},
+      isA: "mv"
+      , bs: bs
+      , gradeStored: -1
+      , opt: {}
+      , blades: []
+      , bladeIdx: {}
     };
 
     mv.pushBlade = function (bl) {
@@ -457,7 +457,7 @@ export function createBasisSet(p, q, r) {
               //    eg try to find ',2,' in ',0,2,4,'
               if (
                 ("," + this.gradeStored + ",").indexOf(
-                  "," + blade.basis.grade + ",",
+                  "," + blade.basis.grade + ","
                 ) == -1
               ) {
                 this.gradeStored = this.gradeStored + "," + blade.basis.grade;
@@ -516,8 +516,8 @@ export function createBasisSet(p, q, r) {
       return mvResult;
     };
     mv.reverse = function () {
-      var mvResult = this.copy(),
-        g;
+      var mvResult = this.copy()
+        , g;
       for (let i = 0; i < mvResult.blades.length; ++i) {
         g = mvResult.blades[i].basis.grade;
         mvResult.blades[i].mul *= Math.pow(-1, (g * (g - 1)) / 2);
@@ -525,8 +525,8 @@ export function createBasisSet(p, q, r) {
       return mvResult;
     };
     mv.involute = function () {
-      var mvResult = this.copy(),
-        g;
+      var mvResult = this.copy()
+        , g;
       for (let i = 0; i < mvResult.blades.length; ++i) {
         g = mvResult.blades[i].basis.grade;
         mvResult.blades[i].mul *= Math.pow(-1, g);
@@ -534,8 +534,8 @@ export function createBasisSet(p, q, r) {
       return mvResult;
     };
     mv.conjugate = function () {
-      var mvResult = this.copy(),
-        g;
+      var mvResult = this.copy()
+        , g;
       for (let i = 0; i < mvResult.blades.length; ++i) {
         g = mvResult.blades[i].basis.grade;
         mvResult.blades[i].mul *= Math.pow(-1, (g * (g + 1)) / 2);
@@ -641,12 +641,12 @@ export function createBasisSet(p, q, r) {
 
       // (e01, e02, e03, e12, e31, e23)
       var B = [
-        this.bVal("e_01") * alpha,
-        this.bVal("e_02") * alpha,
-        this.bVal("e_03") * alpha,
-        this.bVal("e_12") * alpha,
-        this.bVal("e_13") * alpha * -1,
-        this.bVal("e_23") * alpha,
+        this.bVal("e_01") * alpha
+        , this.bVal("e_02") * alpha
+        , this.bVal("e_03") * alpha
+        , this.bVal("e_12") * alpha
+        , this.bVal("e_13") * alpha * -1
+        , this.bVal("e_23") * alpha
       ];
       var l = B[3] * B[3] + B[4] * B[4] + B[5] * B[5];
 
@@ -658,11 +658,11 @@ export function createBasisSet(p, q, r) {
         mvResult.pushBlade(bs.newBlade(B[2], bs.e03));
         return mvResult;
       }
-      var m = B[0] * B[5] + B[1] * B[4] + B[2] * B[3],
-        a = Math.sqrt(l),
-        c = Math.cos(a),
-        s = Math.sin(a) / a,
-        t = (m / l) * (c - s);
+      var m = B[0] * B[5] + B[1] * B[4] + B[2] * B[3]
+        , a = Math.sqrt(l)
+        , c = Math.cos(a)
+        , s = Math.sin(a) / a
+        , t = (m / l) * (c - s);
 
       mvResult.pushBlade(bs.newBlade(c, bs.e));
       mvResult.pushBlade(bs.newBlade(s * B[0] + t * B[5], bs.e01));

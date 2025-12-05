@@ -3,16 +3,16 @@ import { createBasisSet } from "./basisSet.js";
 
 const DEFAULT_CIRCLE_SEGMENTS = 64;
 const DEFAULT_BACK_MATERIAL = new THREE.MeshStandardMaterial({
-  color: 0xddaaff,
-  opacity: 0.6,
-  emissive: 0x111111,
-  transparent: true,
-  side: THREE.BackSide,
+  color: 0xddaaff
+  , opacity: 0.6
+  , emissive: 0x111111
+  , transparent: true
+  , side: THREE.BackSide
 });
 
 function buildCircleOutlineGeometry(
-  radius,
-  segments = DEFAULT_CIRCLE_SEGMENTS,
+  radius
+  , segments = DEFAULT_CIRCLE_SEGMENTS
 ) {
   const safeRadius = radius > 0 ? radius : 1e-4;
   const path = new THREE.Path();
@@ -62,22 +62,22 @@ function createRenderer({ scene, dottyMaterial, pointXYZ }) {
       const geom = new THREE.BufferGeometry().setFromPoints(pts);
       const uvs = [0, 0, 0, 1, 1, 0];
       geom.setAttribute(
-        "uv",
-        new THREE.BufferAttribute(new Float32Array(uvs), 2),
+        "uv"
+        , new THREE.BufferAttribute(new Float32Array(uvs), 2)
       );
       const color = resolveColor(options, mv0, mv1, mv2);
       const frontMaterial = new THREE.MeshBasicMaterial({
-        color,
-        side: THREE.FrontSide,
+        color
+        , side: THREE.FrontSide
       });
       const frontMesh = new THREE.Mesh(geom, frontMaterial);
       const backMesh = new THREE.Mesh(geom, dottyMaterial);
       scene.add(frontMesh, backMesh);
 
       geom.computeVertexNormals();
-    },
+    }
 
-    lineSegments(points, options = {}) {
+    , lineSegments(points, options = {}) {
       if (!Array.isArray(points) || points.length < 2) {
         return;
       }
@@ -103,7 +103,7 @@ function createRenderer({ scene, dottyMaterial, pointXYZ }) {
         positions[offset + 5] = end.z;
 
         const color = new THREE.Color(
-          resolveColor(options, points[i], points[i + 1]),
+          resolveColor(options, points[i], points[i + 1])
         );
         colors[offset + 0] = color.r;
         colors[offset + 1] = color.g;
@@ -115,16 +115,16 @@ function createRenderer({ scene, dottyMaterial, pointXYZ }) {
 
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(positions, 3),
+        "position"
+        , new THREE.BufferAttribute(positions, 3)
       );
       geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 
       const material = new THREE.LineBasicMaterial({ vertexColors: true });
       scene.add(new THREE.LineSegments(geometry, material));
-    },
+    }
 
-    list(mvs, options = {}) {
+    , list(mvs, options = {}) {
       if (!Array.isArray(mvs) || mvs.length === 0) {
         return;
       }
@@ -136,7 +136,7 @@ function createRenderer({ scene, dottyMaterial, pointXYZ }) {
       } else {
         this.lineSegments(mvs, options);
       }
-    },
+    }
   };
 }
 
@@ -146,18 +146,18 @@ export function createCgaBasis(scene, options = {}) {
   const dottyMaterial = customBackMaterial ?? DEFAULT_BACK_MATERIAL;
   let renderer;
   const cga = {
-    isA: "cgaBasis",
-    bs: bs, // basisSet
-    scene: scene,
-    opt: {},
-    cemo,
-    n0: bs.multiVector(),
-    ni: bs.multiVector(),
-    I5: bs.multiVector(),
+    isA: "cgaBasis"
+    , bs: bs // basisSet
+    , scene: scene
+    , opt: {}
+    , cemo
+    , n0: bs.multiVector()
+    , ni: bs.multiVector()
+    , I5: bs.multiVector()
 
-    pt: function (x, y, z) {
+    , pt: function (x, y, z) {
       return bs.multiVector({ e_1: x, e_2: y, e_3: z });
-    },
+    }
 
     // from page 14 of Normalization__Square_roots_and_the_Exponential_map_in_Clifford_Algebras_less_than_6D.pdf
     // pga specific
@@ -185,7 +185,7 @@ export function createCgaBasis(scene, options = {}) {
 			return mvResult
 		}*/
 
-    pointXYZ: function (mv) {
+    , pointXYZ: function (mv) {
       // https://clifford.readthedocs.io/en/latest/tutorials/cga/index.html
       // normalize
       // Xn = X / (X . ni)
@@ -202,12 +202,12 @@ export function createCgaBasis(scene, options = {}) {
       // var Xn = this.smul(1/XdotNi)
       // return {x: -Xn.d[1], y: -Xn.d[2], z:-Xn.d[3]}
       return {
-        x: mv.basisSVal("e_1") / XScalarNi,
-        y: mv.basisSVal("e_2") / XScalarNi,
-        z: mv.basisSVal("e_3") / XScalarNi,
+        x: mv.basisSVal("e_1") / XScalarNi
+        , y: mv.basisSVal("e_2") / XScalarNi
+        , z: mv.basisSVal("e_3") / XScalarNi
       };
-    },
-    renderMV: function (mv, options) {
+    }
+    , renderMV: function (mv, options) {
       if (!mv) {
         return;
       }
@@ -252,12 +252,12 @@ export function createCgaBasis(scene, options = {}) {
         // radius of circle
         var rad = Math.pow(circ_dual.sq(), 0.5);
 
-        var Icd = cga.I5.gp(Ic),
-          nx = Icd.bVal("e_1"),
-          ny = Icd.bVal("e_2"),
-          nz = Icd.bVal("e_3"),
+        var Icd = cga.I5.gp(Ic)
+          , nx = Icd.bVal("e_1")
+          , ny = Icd.bVal("e_2")
+          , nz = Icd.bVal("e_3")
           //				,	nd = d
-          mag = Math.pow(nx * nx + ny * ny + nz * nz, 1 / 2);
+          , mag = Math.pow(nx * nx + ny * ny + nz * nz, 1 / 2);
 
         // normalize
         nx = nx / mag;
@@ -303,10 +303,10 @@ export function createCgaBasis(scene, options = {}) {
 
           if (this.sphMat == undefined) {
             this.sphMat = new THREE.MeshPhongMaterial({
-              color: 0xff00ff,
-              emissive: 0x111111,
-              opacity: 0.5,
-              transparent: true,
+              color: 0xff00ff
+              , emissive: 0x111111
+              , opacity: 0.5
+              , transparent: true
             });
           }
           if (this.sphGeom == undefined) {
@@ -335,11 +335,11 @@ export function createCgaBasis(scene, options = {}) {
           //var sphDN = -sphD.dot(cg.ni).d[0]
           //sphD = sphD.smul(1/sphDN)
 
-          let nx = nHat.bVal("e_1"),
-            ny = nHat.bVal("e_2"),
-            nz = nHat.bVal("e_3"),
-            nd = d,
-            mag = Math.pow(nx * nx + ny * ny + nz * nz, 1 / 2);
+          let nx = nHat.bVal("e_1")
+            , ny = nHat.bVal("e_2")
+            , nz = nHat.bVal("e_3")
+            , nd = d
+            , mag = Math.pow(nx * nx + ny * ny + nz * nz, 1 / 2);
 
           // normalize
           nx = nx / mag;
@@ -349,9 +349,9 @@ export function createCgaBasis(scene, options = {}) {
 
           if (this.plMat == undefined) {
             this.plMat = new THREE.MeshStandardMaterial({
-              color: 0xffff00,
-              emissive: 0x111111,
-              side: THREE.DoubleSide,
+              color: 0xffff00
+              , emissive: 0x111111
+              , side: THREE.DoubleSide
             });
           }
           if (this.plGeom == undefined) {
@@ -379,10 +379,10 @@ export function createCgaBasis(scene, options = {}) {
           var rs = mv.renderStuff;
           rs.geomOut = new THREE.SphereGeometry(mv.opt.size, 9, 9);
           rs.matOut = new THREE.MeshStandardMaterial({
-            color: mv.opt.color,
-            opacity: 0.6,
-            emissive: 0x111111,
-            side: THREE.DoubleSide,
+            color: mv.opt.color
+            , opacity: 0.6
+            , emissive: 0x111111
+            , side: THREE.DoubleSide
           });
           rs.meshOut = new THREE.Mesh(rs.geomOut, rs.matOut);
 
@@ -399,13 +399,13 @@ export function createCgaBasis(scene, options = {}) {
           mv.components[i].render(options);
         }
       }
-    },
+    }
   };
 
   renderer = createRenderer({
-    scene,
-    dottyMaterial,
-    pointXYZ: (mv) => cga.pointXYZ(mv),
+    scene
+    , dottyMaterial
+    , pointXYZ: (mv) => cga.pointXYZ(mv)
   });
 
   cga.bs = bs;

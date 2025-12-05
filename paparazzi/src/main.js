@@ -10,7 +10,7 @@ import {
   , cRed
   , cBlue
   , cGreen
-,} from "./dot_js/cemo_01.js";
+} from "./dot_js/cemo_01.js";
 
 const cgaBs = createBasisSet();
 const pgaBs = createBasisSet();
@@ -45,26 +45,26 @@ cemo.addVectorToScene(
   [
     [0, 0, 0]
     , [1, 0, 0]
-  ,]
+  ]
   , mtrlRed
   , scene
-,);
+);
 cemo.addVectorToScene(
   [
     [0, 0, 0]
     , [0, 1, 0]
-  ,]
+  ]
   , mtrlGreen
   , scene
-,);
+);
 cemo.addVectorToScene(
   [
     [0, 0, 0]
     , [0, 0, 1]
-  ,]
+  ]
   , mtrlBlue
   , scene
-,);
+);
 
 // ==============================================================================
 // CGA (Conformal Geometric Algebra) Demo
@@ -134,7 +134,7 @@ const centreXYZ = {
   x: centre.basisSVal("e_1")
   , y: centre.basisSVal("e_2")
   , z: centre.basisSVal("e_3")
-,};
+};
 
 // ------------------------------------------------------------------------------
 // STEP 4: Compute the plane normal via wedge product and duality
@@ -199,7 +199,7 @@ const rotBivector = cgaBs.multiVector({
   e_23: normal.x
   , e_13: -normal.y  // Note: e_31 = -e_13, so we negate
   , e_12: normal.z
-,});
+});
 console.log("rotBivector blades:");
 console.log("  e_12:", rotBivector.basisSVal("e_12"));
 console.log("  e_13:", rotBivector.basisSVal("e_13"));
@@ -258,7 +258,7 @@ const axisLen = 2;
 const axisEndpoints = [
   [cx - normal.x * axisLen, cy - normal.y * axisLen, cz - normal.z * axisLen]
   , [cx + normal.x * axisLen, cy + normal.y * axisLen, cz + normal.z * axisLen]
-,];
+];
 cemo.addVectorToScene(axisEndpoints, new THREE.LineBasicMaterial({ color: 0xffaa00 }), scene);
 
 // ------------------------------------------------------------------------------
@@ -345,7 +345,7 @@ const polylinePoints = [
   , pga.pt(PGA_OFFSET.x - 1, PGA_OFFSET.y + 0, PGA_OFFSET.z + 1)
   , pga.pt(PGA_OFFSET.x + 0, PGA_OFFSET.y + 1, PGA_OFFSET.z + 2)
   , pga.pt(PGA_OFFSET.x + 0, PGA_OFFSET.y + 0, PGA_OFFSET.z + 3)
-,];
+];
 // pga.renderMV(polylinePoints, { color: 0xffaa00 });
 
 // ================
@@ -395,9 +395,9 @@ for (let x of [-0.5, 0.5]) {
   }
 }
 const cubeEdges = [
-  [0, 1], [1, 3], [3, 2], [2, 0], // Bottom
-  [4, 5], [5, 7], [7, 6], [6, 4], // Top
-  [0, 4], [1, 5], [2, 6], [3, 7], // Sides
+  [0, 1], [1, 3], [3, 2], [2, 0] // Bottom
+  , [4, 5], [5, 7], [7, 6], [6, 4] // Top
+  , [0, 4], [1, 5], [2, 6], [3, 7] // Sides
 ];
 
 // Setup visual mesh for the cube (reuse geometry for performance)
@@ -418,14 +418,14 @@ const tVec = pgaBs.multiVector({
   e_01: PGA_OFFSET.x
   , e_02: PGA_OFFSET.y
   , e_03: PGA_OFFSET.z
-,});
+});
 let M = tVec.smul(-0.5).exp(1);
 
 // B: Initial Velocity (Twist)
 // Rotation around y-axis (e13) and some translation
 let B = pgaBs.multiVector({
-  e_13: 2.0, // Rotation speed
-  e_02: 1.0, // Translation speed
+  e_13: 2.0 // Rotation speed
+  , e_02: 1.0 // Translation speed
 });
 
 // 3. Physics Update

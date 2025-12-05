@@ -32,8 +32,8 @@ export function createCemoQuadCamera(options = {}) {
 
           if (defaultView) {
             return {
-              width: defaultView.innerWidth,
-              height: defaultView.innerHeight,
+              width: defaultView.innerWidth
+              , height: defaultView.innerHeight
             };
           }
 
@@ -48,12 +48,12 @@ export function createCemoQuadCamera(options = {}) {
 
       const size = getSize();
       const wiw = Math.max(
-        1,
-        size && typeof size.width === "number" ? size.width : 1,
+        1
+        , size && typeof size.width === "number" ? size.width : 1
       );
       const wih = Math.max(
-        1,
-        size && typeof size.height === "number" ? size.height : 1,
+        1
+        , size && typeof size.height === "number" ? size.height : 1
       );
 
       const layoutHost = ownerDocument.createElement("div");
@@ -91,8 +91,8 @@ export function createCemoQuadCamera(options = {}) {
       this.rndr_w = rndr_w;
 
       const renderer = new THREE.WebGLRenderer({
-        canvas: canvasMain,
-        antialias: true,
+        canvas: canvasMain
+        , antialias: true
       });
       renderer.setClearColor(0x000000);
       renderer.setPixelRatio(mainRndrScreenRatio);
@@ -104,8 +104,8 @@ export function createCemoQuadCamera(options = {}) {
       const orthoRndrScreenRatio = rndr_w / rndr_h;
 
       const rndr_02 = new THREE.WebGLRenderer({
-        canvas: canvas02,
-        antialias: true,
+        canvas: canvas02
+        , antialias: true
       });
       rndr_02.setClearColor(0x000000);
       rndr_02.setPixelRatio(orthoRndrScreenRatio);
@@ -113,8 +113,8 @@ export function createCemoQuadCamera(options = {}) {
       this.rndr_02 = rndr_02;
 
       const rndr_03 = new THREE.WebGLRenderer({
-        canvas: canvas03,
-        antialias: true,
+        canvas: canvas03
+        , antialias: true
       });
       rndr_03.setClearColor(0x000000);
       rndr_03.setPixelRatio(orthoRndrScreenRatio);
@@ -122,8 +122,8 @@ export function createCemoQuadCamera(options = {}) {
       this.rndr_03 = rndr_03;
 
       const rndr_04 = new THREE.WebGLRenderer({
-        canvas: canvas04,
-        antialias: true,
+        canvas: canvas04
+        , antialias: true
       });
       rndr_04.setClearColor(0x000000);
       rndr_04.setPixelRatio(orthoRndrScreenRatio);
@@ -131,63 +131,63 @@ export function createCemoQuadCamera(options = {}) {
       this.rndr_04 = rndr_04;
 
       this.camera = new THREE.PerspectiveCamera(
-        60,
-        mainRndrScreenRatio,
-        1,
-        1000,
+        60
+        , mainRndrScreenRatio
+        , 1
+        , 1000
       );
       this.camera.position.set(0, 10, 10);
 
       const wSpan = 6;
       const camOrth_01 = new THREE.OrthographicCamera(
-        -wSpan,
-        wSpan,
-        wSpan / orthoRndrScreenRatio,
-        -wSpan / orthoRndrScreenRatio,
-        0.1,
-        10000,
+        -wSpan
+        , wSpan
+        , wSpan / orthoRndrScreenRatio
+        , -wSpan / orthoRndrScreenRatio
+        , 0.1
+        , 10000
       );
       camOrth_01.position.set(0, 0, 20);
       camOrth_01.lookAt(new THREE.Vector3(0, 0, 0));
       this.camOrth_01 = camOrth_01;
 
       const camOrth_02 = new THREE.OrthographicCamera(
-        -wSpan,
-        wSpan,
-        wSpan / orthoRndrScreenRatio,
-        -wSpan / orthoRndrScreenRatio,
-        0.1,
-        10000,
+        -wSpan
+        , wSpan
+        , wSpan / orthoRndrScreenRatio
+        , -wSpan / orthoRndrScreenRatio
+        , 0.1
+        , 10000
       );
       camOrth_02.position.set(0, 20, 0);
       camOrth_02.lookAt(new THREE.Vector3(0, 0, 0));
       this.camOrth_02 = camOrth_02;
 
       const camOrth_03 = new THREE.OrthographicCamera(
-        -wSpan,
-        wSpan,
-        wSpan / orthoRndrScreenRatio,
-        -wSpan / orthoRndrScreenRatio,
-        0.1,
-        10000,
+        -wSpan
+        , wSpan
+        , wSpan / orthoRndrScreenRatio
+        , -wSpan / orthoRndrScreenRatio
+        , 0.1
+        , 10000
       );
       camOrth_03.position.set(20, 0, 0);
       camOrth_03.lookAt(new THREE.Vector3(0, 0, 0));
       this.camOrth_03 = camOrth_03;
 
       this.controls = new OrbitControls(this.camera, this.renderer.domElement, {
-        document: ownerDocument,
-        eventTarget,
+        document: ownerDocument
+        , eventTarget
       });
-    },
+    }
 
-    render: function () {
+    , render: function () {
       this.controls.update();
       this.renderer.render(this.scene, this.camera);
       this.rndr_02.render(this.scene, this.camOrth_01);
       this.rndr_03.render(this.scene, this.camOrth_02);
       this.rndr_04.render(this.scene, this.camOrth_03);
-    },
+    }
   };
 
   return cemoCamera;
