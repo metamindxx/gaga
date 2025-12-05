@@ -604,6 +604,28 @@ export function createBasisSet(p, q, r) {
       var nPow = n.copy();
       var res = n.copy().sadd(1);
 
+      const sq = n.gp(n);
+      if (sq.grade() == 0) {
+        const sq_val = sq.basisSVal("e_");
+        if (sq_val < 0) {
+          // n is a bivector with negative square -> use trig functions
+          const a = Math.sqrt(-sq_val);
+          const cos = Math.cos(a);
+          const sin = Math.sin(a);
+          return n.smul(sin).sadd(cos);
+        } else if (sq_val > 0) {
+          // n is a bivector with positive square -> use hyperbolic functions
+          const a = Math.sqrt(sq_val);
+          const cosh = Math.cosh(a);
+          const sinh = Math.sinh(a);
+          return n.smul(sinh).sadd(cosh);
+        } else {
+          // sq == 0, res = 1 + x
+          return n.sadd(1);
+        }
+      }
+      // todo: since we already have n^2, we can use that to speed up the series calculation
+
       var numTerms = 11;
       //console.log(numTerms)
       for (let i = 2; i < numTerms; ++i) {
