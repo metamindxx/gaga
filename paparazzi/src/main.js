@@ -66,185 +66,253 @@ cemo.addVectorToScene(
   , scene
 ,);
 
-// ================
-// CGA demo objects
+// ==============================================================================
+// CGA (Conformal Geometric Algebra) Demo
+// ==============================================================================
+//
+// REFERENCES:
+//   [Miller]  R.A. Miller, "Geometric Algebra: An Introduction with Applications in Euclidean and Conformal Geometry"
+//   [Lasenby] Lasenby et al., "A Covariant Approach to Geometry using GA"
+//
+// ==============================================================================
 
 var cga = createCgaBasis(scene, { basisSet: cgaBs, cemo });
+
+// ------------------------------------------------------------------------------
+// STEP 1: Create a conformal point from Euclidean coordinates (x, y, z)
+//
+// [Miller 4.1.4, Eq 4.10] Standard form of a conformal point:
+//   X = 1/2 (2x + x**2 * ni - n0)
+// ------------------------------------------------------------------------------
 var point = function (x, y, z) {
-  let x3d = cgaBs.multiVector({ e_1: x, e_2: y, e_3: z });
+  // Euclidean part: x * e_1 + y * e_2 + z * e_3
+  let euclidean = cgaBs.multiVector({ e_1: x, e_2: y, e_3: z });
+  // Infinity coefficient: 1/2 * |x|**2
   let infScale = (x * x + y * y + z * z) / 2;
-  return cga.n0.add(x3d).add(cga.ni.smul(infScale));
+  // Full conformal point: n0 + euclidean + infScale * ni
+  return cga.n0.add(euclidean).add(cga.ni.smul(infScale));
 };
 
+// ------------------------------------------------------------------------------
+// STEP 2: Create three points and wedge them to form a circle (OPNS)
+//
+// [Miller 4.4.4, Eq 4.49] Circle as outer product of three points:
+//   Lc = A ^ B ^ C
+// where A, B, C are conformal mappings of three non-collinear Euclidean points.
+//
+// [Miller 4.3.2] This is an OPNS (Outer Product Null Space) representation:
+//   OPNScircle = {X | X ^ A ^ B ^ C = 0}
+// The circle is the set of all conformal points X satisfying this equation.
+// ------------------------------------------------------------------------------
 const pt1 = point(-2, 0, 1);
 const pt2 = point(1, -1, 0.5);
-const pt3 = point(1, 1, 2).smul(2);
-const pt4 = point(0, 2, 0);
-// circle OPNS (grade-3): c1 = P1 ∧ P2 ∧ P3
-const c1 = pt1.op(pt2.op(pt3));
-console.log("c1 grade =>", c1.grade());
-// sphere OPNS (grade-4): s1 = c1 ∧ P4
-const s1 = c1.op(pt4);
-console.log("s1 grade =>", s1.grade());
-// sphere through infinity (OPNS grade-4): s2 = c1 ∧ ni
-const s2 = c1.op(cga.ni);
-console.log("s2 grade =>", s2.grade());
+const pt3 = point(1, 1, 2);
 
-pt1.strLog("pt1");
-pt2.strLog("pt2");
-pt3.strLog("pt3");
-pt4.strLog("pt4");
-c1.strLog("c1 (circle through pt1,pt2,pt3)");
-s1.strLog("s1 (sphere through pt1,pt2,pt3,pt4)");
-s2.strLog("s2 (sphere through pt1,pt2,pt3 and infinity)");
+// Outer product (wedge) of three points = circle through all three
+const circle = pt1.op(pt2).op(pt3);
 
-// ok, I have 4 points, a circle and 2 spheres.
-// now to find the line through the circle centre perpendicular to the circle
-// and use that to build a rotor to spin the circle about its centre
+// ------------------------------------------------------------------------------
+// STEP 3: Extract the circle's center
+//
+// [Miller 4.4.4, Eq 4.51] Center of a circle:
+//   P0 = Lc * ni * Lc
+// The operation Lc M Lc reflects any object M in the circle Lc.
+// The center is the image of the point at infinity under reflection in the circle.
+//
+// [Miller 4.1.4, Eq 4.12] Normalize to standard form:
+//   P_hat = P / (-P.dot(ni))
+// so that -P_hat.dot(ni) = 1, then Euclidean coords can be read directly from e_1, e_2, e_3.
+// ------------------------------------------------------------------------------
+// Compute unnormalized center via sandwich product
+const centreRaw = circle.gp(cga.ni).gp(circle);
+// Normalize: scale so that -P0.dot(ni) = 1
+const normFactor = -1 / centreRaw.scalarProduct(cga.ni);
+const centre = centreRaw.smul(normFactor);
 
-// Circle center from Eq. (4.51): P_0 = L_c * n_\infty * L_c, normalized so -P0·n_\infty = 1
-// Grades:
-//  - c1 (circle) is OPNS grade-3 (P1 ∧ P2 ∧ P3)
-//  - cga.ni is grade-1 (point at infinity)
-//  - P0 computed below should be a grade-1 MV (a conformal point)
-const c1CentreRaw = c1.gp(cga.ni).gp(c1);
-console.log("c1CentreRaw grade =>", c1CentreRaw.grade());
-const c1CentreNormalization = -1 / c1CentreRaw.dot(cga.ni).basisSVal("e_");
-const c1Centre = c1CentreRaw.smul(c1CentreNormalization);
-c1Centre.strLog("c1Centre");
-console.log("c1Centre grade =>", c1Centre.grade());
-
-// Build an axis line through the circle center perpendicular to the circle plane:
-// The canonical way in CGA is to join the centre point to another point in the
-// direction of the plane normal (or point at infinity along that direction).
-// We'll compute an explicit axis point from the plane's Euclidean bivector
-// and join c1Centre to that point. The resulting axisLine is OPNS grade-3.
-
-// Extract Euclidean center coordinates for building translators
-const c1CentreCoords = {
-  x: c1Centre.basisSVal("e_1")
-  , y: c1Centre.basisSVal("e_2")
-  , z: c1Centre.basisSVal("e_3")
+// Extract Euclidean (x,y,z) coordinates from the normalized conformal point
+const centreXYZ = {
+  x: centre.basisSVal("e_1")
+  , y: centre.basisSVal("e_2")
+  , z: centre.basisSVal("e_3")
 ,};
 
-// Translator rotors that move points to/from the circle center before applying rotations
-const cgaCentreVector = cgaBs.multiVector({
-  e_1: c1CentreCoords.x
-  , e_2: c1CentreCoords.y
-  , e_3: c1CentreCoords.z
+// ------------------------------------------------------------------------------
+// STEP 4: Compute the plane normal via wedge product and duality
+//
+// [Miller 2.3, Def 2.3.4] Outer product of two vectors:
+//   u ^ v = oriented area (bivector) in the plane spanned by u and v
+//
+// [Miller 4.3.1, Def 4.3.1, Eq 4.39] Duality:
+//   A* = A I^-1
+// where I is the unit pseudoscalar. In R3 with I = e_1 e_2 e_3:
+//   (e_2 e_3)* = e_1,  (e_3 e_1)* = e_2,  (e_1 e_2)* = e_3
+//
+// So the dual of a plane bivector is its normal vector.
+// ------------------------------------------------------------------------------
+
+// Extract Euclidean (grade-1) parts from the conformal points
+const euclidean1 = pt1.selectGrade(1);
+const euclidean2 = pt2.selectGrade(1);
+const euclidean3 = pt3.selectGrade(1);
+
+// Vectors in the plane (displacement vectors between points)
+const vec12 = euclidean2.sub(euclidean1);  // p2 - p1
+const vec13 = euclidean3.sub(euclidean1);  // p3 - p1
+
+// Wedge product gives the plane bivector (in Euclidean 3D)
+const planeBivector = vec12.op(vec13);
+planeBivector.strLog("planeBivector (vec12 ^ vec13)");
+
+// [Miller 4.3.1, Eq 4.39] Hodge dual in R3:
+//   (e_2 e_3)* = e_1,  (e_3 e_1)* = e_2,  (e_1 e_2)* = e_3
+// So bivector components map to normal vector components.
+//
+// TODO: use planeBivector.dual() instead of manual extraction.
+const normal = {
+  x: planeBivector.basisSVal("e_23")
+  , y: -planeBivector.basisSVal("e_13")  // e_31 = -e_13
+  , z: planeBivector.basisSVal("e_12")
+};
+
+// Normalize to unit length (required? for rotor to be a pure rotation)
+const nMag = Math.hypot(normal.x, normal.y, normal.z);
+normal.x /= nMag;
+normal.y /= nMag;
+normal.z /= nMag;
+
+console.log("Plane normal (from GA wedge product):", normal.x, normal.y, normal.z);
+
+// ------------------------------------------------------------------------------
+// STEP 5: Build the Euclidean rotation bivector
+//
+// [Miller 3.7, Theorem 3.7.1, Eq 3.26] Rotation formula:
+//   Let RI(2)θ(u) denote the rotation of a vector u by the angle θ around an axis perpendicular to the plane I(2)
+//   R_{I(2),theta}(u) = exp(-I(2) * theta / 2) u exp(I(2) * theta / 2)
+//
+// [Miller 3.4, Def 3.4.2] Exponential of a bivector:
+//   exp(I(2) * theta) = cos(theta) + I(2) * sin(theta)
+//
+// The bivector B = nx * e_23 + ny * e_31 + nz * e_12 generates rotation IN the plane
+// perpendicular to axis (nx, ny, nz) - which is exactly our circle's plane.
+// ------------------------------------------------------------------------------
+const rotBivector = cgaBs.multiVector({
+  e_23: normal.x
+  , e_13: -normal.y  // Note: e_31 = -e_13, so we negate
+  , e_12: normal.z
 ,});
-// centreTranslationGenerator: bivector (euclidean vector ∧ ni) used for translation
-const centreTranslationGenerator = cgaCentreVector.gp(cga.ni).smul(0.5);
-console.log("centreTranslationGenerator grade =>", centreTranslationGenerator.grade());
-// Translators: these are even spinors generated with exp(generator)
-const cgaTranslateFromCentre = centreTranslationGenerator.exp(1);
-const cgaTranslateToCentre = centreTranslationGenerator.smul(-1).exp(1);
-console.log("cgaTranslateFromCentre grade =>", cgaTranslateFromCentre.grade());
-console.log("cgaTranslateToCentre grade =>", cgaTranslateToCentre.grade());
+console.log("rotBivector blades:");
+console.log("  e_12:", rotBivector.basisSVal("e_12"));
+console.log("  e_13:", rotBivector.basisSVal("e_13"));
+console.log("  e_23:", rotBivector.basisSVal("e_23"));
+console.log("  e_31:", rotBivector.basisSVal("e_31"));
+rotBivector.strLog("rotBivector");
 
-// Plane containing the circle (IPNS). Use the math ops to derive the rotation bivector
-// directly, then build a line through the circle centre in that direction.
-// Plane containing the circle (IPNS): P1 ∧ P2 ∧ P3 ∧ n∞. This is grade-4 (OPNS).
-const c1PlaneIpns = c1.op(cga.ni).dual();
-console.log("c1PlaneIpns grade =>", c1PlaneIpns.grade());
+// Test: what does exp give us?
+const testRotor = rotBivector.smul(0.5).exp(1);
+console.log("testRotor grade:", testRotor.grade());
+testRotor.strLog("testRotor = exp(B * 0.5)");
 
-// Euclidean bivector that generates rotation in the circle's plane:
-//  - unDual() turns the IPNS plane to OPNS dual form
-//  - selectGrade(2) restricts to the Euclidean bivector (grade-2)
-//  - normalize() makes it a unit generator for clean rotor exponents
-const c1RotationPlane = c1PlaneIpns.unDual().selectGrade(2).normalize();
-console.log("c1RotationPlane grade =>", c1RotationPlane.grade());
-c1RotationPlane.strLog("c1RotationPlane (bivector generator - grade 2)");
+// ------------------------------------------------------------------------------
+// STEP 6: Build translator to rotate about circle center (not origin)
+//
+// [Miller 4.2.1, Eq 4.14] Translation rotors:
+//   Ta = exp(na/2) = 1 + na/2   (because (na)**2 = 0, null bivector)
+//   T_tilde = exp(-na/2) = 1 - na/2
+//
+// These translators are used to construct the Motor for rotation about the center.
+// ------------------------------------------------------------------------------
+const cx = centreXYZ.x, cy = centreXYZ.y, cz = centreXYZ.z;
+console.log("Circle center:", cx, cy, cz);
 
-// Build the axis line by creating a second point offset along the plane's normal
-// The bivector components (e_23,e_31,e_12) correspond to the Euclidean normal.
-const axisOffset = {
-  x: c1RotationPlane.basisSVal("e_23")
-  , y: c1RotationPlane.basisSVal("e_31")
-  , z: c1RotationPlane.basisSVal("e_12")
-,};
-// Build a second point offset by the Euclidean normal to make the axis line:
-// axisPoint: a conformal point offset from the centre using the plane normal
-const axisPoint = point(
-  c1CentreCoords.x + axisOffset.x
-  , c1CentreCoords.y + axisOffset.y
-  , c1CentreCoords.z + axisOffset.z
-,);
-const axisLine = c1Centre.join(axisPoint);
-console.log("axisPoint grade =>", axisPoint.grade());
-axisLine.strLog("axisLine (through circle centre perpendicular to circle)");
-console.log("axisLine grade =>", axisLine.grade());
-// NOTE: `axisLine` is the canonical line (grade-3). We keep the older name out
-// of the repo to avoid unused-variable warnings.
+// Build translator directly (not via exp)
+// T = 1 - 0.5 * centreVec * ni
+const centreVec = cgaBs.multiVector({ e_1: cx, e_2: cy, e_3: cz });
+const halfCentreNi = centreVec.op(cga.ni).smul(0.5);
 
-let cgaRotorPhase = 0;
-const CGA_ROTATION_SPEED = Math.PI / 400;
-setTimeout(() => {
-  updateCgaRotor(1 / 60); // warm up
-}, 2000);
-let step = 0;
-function updateCgaRotor(deltaSeconds = 0) {
-  // allow either accumulated delta-time or wall-clock control of the animation phase
-  if (deltaSeconds) {
-    cgaRotorPhase += deltaSeconds * CGA_ROTATION_SPEED;
-  } else {
-    const totalElapsedSeconds = (Date.now() - start) / 1000;
-    cgaRotorPhase = totalElapsedSeconds * CGA_ROTATION_SPEED;
-  }
+// T translates FROM origin TO centre
+// T = 1 - 0.5 * c * ni
+const T = cgaBs.multiVector({ e_: 1 }).sub(halfCentreNi);
+T.strLog("T (translator to centre)");
 
-  // Rotor around the circle's plane, translated so the center stays fixed
-  const rotor = c1RotationPlane.smul(cgaRotorPhase).exp(1);
-  const combinedRotor = cgaTranslateFromCentre
-    .gp(rotor.gp(cgaTranslateToCentre))
-    .normalize();
-  const combinedRotorReverse = combinedRotor.reverse();
+// T_inv translates FROM centre TO origin  
+// T_inv = 1 + 0.5 * c * ni
+const T_inv = cgaBs.multiVector({ e_: 1 }).add(halfCentreNi);
+T_inv.strLog("T_inv (translator to origin)");
 
-  const rotatePoint = function (pt, color) {
-    return combinedRotor
-      .gp(pt)
-      .gp(combinedRotorReverse)
-      .render({ color, size: 0.12 });
-  };
+// Verify: T * T_inv should equal 1
+const T_check = T.gp(T_inv);
+T_check.strLog("T * T_inv (should be ~1)");
 
-  const rotatedPt1 = rotatePoint(pt1, cRed);
-  rotatePoint(pt2, cGreen);
-  rotatePoint(pt3, cBlue);
+// ------------------------------------------------------------------------------
+// STEP 7: Render static elements
+// ------------------------------------------------------------------------------
+// Draw the circle
+cga.renderMV(circle, { color: 0x3366cc });
 
-  if (step++ < 4) {
-    // Grades verification for debugging:
-    //  - rotor: should be an even multivector (rotor) - possibly mixed grade (0/2)
-    //  - combinedRotor: the translator-rotor-translator product should be normalized rotors
-    console.log("centreTranslationGenerator grade =>", centreTranslationGenerator.grade());
-    console.log("cgaTranslateFromCentre grade =>", cgaTranslateFromCentre.grade());
-    console.log("cgaTranslateToCentre grade =>", cgaTranslateToCentre.grade());
-    console.log("rotor (generator exp) grade =>", rotor.grade());
-    console.log("combinedRotor grade =>", combinedRotor.grade());
-    combinedRotor.strLog("combinedRotor");
-    rotatedPt1.strLog("rotated pt1");
-  }
-  // cgaRotorPhase += deltaSeconds * CGA_ROTATION_SPEED;
-  // const rotor = cgaRotationMotor.evaluate(
-  //   cgaRotorPhase * 0.5,
-  //   cgaReusableRotor,
-  // );
+// Draw the center as a red dot
+centre.render({ color: 0xff0000, size: 0.08 });
 
-  // build rotor from generator
-  // const rotor = c1.smul(cgaRotorPhase).exp(1);
-  // rotor.strLog("rotor");
-  // const combinedRotor = cgaTranslateFromCentre
-  //   .gp(rotor.gp(cgaTranslateToCentre))
-  //   .normalize();
-  // for (let i = 0; i < cgaRotatingPoints.length; ++i) {
-  //   // apply rotor to each point
-  //   // let pt = cgaRotatingPoints[i];
-  //   // let updatedPt = rotor.gp(pt).gp(rotor.reverse());
-  //   // cgaRotatingPoints[i] = updatedPt;
+// Draw axis line through centre
+const axisLen = 2;
+/** @type {[number[], number[]]} */
+const axisEndpoints = [
+  [cx - normal.x * axisLen, cy - normal.y * axisLen, cz - normal.z * axisLen]
+  , [cx + normal.x * axisLen, cy + normal.y * axisLen, cz + normal.z * axisLen]
+,];
+cemo.addVectorToScene(axisEndpoints, new THREE.LineBasicMaterial({ color: 0xffaa00 }), scene);
 
-  //   // apply rotor about circle centre
-  //   cgaReferencePoints[i].move(rotor, cgaRotatingPoints[i]);
-  //   cgaRotatingPoints[i].render();
-  // }
+// ------------------------------------------------------------------------------
+// STEP 8: Animation — Rotate points around the circle's center
+//
+// [Miller 4.2.2] Rotation:
+//   To rotate about an arbitrary point C, we construct a Motor M:
+//   M = T * R * T_inv
+//   where T translates origin to C, and R is the rotation rotor at the origin.
+//
+//   X' = M * X * M_rev
+// ------------------------------------------------------------------------------
+let angle = 0;
+const SPEED = Math.PI / 400;
 
+function animate() {
+  angle += SPEED;
+
+  // [Miller 3.7] Build rotor: R = exp(B * theta) where B is the rotation bivector
+  const R = rotBivector.smul(angle).exp(1);
+
+  // [Miller 4.2.1] Construct Motor M = T * R * T_inv
+  // T translates origin -> center
+  // T_inv translates center -> origin
+  // So M moves space so center is at origin, rotates, then moves back.
+  //
+  // Reverting to T * R * T_inv.
+  // Derivation:
+  // To rotate around C:
+  // 1. Translate by -C (move C to origin). Operator: T_inv.
+  // 2. Rotate at origin. Operator: R.
+  // 3. Translate by +C (move origin to C). Operator: T.
+  // Sequence on vector X: X' = T (R (T_inv X T_inv~) R~) T~
+  // Motor M = T * R * T_inv.
+  //
+  // T = 1 - 0.5 c ni (Translation by +c)
+  // T_inv = 1 + 0.5 c ni (Translation by -c)
+  const M = T.gp(R).gp(T_inv);
+  const M_rev = M.reverse();
+
+  // DEBUG: Verify center is invariant.
+  // If M rotates around C, then M * C * M~ should equal C.
+  // If M rotates around -C, then C will move significantly.
+  // const centreRotated = M.gp(centre).gp(M_rev);
+  // centreRotated.render({ color: 0xffff00, size: 0.05 }); // Yellow dot should overlap red dot
+
+  // Apply motor to points
+  const pt1_rot = M.gp(pt1).gp(M_rev);
+  const pt2_rot = M.gp(pt2).gp(M_rev);
+  const pt3_rot = M.gp(pt3).gp(M_rev);
+
+  pt1_rot.render({ color: cRed, size: 0.12 });
+  pt2_rot.render({ color: cGreen, size: 0.12 });
+  pt3_rot.render({ color: cBlue, size: 0.12 });
 }
 
 // ================
@@ -312,19 +380,120 @@ infoDiv.innerHTML = cgaBs.cayleyHtml({order: bladeOrder})
 */
 //infoDiv.innerHTML = cgaBs.cayleyHtml()
 
+// ==============================================================================
+// PGA Dynamics Demo (from PGAdyn.pdf)
+// ==============================================================================
+
+// 1. Define the object (Cube at origin)
+const cubePointsBody = [];
+const cubeSize = 1.0;
+for (let x of [-0.5, 0.5]) {
+  for (let y of [-0.5, 0.5]) {
+    for (let z of [-0.5, 0.5]) {
+      cubePointsBody.push(pga.pt(x * cubeSize, y * cubeSize, z * cubeSize));
+    }
+  }
+}
+const cubeEdges = [
+  [0, 1], [1, 3], [3, 2], [2, 0], // Bottom
+  [4, 5], [5, 7], [7, 6], [6, 4], // Top
+  [0, 4], [1, 5], [2, 6], [3, 7], // Sides
+];
+
+// Setup visual mesh for the cube (reuse geometry for performance)
+const cubeGeo = new THREE.BufferGeometry();
+const cubePos = new Float32Array(cubeEdges.length * 2 * 3); // 2 points per edge, 3 coords per point
+cubeGeo.setAttribute("position", new THREE.BufferAttribute(cubePos, 3));
+const cubeMat = new THREE.LineBasicMaterial({ color: 0xff00ff });
+const cubeMesh = new THREE.LineSegments(cubeGeo, cubeMat);
+scene.add(cubeMesh);
+
+// 2. Initial State
+// M: Start with translation to PGA_OFFSET
+// [PGAdyn.pdf Section 1.5] The Motor Logarithm
+// A translation by vector t = (tx, ty, tz) is represented by the motor:
+//   T = exp( -1/2 * (tx*e01 + ty*e02 + tz*e03) )
+// Note: e01, e02, e03 are ideal bivectors representing lines at infinity.
+const tVec = pgaBs.multiVector({
+  e_01: PGA_OFFSET.x
+  , e_02: PGA_OFFSET.y
+  , e_03: PGA_OFFSET.z
+,});
+let M = tVec.smul(-0.5).exp(1);
+
+// B: Initial Velocity (Twist)
+// Rotation around y-axis (e13) and some translation
+let B = pgaBs.multiVector({
+  e_13: 2.0, // Rotation speed
+  e_02: 1.0, // Translation speed
+});
+
+// 3. Physics Update
+function updatePGA(dt) {
+  // [PGAdyn.pdf Section 2.1.1] Kinematics of Euclidean Motion
+  // The derivative of the motor M is given by:
+  //   dM/dt = -1/2 * M * B
+  // where B is the velocity bivector (twist) in the body frame.
+  const dM = M.gp(B).smul(-0.5);
+
+  // [PGAdyn.pdf Section 2.1.1] Conservation of Momentum
+  // In the absence of external forces, the derivative of the velocity bivector B is:
+  //   dB/dt = - (dual(B) x B)^(-star)
+  // where 'x' is the commutator product: A x B = 1/2 (AB - BA)
+  //
+  // Code implements: -0.5 * unDual( dual(B)*B - B*dual(B) )
+  // This matches the formula: - unDual( 0.5 * (dual(B)*B - B*dual(B)) )
+  const bDual = B.dual();
+  const comm = bDual.gp(B).sub(B.gp(bDual));
+  const dB = comm.unDual().smul(-0.5);
+
+  // Euler Step (Integration)
+  // M(t+dt) = M(t) + dM * dt
+  // B(t+dt) = B(t) + dB * dt
+  M = M.add(dM.smul(dt));
+  B = B.add(dB.smul(dt));
+
+  // Normalize M (approximate) to prevent drift
+  // For this demo, let's try without normalization first.
+
+  // Render
+  // [PGAdyn.pdf Section 1.5] Rigid Body Transform
+  // Points in body frame (x_b) are transformed to world frame (x_w) via sandwich product:
+  //   x_w = M * x_b * ~M
+  const M_rev = M.reverse();
+  const transformedPoints = cubePointsBody.map((pt) => M.gp(pt).gp(M_rev));
+
+  const positions = cubeMesh.geometry.attributes.position.array;
+  let idx = 0;
+  cubeEdges.forEach((edge) => {
+    const p1 = transformedPoints[edge[0]];
+    const p2 = transformedPoints[edge[1]];
+
+    const v1 = pga.pointXYZ(p1);
+    const v2 = pga.pointXYZ(p2);
+
+    positions[idx++] = v1.x;
+    positions[idx++] = v1.y;
+    positions[idx++] = v1.z;
+    positions[idx++] = v2.x;
+    positions[idx++] = v2.y;
+    positions[idx++] = v2.z;
+  });
+  cubeMesh.geometry.attributes.position.needsUpdate = true;
+}
+
 /**************************
  **	animate
  **************************/
-var start = Date.now();
-var lastFrameTime = start;
+function runAnimationLoop() {
+  requestAnimationFrame(runAnimationLoop);
 
-function animate() {
-  requestAnimationFrame(animate);
-  var now = Date.now();
-  var deltaSeconds = (now - lastFrameTime) / 1000;
-  lastFrameTime = now;
-  updateCgaRotor(deltaSeconds);
+  // Call our CGA animation function (defined above in the CGA demo section)
+  animate();
+
+  // Call our PGA dynamics function
+  updatePGA(0.016);
 
   cemoCam.renderer.render(scene, camera);
 }
-animate();
+runAnimationLoop();
