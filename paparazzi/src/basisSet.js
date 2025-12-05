@@ -601,9 +601,6 @@ export function createBasisSet(p, q, r) {
     mv.exp = function (alpha) {
       alpha = (alpha % (Math.PI * 2)) - Math.PI;
       var n = this.smul(alpha);
-      var nPow = n.copy();
-      var res = n.copy().sadd(1);
-
       const sq = n.gp(n);
       if (sq.grade() == 0) {
         const sq_val = sq.basisSVal("e_");
@@ -624,15 +621,24 @@ export function createBasisSet(p, q, r) {
           return n.sadd(1);
         }
       }
-      // todo: since we already have n^2, we can use that to speed up the series calculation
 
-      var numTerms = 11;
-      //console.log(numTerms)
-      for (let i = 2; i < numTerms; ++i) {
-        nPow = nPow.gp(n).smul(1 / i);
-        res = res.add(nPow);
+      let nPow = sq.smul(0.5); // n^2 / 2!
+      // collect even and odd terms separately to reduce lookup costs in .add()
+      // (since even and odd terms tend to be in orthogonal subspaces and there
+      //  is no additional cost when they're not orthogonal)
+      let even_terms = nPow.add(1); // 1 + n^2 / 2!
+      let odd_terms = n; // n
+
+      const numTerms = 11; // sum up to n^10 / 10!
+      for (let i = 3; i < numTerms; ++i) {
+        nPow = nPow.gp(n).smul(1 / i); // n^i / i!
+        if (i & 1 === 0) { // even
+          even_terms = even_terms.add(nPow);
+        } else { // odd
+          odd_terms = odd_terms.add(nPow);
+        }
       }
-      return res;
+      return even_terms.add(odd_terms);
     };
 
     // enki's exponential
