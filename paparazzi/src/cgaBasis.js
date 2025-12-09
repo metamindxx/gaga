@@ -121,7 +121,9 @@ function createRenderer({ scene, dottyMaterial, pointXYZ }) {
       geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 
       const material = new THREE.LineBasicMaterial({ vertexColors: true });
-      scene.add(new THREE.LineSegments(geometry, material));
+      const line = new THREE.LineSegments(geometry, material);
+      scene.add(line);
+      return line;
     }
 
     , list(mvs, options = {}) {
@@ -130,11 +132,11 @@ function createRenderer({ scene, dottyMaterial, pointXYZ }) {
       }
 
       if (mvs.length === 1) {
-        mvs[0]?.render(options);
+        return mvs[0]?.render(options);
       } else if (mvs.length === 3) {
-        this.triangle(mvs[0], mvs[1], mvs[2], options);
+        return this.triangle(mvs[0], mvs[1], mvs[2], options);
       } else {
-        this.lineSegments(mvs, options);
+        return this.lineSegments(mvs, options);
       }
     }
   };
