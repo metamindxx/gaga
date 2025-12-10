@@ -408,7 +408,8 @@ export function createBasisSet(p, q, r) {
 			}
 			*/
     };
-    mv.strLog = function (s) {
+    // Return a string representation of the multivector
+    mv.toStr = function (s) {
       var sBits = [];
       if (s) {
         sBits.push(s);
@@ -432,7 +433,11 @@ export function createBasisSet(p, q, r) {
           }
         }
       }
-      console.log(sBits.join(" "));
+      return sBits.join(" ");
+    };
+    // Log a formatted string and return the multivector
+    mv.strLog = function (s) {
+      console.log(this.toStr(s));
       return this;
     };
     mv.grade = function (refreshGrade) {
