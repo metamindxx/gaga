@@ -814,29 +814,19 @@ export function createBasisSet(p, q, r) {
         this.pushBlade(copyFrom.blades[i].copy());
       }
     };
+    // Hodge dual: mv * I (right multiply by pseudoscalar)
     mv.dual = function () {
-      var mv = this;
-      var mvResult = bs.multiVector('');
-      var dualBlade;
-      for (let i = 0; i < mv.blades.length; ++i) {
-        dualBlade = mv.blades[i].basis.dual.copy();
-        dualBlade.mul *= mv.blades[i].mul;
-        mvResult.pushBlade(dualBlade);
-      }
-      return mvResult;
+      var pss = bs.bases[bs.bases.length - 1];
+      var I = bs.multiVector('');
+      I.pushBlade(bs.newBlade(1, pss));
+      return this.gp(I);
     };
+    // Hodge unDual: I * mv (left multiply by pseudoscalar)
     mv.unDual = function () {
-      var mv = this;
-      var mvResult = bs.multiVector('');
-      var dualBlade;
-      var blDual;
-      for (let i = 0; i < mv.blades.length; ++i) {
-        blDual = mv.blades[i].basis.dual;
-        dualBlade = blDual.copy();
-        dualBlade.mul = mv.blades[i].mul * blDual.unDualMul;
-        mvResult.pushBlade(dualBlade);
-      }
-      return mvResult;
+      var pss = bs.bases[bs.bases.length - 1];
+      var I = bs.multiVector('');
+      I.pushBlade(bs.newBlade(1, pss));
+      return I.gp(this);
     };
     mv.onClick = function (event) {
       if (event == this.lastEvent) {
@@ -943,7 +933,7 @@ export function createBasisSet(p, q, r) {
       return res;
     };
     mv.join = function (b) {
-      // a V b = !( !a * !b )
+      // a V b = !( !a ^ !b )  (regressive product via duality)
       var res = this.dual().op(b.dual()).unDual();
       res.components = [];
       res.copyComponents(this);
