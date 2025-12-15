@@ -12,9 +12,33 @@
   import Slide35Refactored from './Slide35Refactored.svelte';
   import Slide38Refactored from './Slide38Refactored.svelte';
   import PgaDemo from './PgaDemo.svelte';
-  import { Grid, OrbitControls } from '@threlte/extras';
+  import { Grid, OrbitControls, Gizmo } from '@threlte/extras';
   import { hoverInfo, unpinHoverInfo, isPinned } from '../stores/hoverInfo';
   import { orbitEnabled } from '../stores/orbitControl';
+
+  // Theme: default to light unless env var or localStorage says dark
+  type ThemeEnvMeta = ImportMeta & {
+    env?: {
+      VITE_THEME?: string;
+    };
+  };
+
+  const getInitialTheme = (): 'light' | 'dark' => {
+    // Check env var (set VITE_THEME=dark in .env)
+    if ((import.meta as ThemeEnvMeta).env?.VITE_THEME === 'dark') return 'dark';
+    return 'light';
+  };
+
+  let theme = $state<'light' | 'dark'>(getInitialTheme());
+
+  function toggleTheme() {
+    theme = theme === 'light' ? 'dark' : 'light';
+  }
+
+  // Theme-dependent colors
+  const bgColor = $derived(theme === 'light' ? '#f0f0f5' : '#1a1a2e');
+  const gridCellColor = $derived(theme === 'light' ? '#ccccdd' : '#444466');
+  const gridSectionColor = $derived(theme === 'light' ? '#aaaacc' : '#333344');
 
   // Toggle states for each slide
   let showSlide20 = $state(true);
@@ -145,9 +169,24 @@
 
 <div class="container">
   <Canvas>
+    <!-- Scene background color -->
+    <T.Color args={[bgColor]} attach="background" />
+
     <!-- Camera -->
     <T.PerspectiveCamera makeDefault position={[3, 2, 4]} fov={60}>
-      <OrbitControls target={[0, 0.5, 0]} enabled={$orbitEnabled} />
+      <OrbitControls target={[0, 0.5, 0]} enabled={$orbitEnabled}>
+        <Gizmo
+          type="cube"
+          placement="bottom-left"
+          size={80}
+          x={{ color: '#ff4444', label: 'X' }}
+          y={{ color: '#44ff44', label: 'Y' }}
+          z={{ color: '#4444ff', label: 'Z' }}
+          nx={{ color: '#994444', label: '-X' }}
+          ny={{ color: '#449944', label: '-Y' }}
+          nz={{ color: '#444499', label: '-Z' }}
+        />
+      </OrbitControls>
     </T.PerspectiveCamera>
 
     <!-- Lighting -->
@@ -155,7 +194,15 @@
     <T.DirectionalLight position={[5, 10, 5]} intensity={0.8} />
 
     <!-- Grid -->
-    <Grid cellColor="#444466" sectionColor="#333344" fadeDistance={10} />
+    <Grid cellColor={gridCellColor} sectionColor={gridSectionColor} fadeDistance={10} />
+
+    <!-- Axes -->
+    <T.AxesHelper
+      args={[1]}
+      oncreate={(ref) => {
+        ref.setColors('#ff0000', '#00ff00', '#0000ff');
+      }}
+    />
 
     <!-- Invisible background plane for click-away deselection -->
     <T.Mesh position={[0, 0, -10]} onclick={unpinHoverInfo}>
@@ -196,6 +243,7 @@
     <div class="button-row">
       <button onclick={showAll}>Show All</button>
       <button onclick={hideAll}>Hide All</button>
+      <button onclick={toggleTheme}>{theme}</button>
     </div>
 
     <div class="toggles">
