@@ -86,5 +86,8 @@ export const cga: CgaHelpers = createCgaHelpers({
 // Attach helpers to the basis set so MVs can classify themselves
 bs.helpers = cga;
 
+// Export the basis set for advanced usage (e.g., cayleyHtml)
+export { bs as cgaBasisSet };
+
 // Re-export types
 export type { CgaHelpers } from './cgaHelpers.js';

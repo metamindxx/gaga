@@ -15,6 +15,8 @@
   import { Grid, OrbitControls, Gizmo } from '@threlte/extras';
   import { hoverInfo, unpinHoverInfo, isPinned } from '../stores/hoverInfo';
   import { orbitEnabled } from '../stores/orbitControl';
+  import { cgaBasisSet } from '../algebra/cga';
+  import { pgaBasisSet } from '../algebra/pga';
 
   // Theme: default to light unless env var or localStorage says dark
   type ThemeEnvMeta = ImportMeta & {
@@ -49,6 +51,14 @@
   let showSlide35 = $state(false);
   let showSlide38 = $state(false);
   let showPgaDemo = $state(false);
+  let showCayley = $state(false);
+
+  // Available algebras for Cayley table viewer
+  const algebras = [
+    { id: 'cga', name: 'CGA (4,1)', basisSet: cgaBasisSet },
+    { id: 'pga', name: 'PGA (3,0,1)', basisSet: pgaBasisSet }
+  ];
+  let selectedAlgebra = $state('cga');
 
   const slides = [
     {
@@ -244,6 +254,7 @@
       <button onclick={showAll}>Show All</button>
       <button onclick={hideAll}>Hide All</button>
       <button onclick={toggleTheme}>{theme}</button>
+      <button onclick={() => (showCayley = !showCayley)}>Cayley</button>
     </div>
 
     <div class="toggles">
@@ -329,6 +340,32 @@
           {/each}
         </div>
       {/if}
+    </div>
+  {/if}
+
+  {#if showCayley}
+    <div class="cayley-overlay">
+      <div class="cayley-header">
+        <h3>Cayley Table</h3>
+        <div class="cayley-algebra-selector">
+          {#each algebras as algebra}
+            <label class="algebra-radio">
+              <input
+                type="radio"
+                name="algebra"
+                value={algebra.id}
+                checked={selectedAlgebra === algebra.id}
+                onchange={() => (selectedAlgebra = algebra.id)}
+              />
+              {algebra.name}
+            </label>
+          {/each}
+        </div>
+        <button class="cayley-close" onclick={() => (showCayley = false)}>×</button>
+      </div>
+      <div class="cayley-content">
+        {@html algebras.find((a) => a.id === selectedAlgebra)?.basisSet.cayleyHtml()}
+      </div>
     </div>
   {/if}
 </div>
@@ -656,5 +693,103 @@
   .action-btn:hover {
     background: #446;
     border-color: #557;
+  }
+
+  /* Cayley table overlay */
+  .cayley-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.95);
+    padding: 0;
+    border-radius: 8px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: hidden;
+    border: 2px solid #4af;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cayley-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #333;
+    background: rgba(0, 0, 0, 0.8);
+    gap: 16px;
+  }
+
+  .cayley-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #4af;
+    white-space: nowrap;
+  }
+
+  .cayley-algebra-selector {
+    display: flex;
+    gap: 12px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .algebra-radio {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #ccc;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .algebra-radio input {
+    cursor: pointer;
+  }
+
+  .algebra-radio:has(input:checked) {
+    color: #4af;
+  }
+
+  .cayley-close {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+  }
+
+  .cayley-close:hover {
+    color: #fff;
+  }
+
+  .cayley-content {
+    padding: 16px;
+    overflow: auto;
+    color: #eee;
+    font-family: monospace;
+    font-size: 12px;
+  }
+
+  .cayley-content :global(table) {
+    border-collapse: collapse;
+    margin: 0 auto;
+  }
+
+  .cayley-content :global(td),
+  .cayley-content :global(th) {
+    border: 1px solid #444;
+    padding: 4px 8px;
+    text-align: center;
+  }
+
+  .cayley-content :global(th) {
+    background: #222;
+    color: #4af;
+    font-weight: bold;
   }
 </style>

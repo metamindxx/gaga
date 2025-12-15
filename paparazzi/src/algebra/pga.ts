@@ -103,5 +103,8 @@ export const pga: PgaHelpers = createPgaHelpers({
 // Attach helpers to the basis set so MVs can classify themselves
 bs.helpers = pga;
 
+// Export the basis set for advanced usage (e.g., cayleyHtml)
+export { bs as pgaBasisSet };
+
 // Re-export types
 export type { PgaHelpers } from './pgaHelpers.js';
