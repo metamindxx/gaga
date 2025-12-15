@@ -4,207 +4,274 @@ A compact set of formulas and code recipes for conformal geometric algebra (CGA)
 
 ---
 
-## Conformal basis (3D → 5D model)
-Math:
-- Add two null basis vectors `n0` and `ni` (sometimes `n` and `\bar{n}`):
-  - `n0` is the origin direction, `ni` is the point-at-infinity direction.
+## Quick Start
 
-Code (project):
-- Created in `src/cgaBasis.js`:
-  - `cga.n0 = bs.multiVector({ e_m: 0.5, e_p: -0.5 });`
-  - `cga.ni = bs.multiVector({ e_m: 1, e_p: 1 });`
-  - `cga.I5 = bs.multiVector({ e_123pm: 1 }); // pseudoscalar (I5)`
+```typescript
+import { cga, no, ni, e1, e2, e3, one } from '../algebra/cga';
 
-Note: The exact conventions (signs/scalar factors) depend on the implementation; use `cga.n0` and `cga.ni` objects from the project.
+// Create a point
+const pt = cga.up([1, 2, 3]);
+
+// Extract coordinates
+const coords = cga.down(pt);  // [1, 2, 3]
+
+// Classify (for rendering)
+const primitive = pt.classify();  // { type: 'point', coords: [1, 2, 3] }
+```
+
+---
+
+## Conformal Basis (3D → 5D model)
+
+The conformal model embeds 3D Euclidean space into 5D:
+
+| Element | Description | Code |
+|---------|-------------|------|
+| `e1, e2, e3` | Euclidean basis | `import { e1, e2, e3 }` |
+| `no` | Origin point | `n₀ = ½(e₋ - e₊)` |
+| `ni` | Point at infinity | `n∞ = e₋ + e₊` |
+| `I5` | 5D pseudoscalar | `e₁e₂e₃e₊e₋` |
+| `one` | Scalar unit | `import { one }` |
 
 ---
 
 ## Points
-Math (point at x = (x,y,z)):
-- P(x) = n0 + x + (1/2)(x·x) ni
-  - where x is the Euclidean vector.
-  - Note: the scalar factor and sign depend on the chosen null basis.
 
-Code examples:
-- Manual construction (used in `src/main.js`):
-  - `const x3d = cgaBs.multiVector({ e_1: x, e_2: y, e_3: z });`
-  - `const infScale = (x*x + y*y + z*z) / 2;`
-  - `const P = cga.n0.add(x3d).add(cga.ni.smul(infScale));`
-- Helper in project (`cga.pt` / `cga.pointXYZ` may exist):
-  - `const P = cga.pt(x, y, z);` // in `playground` helpers
+### Creating Points
 
-### Extract Euclidean coordinates from a CGA point:
-- Math (normalized IPNS/OPNS): divide by `-P·ni`:
-  - x = P_e1 / (-P·ni)
-  - y = P_e2 / (-P·ni)
-  - z = P_e3 / (-P·ni)
+```typescript
+// Using helper (preferred)
+const pt = cga.up([x, y, z]);
 
-Code snippet (project):
-- `pointXYZ` helper (Playground): `const {x,y,z} = cga.pointXYZ(P)` or manual as above by using `P.basisSVal("e_1")` etc.
-
----
-
-## Inner product for points (distance)
-Math:
-- For two points P and Q: `P·Q = -0.5 * ||x - y||^2` (with our sign convention)
-  - Use to compute squared distances and checks.
-
-Code:
-- `let d2 = -2 * p1.scalarProduct(p2);`  // or adjust sign depending on conventions.
-
----
-
-## Geometric operations (basic)
-- `gp` → geometric product: `A.gp(B)`
-- `op` → outer/wedge product: `A.op(B)` (A ∧ B)
-- `join` → join (vee product) implemented via duality; use for lines/planes in some APIs
-- `dual()` / `unDual()` → convert between OPNS/IPNS
-- `smul(k)` → scalar multiplication: `A.smul(k)`
-- `exp(1)` → exponential of a bivector/vector to create rotors/translators
-- `reverse()` → reverse of rotor
-- `normalize()` / `smul(1/...)` → normalize multivectors
-- `selectGrade(g)` → keep only the grade `g` components (e.g., `selectGrade(2)` to get a bivector)
-- `scalarProduct()` → scalar product
-- `.basisSVal("e_1")` or `.bVal()` → get component value
-
----
-
-## Lines, Planes, Circles, Spheres (OPNS and IPNS forms)
-- Line (OPNS): `L = P1 ∧ P2 ∧ ni` (grade 3)  // includes point at infinity
-  - Code (project): `const line = p1.join(p2);` or `const L = p1.op(p2.op(cga.ni));`
-
-- Circle (OPNS): `C = P1 ∧ P2 ∧ P3` (grade 3)
-  - Code: `const c = p1.op(p2.op(p3));`
-
-- Plane (OPNS): `Plane = P1 ∧ P2 ∧ P3 ∧ ni` (grade 4)
-  - Code: `const plane = p1.op(p2.op(p3.op(cga.ni)));` or `line.join(p)` etc.
-
-- Sphere (OPNS): `S = P1 ∧ P2 ∧ P3 ∧ P4` (grade 4)
-  - Code: `const s = p1.op(p2.op(p3.op(p4)));`
-
-Dual forms (IPNS):
-- IPNS (dual) forms often easier to extract centers/normals:
-  - `dual` or `unDual` used to switch representation.
-  - Convert circle to dual with `circ_dual = (Lc) * Iplane` as shown in code.
-
----
-
-## Centers and normals
-- Circle center (conformal formula Eq. 4.51):
-  - Math: `P0 = Lc * ni * Lc` (reflect infinity in circle)
-  - Code (project):
-    - `const cRaw = Lc.gp(cga.ni).gp(Lc);`
-    - `const norm = -1 / cRaw.dot(cga.ni).basisSVal("e_");`
-    - `const cCentre = cRaw.smul(norm);` // normalized so -P0·ni = 1
-
-- Sphere center (dual method):
-  - Code (project):
-    - `var sphD = cga.I5.gp(sphereOP);` // dual sphere
-    - `var sphDn = Math.abs(sphD.scalarProduct(cga.ni));` // normalise if needed
-    - `var centre = sphD.gp(cga.ni.gp(sphD));`
-
-- Plane normal (from IPNS plane):
-  - Given planeIPNS = P1 ∧ P2 ∧ P3 ∧ ni
-  - Euclidean normal via dual/unDual or selectGrade(2)
-  - Example in project: `const c1PlaneIpns = c1.op(cga.ni).dual();` (circle plane IPNS), then `const planeBivector = c1PlaneIpns.unDual().selectGrade(2).normalize()` gives a normalized Euclidean bivector for rotation generation.
-
-- Radius:
-  - Use dual circle or sphere magnitude. Example (project): `var rad = Math.pow(circ_dual.sq(), 0.5);`
-
----
-
-## Rotors and Translators (Transformers)
-- Translation:
-  - Generator: `T_g = (v gp ni) * 0.5`  (v is Euclidean vector)
-  - Translator (spinor): `T = exp(T_g)`
-  - In code:
-    - `const centreVec = cgaBs.multiVector({ e_1: x, e_2: y, e_3: z });`
-    - `const tGen = centreVec.gp(cga.ni).smul(0.5);`
-    - `const Tf = tGen.exp(1);` // translate from center
-    - `const Tt = tGen.smul(-1).exp(1);` // translate to center
-
-- Rotation:
-  - Generator: plane bivector B (dual of IPNS plane or selectGrade(2) bivector)
-  - Rotor: `R = exp(B * theta)`
-  - Apply rotation about a point: `T_f * R * T_t` where `T_f` and `T_t` translate from/to center
-  - Code (project):
-    - `const rotor = B.smul(theta).exp(1);`
-    - `const combined = T_from.gp(rotor.gp(T_to));` and apply with `combined.gp(pt).gp(combined.reverse())`
-
-- Use `reverse()` for inverse application and `normalize()` for numerical stability.
-
----
-
-## Useful code recipes (compact)
-Create a point:
-```
-const P = cga.n0.add(cgaBs.multiVector({e_1:x,e_2:y,e_3:z})).add(cga.ni.smul((x*x+y*y+z*z)/2))
+// Manual construction
+const euclidean = e1.smul(x).add(e2.smul(y)).add(e3.smul(z));
+const rSq = x*x + y*y + z*z;
+const pt = no.add(euclidean).add(ni.smul(0.5 * rSq));
 ```
 
-Circle through 3 points and its center:
-```
-const c = p1.op(p2.op(p3)); // OPNS circle
-const cRaw = c.gp(cga.ni).gp(c);
-const cNorm = -1 / cRaw.dot(cga.ni).basisSVal("e_");
-const center = cRaw.smul(cNorm);
+### Extracting Coordinates
 
-// plane bivector (rotation generator)
-const planeIpns = c.op(cga.ni).dual();
-const B = planeIpns.unDual().selectGrade(2).normalize();
+```typescript
+// Using helper (preferred)
+const coords = cga.down(pt);  // [x, y, z] or null if not a point
 
-// translator to/from center
-const v = cgaBs.multiVector({ e_1: center.basisSVal("e_1"), e_2: center.basisSVal("e_2"), e_3: center.basisSVal("e_3") });
-const tGen = v.gp(cga.ni).smul(0.5);
-const T_from = tGen.exp(1);
-const T_to = tGen.smul(-1).exp(1);
-
-// rotor for angle theta
-const R = B.smul(theta).exp(1);
-const combined = T_from.gp(R.gp(T_to)).normalize();
-
-// rotate a point
-const rotated = combined.gp(point).gp(combined.reverse());
+// Manual extraction
+const w = -pt.scalarProduct(ni);  // normalization factor
+const x = pt.basisSVal('e_1') / w;
+const y = pt.basisSVal('e_2') / w;
+const z = pt.basisSVal('e_3') / w;
 ```
 
-Create a line between two points (dual/OPNS handling):
-```
-const L = p1.join(p2); // uses dual trick internally: !( !p1 ∧ !p2 )
-```
+### Point Distance
 
-Plane from line and a point (example shows `join` chaining in repo):
+```typescript
+// Squared distance between two CGA points
+const d2 = -2 * p1.dot(p2).basisSVal('e_');
 ```
-const plane = line.join(pointC);
-```
-
-Dualizing and converting forms:
-- `mv.dual()` and `mv.unDual()` are available.
-- `mv.selectGrade(g)` to pull bivectors/lines, etc.
 
 ---
 
-## Debugging / Visualization helpers in repo
-- `mv.strLog("label")` logs the multi-vector for debugging
-- `render()` calls exist in the CGA basis to render points/circles/planes (see `cga.renderMV` in `cgaBasis.js`)
-- Use `basisSVal` / `bVal` to extract components for debugging or building plain JS bounds.
+## Basic Operations
+
+| Operation | Code | Description |
+|-----------|------|-------------|
+| Geometric product | `A.gp(B)` | Full GA product |
+| Outer product | `A.op(B)` | Wedge (∧) |
+| Inner product | `A.dot(B)` | Contraction |
+| Meet | `cga.meet(A, B)` | Intersection (regressive) |
+| Dual | `A.dual()` | Hodge dual |
+| Undual | `A.unDual()` | Inverse dual |
+| Reverse | `A.reverse()` | Reverse order |
+| Normalize | `A.normalize()` | Unit magnitude |
+| Scale | `A.smul(k)` | Scalar multiply |
+| Grade select | `A.selectGrade(g)` | Extract grade g |
+| Scalar value | `A.basisSVal('e_')` | Get scalar part |
+| Component | `A.basisSVal('e_12')` | Get component |
 
 ---
 
-## Common gotchas
-- Keep track of normalization: many IPNS/OPNS forms expect normalization so that, e.g., `-P·ni = 1` for points, `dual` forms may require scaling.
-- `join` uses duality; when mixing raw `op` and `join`, be careful which form (IPNS/OPNS) you have before operations.
-- For rotations centered on a point, translate the rotor's center to origin, rotate, then translate back (T R T^{-1}).
-- Always normalize rotors and plane bivectors where required.
+## Geometric Objects
+
+### Circle (3 points)
+
+```typescript
+const circle = p1.op(p2).op(p3);  // OPNS form
+
+// Extract center
+const cRaw = circle.gp(ni).gp(circle);
+const norm = -1 / cRaw.dot(ni).basisSVal('e_');
+const center = cRaw.smul(norm);
+
+// Extract radius
+const circleDual = circle.dual();
+const radius = Math.sqrt(Math.abs(circleDual.gp(circleDual).basisSVal('e_')));
+```
+
+### Line (2 points + infinity)
+
+```typescript
+const line = p1.op(p2).op(ni);  // OPNS form
+```
+
+### Sphere (4 points)
+
+```typescript
+const sphere = p1.op(p2).op(p3).op(p4);  // OPNS form
+
+// Or from center and radius (IPNS)
+const sphereIPNS = cga.up(center).sub(ni.smul(0.5 * radius * radius));
+```
+
+### Plane (3 points + infinity)
+
+```typescript
+const plane = p1.op(p2).op(p3).op(ni);  // OPNS form
+```
 
 ---
 
-## Sources & Further Reading
-- Richard A. Miller — "Geometric Algebra: An Introduction with Applications in Euclidean and Conformal Geometry" — Chapter 4 (conformal model). See formula (4.51) for circle center: P0 = Lc ni Lc.
-- Lasenby, Lasenby & coworkers — Covariant approach to geometry — (useful for formal derivations).
-- Project source files with working examples:
-  - `src/main.js` — example usage for building points/circles/rotors
-  - `src/cgaBasis.js` — core CGA functions, helper renderers
-  - `src/basisSet.js` — multivector ops (gp, op, join, dual/unDual, etc.)
+## Intersections (Meet)
+
+```typescript
+// Two spheres → circle
+const C = cga.meet(S1.dual(), S2.dual());
+
+// Sphere and plane → circle
+const C = cga.meet(sphereDual, planeDual);
+
+// Circle and plane → point pair
+const PP = cga.meet(plane, circle);
+
+// Extract point from point pair
+const ppSq = PP.gp(PP).basisSVal('e_');
+if (ppSq > 0) {
+  const pt = one.add(PP.smul(1/Math.sqrt(ppSq))).gp(PP.dot(ni));
+}
+```
 
 ---
 
-If you'd like, I can extend this cheatsheet with more detailed examples (e.g., reflection, inversion), small visual tests, or a step-by-step example showing a circle rotated around its center in the scene (with code to render axis and rotating points).
+## Motors (Rotors & Translators)
+
+### Translation
+
+```typescript
+// Translate by vector [dx, dy, dz]
+const vec = e1.smul(dx).add(e2.smul(dy)).add(e3.smul(dz));
+const tGen = vec.gp(ni).smul(0.5);
+const translator = tGen.exp(1);
+
+// Apply: sandwich product
+const translated = translator.gp(point).gp(translator.reverse());
+```
+
+### Rotation
+
+```typescript
+// Rotate around axis through origin by angle theta
+const axis = e1.op(e2);  // bivector (xy-plane rotation)
+const rotor = axis.smul(theta / 2).exp(1);
+const rotated = rotor.gp(point).gp(rotor.reverse());
+```
+
+### Rotation Around a Point
+
+```typescript
+// Translate to origin, rotate, translate back
+const toOrigin = getTranslator(center, [0,0,0]);
+const fromOrigin = toOrigin.reverse();
+const rotor = bivector.smul(theta / 2).exp(1);
+const motor = fromOrigin.gp(rotor).gp(toOrigin);
+const result = motor.gp(point).gp(motor.reverse());
+```
+
+---
+
+## Classification (for Rendering)
+
+Multivectors can classify themselves via `mv.classify()`:
+
+```typescript
+const prim = myMv.classify();
+
+switch (prim?.type) {
+  case 'point':
+    // prim.coords: [x, y, z]
+    break;
+  case 'pointPair':
+    // prim.point1, prim.point2, prim.isReal
+    break;
+  case 'circle':
+    // prim.center, prim.radius, prim.normal
+    break;
+  case 'line':
+    // prim.point, prim.direction
+    break;
+  case 'sphere':
+    // prim.center, prim.radius, prim.isImaginary
+    break;
+  case 'plane':
+    // prim.point, prim.normal
+    break;
+}
+```
+
+---
+
+## Common Patterns
+
+### IK: Sphere-Sphere Intersection
+
+```typescript
+// Two spheres centered at points with given radii
+const S0 = no.sub(ni.smul(0.5 * rho ** 2)).dual();
+const S1 = target.sub(ni.smul(0.5 * l ** 2)).dual();
+const C = cga.meet(S0, S1);  // Intersection circle
+```
+
+### Project onto Plane
+
+```typescript
+// Plane IPNS from circle
+const planeIPNS = circle.op(ni).dual();
+// Project line onto plane
+const projected = line.dot(planeIPNS).dot(planeIPNS).normalize();
+```
+
+### Extract Angle Between Lines
+
+```typescript
+const cosAngle = L1.dot(L2).basisSVal('e_');
+const angle = Math.acos(Math.max(-1, Math.min(1, cosAngle)));
+```
+
+---
+
+## Testing
+
+Tests live in `src/algebra/cga.test.ts`:
+
+```bash
+npm run test:run  # Run all tests
+npm run test      # Watch mode
+```
+
+Example test:
+
+```typescript
+it('round-trips point coordinates', () => {
+  const coords = [1.5, -2.3, 0.7];
+  const pt = cga.up(coords);
+  const back = cga.down(pt);
+  expect(back![0]).toBeCloseTo(coords[0]);
+});
+```
+
+---
+
+## See Also
+
+- [store-based-rendering.md](store-based-rendering.md) - Architecture overview
+- `src/algebra/cga.ts` - CGA setup and exports
+- `src/algebra/cgaHelpers.ts` - Helper implementations
+- `src/scenes/Slide*.svelte` - Example usage

@@ -1,194 +1,289 @@
-# Store-Based Rendering
+# Reactive Rendering Architecture
 
 ## Overview
 
-This update introduces a layered architecture that cleanly separates mathematical computation from visualization. The key insight: the store is algebra-agnostic, ie it just holds entities with arbitrary data. Only the handlers know about CGA math.
+This project uses a **Svelte 5 + Threlte** architecture that cleanly separates mathematical computation from visualization. The key patterns:
 
-## The Problem: Two-Way Binding
+1. **Algebra modules** (CGA, PGA) are pure TypeScript with no rendering dependencies
+2. **Svelte runes** (`$state`, `$derived`) drive reactive computation
+3. **Geometry components** render multivectors without knowing what algebra created them
+4. **Stores** coordinate global state (orbit controls, hover info)
+5. **Composables** extract reusable logic (drag handling)
 
-Previously, we faced the classic two-way binding problem:
-
-```mermaid
-flowchart LR
-    MV[Multivector] <-->|"sync?"| Mesh[Three.js Mesh]
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         Scene Component                          │
+│  ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐   │
+│  │ $state(mv)  │───▶│  $derived()  │───▶│   <RenderMv />   │   │
+│  │ (raw MV)    │    │  (IK, etc.)  │    │   (geometry)     │   │
+│  └─────────────┘    └──────────────┘    └──────────────────┘   │
+│        ▲                                         │              │
+│        │                                         ▼              │
+│  ┌─────────────┐                        ┌──────────────────┐   │
+│  │  useDrag()  │◀───────────────────────│   T.Mesh events  │   │
+│  │ (composable)│                        │   (click/drag)   │   │
+│  └─────────────┘                        └──────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-**Issues with direct binding:**
-- **Circular updates**: Changing the mesh position should update the multivector, but updating the multivector should also update the mesh. Who's in charge?
-- **Derived entities**: A circle through 3 points depends on those points. When a point moves, the circle must recalculate.
-- **Mixed concerns**: Math code was tangled with rendering code.
+## Architecture Layers
 
-## The Solution: Unidirectional Data Flow
+### 1. Algebra Layer (`src/algebra/`)
 
-```mermaid
-flowchart TD
-    subgraph Math["Math Layer (Pure CGA)"]
-        BS[basisSet.js]
-        CGA[CGA Algebra]
-    end
-    
-    subgraph State["State Layer"]
-        Store[store.js]
-    end
-    
-    subgraph Render["Render Layer (Three.js)"]
-        Renderer[renderer.js]
-        Handlers[cgaHandlers.js]
-        Scene[Three.js Scene]
-    end
-    
-    subgraph Input["Input Layer"]
-        Drag[drag.js]
-    end
-    
-    BS --> CGA
-    CGA -->|"mv data"| Store
-    Store -->|"subscribe"| Renderer
-    Renderer -->|"delegates to"| Handlers
-    Handlers -->|"creates/updates"| Scene
-    Drag -->|"3D position"| Store
-    
-    style Store fill:#4a9
-    style Math fill:#88f
-    style Render fill:#f84
+Pure TypeScript modules that know nothing about rendering:
+
+```
+src/algebra/
+├── cga.ts          # CGA algebra setup + basis elements
+├── cgaHelpers.ts   # CGA operations (up, down, classify, meet, etc.)
+├── pga.ts          # PGA algebra setup + basis elements
+├── pgaHelpers.ts   # PGA operations (point, plane, classify, etc.)
+├── types.ts        # Shared TypeScript types
+├── cga.test.ts     # Vitest tests for CGA
+└── pga.test.ts     # Vitest tests for PGA
 ```
 
-**The key principle**: Data flows in one direction. User input → Store → Rendering.
+Key design: Helpers are attached to `bs.helpers` so multivectors can classify themselves:
 
-## New Files
+```typescript
+// In cga.ts
+bs.helpers = createCgaHelpers({ no, ni, e1, e2, e3 });
 
-### `store.js` The Single Source of Truth
+// Any MV can now call:
+const primitive = myMv.classify();  // Returns { type: 'point', coords: [...] } etc.
+```
 
-The store is deliberately simple and knows nothing about Multivectors or Three.js
-- Holds entities with arbitrary properties
-- Tracks dependencies between entities
-- Notifies subscribers when things change
+### 2. Geometry Layer (`src/geometry/`)
 
-```javascript
-// Example: Adding a point
-store.add({
-  id: "p1",
-  type: "point",
-  mv: up(1, 0, 0),  // Store doesn't know this is a multivector
-  color: 0xff0000
+Algebra-agnostic Svelte components that render geometric primitives:
+
+```
+src/geometry/
+├── RenderMv.svelte    # Main component - classifies MV and dispatches
+├── Point.svelte       # Sphere at position
+├── Circle.svelte      # MeshLine circle
+├── Sphere.svelte      # Transparent sphere
+├── Plane.svelte       # Disk with normal orientation
+├── Segment.svelte     # Line between two points
+└── ...
+```
+
+**RenderMv** is the bridge: it calls `mv.classify()` and renders the appropriate component:
+
+```svelte
+<script>
+  let { mv } = $props();
+  const primitive = $derived(mv?.classify?.() ?? null);
+</script>
+
+{#if primitive?.type === 'point'}
+  <Point position={primitive.coords} />
+{:else if primitive?.type === 'circle'}
+  <Circle center={primitive.center} radius={primitive.radius} normal={primitive.normal} />
+{/if}
+```
+
+### 3. Scene Layer (`src/scenes/`)
+
+Svelte components that compose algebra + geometry:
+
+```
+src/scenes/
+├── AllSlidesApp.svelte      # Main app with slide navigation
+├── Slide20Refactored.svelte # Forward kinematics
+├── Slide24Refactored.svelte # Serial robot IK (draggable)
+├── Slide30Refactored.svelte # Circle-circle intersection
+├── PgaDemo.svelte           # PGA planes + meet point
+└── ...
+```
+
+### 4. Stores (`src/stores/`)
+
+Global reactive state using Svelte stores:
+
+```typescript
+// orbitControl.ts - coordinates drag and orbit
+export const orbitEnabled = writable(true);
+export function disableOrbit() { orbitEnabled.set(false); }
+export function enableOrbit() { orbitEnabled.set(true); }
+
+// hoverInfo.ts - manages hover/pin info display
+export const hoverInfo = derived(...);
+export function pinHoverInfo(id, getter) { ... }
+```
+
+### 5. Composables (`src/composables/`)
+
+Reusable logic extracted from components:
+
+```typescript
+// useDrag.svelte.ts - handles 3D drag interactions
+const drag = useDrag({
+  getPosition: () => cga.down(target) ?? [0, 0, 0],
+  onDrag: (pos) => { target = cga.up(pos); }
 });
-
-// Updating cascades to dependents automatically (eg, line segments or circles)
-store.update("p1", { mv: up(2, 0, 0) });
 ```
 
-### `renderer.js` The Bridge
+Note: Uses `.svelte.ts` extension to enable Svelte runes (`$state`).
 
-Subscribes to store changes and delegates to type-specific handlers:
+## Data Flow Example
+
+Here's how a draggable robot arm works:
 
 ```mermaid
 sequenceDiagram
-    participant Store
-    participant Renderer
-    participant Handler
+    participant User
+    participant useDrag
     participant Scene
+    participant Derived
+    participant RenderMv
+
+    User->>useDrag: pointerdown on target mesh
+    useDrag->>useDrag: disableOrbit(), create drag plane
     
-    Store->>Renderer: notify("update", "p1")
-    Renderer->>Handler: handler.update()
-    Handler->>Handler: Extract xyz from mv
-    Handler->>Scene: mesh.position.set(x, y, z)
+    User->>useDrag: pointermove
+    useDrag->>useDrag: raycast to plane
+    useDrag->>Scene: onDrag([x, y, z])
+    Scene->>Scene: target = cga.up(pos)
+    
+    Note over Scene,Derived: $derived recomputes IK
+    Scene->>Derived: ik = $derived.by(() => solveIK(target))
+    
+    Derived->>RenderMv: mv={ik.elbow}
+    RenderMv->>RenderMv: classify() → point
+    RenderMv->>RenderMv: render <Point />
 ```
 
-### `cgaHandlers.js` CGA Three.js Translation
+## Key Patterns
 
-This is the **only place** that knows about both CGA and Three.js:
+### 1. State as Raw Multivectors
 
-```javascript
-// Knows how to extract 3D coords from CGA point
-function pointXYZ(mv) {
-  const XScalarNi = -mv.scalarProduct(cga.ni);
-  return {
-    x: mv.basisSVal("e_1") / XScalarNi,
-    y: mv.basisSVal("e_2") / XScalarNi,
-    z: mv.basisSVal("e_3") / XScalarNi
-  };
+```typescript
+// Use $state.raw for multivector state (MV has no reactivity internally)
+let target = $state.raw(cga.up([0.5, 0.8, 0]));
+
+// Derived computations recalculate automatically
+const ik = $derived.by(() => {
+  const S0 = no.sub(ni.smul(0.5 * rho ** 2)).dual();
+  const S1 = target.sub(ni.smul(0.5 * l ** 2)).dual();
+  const C = cga.meet(S0, S1);
+  // ... more IK math
+  return { elbow, endpoint, angles };
+});
+```
+
+### 2. Algebra-Agnostic Geometry
+
+Geometry components never import algebra modules:
+
+```svelte
+<!-- Point.svelte - just renders a sphere at [x,y,z] -->
+<script>
+  let { position, radius = 0.05, color = 0x000000 } = $props();
+</script>
+
+<T.Mesh {position}>
+  <T.SphereGeometry args={[radius, 16, 16]} />
+  <T.MeshBasicMaterial {color} />
+</T.Mesh>
+```
+
+### 3. Classification at the Boundary
+
+The only place algebra meets rendering is in `RenderMv`:
+
+```typescript
+// In RenderMv.svelte
+const primitive = $derived(mv?.classify?.() ?? null);
+// primitive is now a plain object: { type: 'circle', center: [...], radius: 1.5, normal: [...] }
+```
+
+### 4. Composables for Shared Behavior
+
+```typescript
+// useDrag.svelte.ts extracts ~80 lines of drag logic
+export function useDrag(options: UseDragOptions): UseDragReturn {
+  const { camera, renderer } = useThrelte();
+  let isDragging = $state(false);
+  // ... raycasting, plane intersection, orbit control
+  return { onPointerDown, onPointerMove, onPointerUp, isDragging };
 }
 
-// Knows how to embed 3D coords into CGA
-function up(x, y, z) {
-  const euclidean = cga.bs.multiVector({ e_1: x, e_2: y, e_3: z });
-  const rSq = x*x + y*y + z*z;
-  return cga.n0.add(euclidean).add(cga.ni.smul(0.5 * rSq));
-}
+// Usage in scene (4 lines instead of 30+)
+const drag = useDrag({
+  getPosition: () => cga.down(Y) ?? [0, 0, 1],
+  onDrag: (pos) => { Y = cga.up(pos); }
+});
 ```
 
-### `drag.js` Input Without Algebra
+## File Structure
 
-The drag controller is also algebra-agnostic. It:
-1. Raycasts to find which entity was clicked
-2. Projects mouse movement onto a drag plane
-3. Reports the 3D position via callback
-
-The **consumer** (demo code) converts 3D coordinates to CGA:
-
-```javascript
-enableDragging(canvas, camera, renderer,
-  // This callback runs when dragging
-  (entityId, pos) => store.update(entityId, { 
-    mv: up(pos.x, pos.y, pos.z)  // 3D to CGA happens here
-  })
-);
+```
+paparazzi/
+├── src/
+│   ├── algebra/           # Pure math (CGA, PGA)
+│   │   ├── cga.ts         # CGA setup
+│   │   ├── cgaHelpers.ts  # CGA operations
+│   │   ├── pga.ts         # PGA setup
+│   │   ├── pgaHelpers.ts  # PGA operations
+│   │   └── *.test.ts      # Vitest tests
+│   ├── geometry/          # Rendering components
+│   │   ├── RenderMv.svelte
+│   │   ├── Point.svelte
+│   │   ├── Circle.svelte
+│   │   └── ...
+│   ├── primitives/        # Type definitions
+│   │   └── types.ts       # GeoPrimitive, Coords3D, etc.
+│   ├── scenes/            # Demo scenes
+│   │   ├── AllSlidesApp.svelte
+│   │   └── Slide*.svelte
+│   ├── stores/            # Global state
+│   │   ├── orbitControl.ts
+│   │   └── hoverInfo.ts
+│   ├── composables/       # Reusable logic
+│   │   └── useDrag.svelte.ts
+│   ├── basisSet.js        # Core GA operations
+│   └── main.ts            # Entry point
+├── docs/
+│   ├── cga-cheatsheet.md
+│   ├── pga-cheatsheet.md
+│   └── store-based-rendering.md (this file)
+└── package.json
 ```
 
-## Dependency Tracking
+## Testing
 
-When entities reference other entities, updates cascade automatically:
+Tests use Vitest and focus on algebra correctness:
 
-```mermaid
-flowchart TD
-    subgraph Store
-        P1[p1: point]
-        P2[p2: point]
-        P3[p3: point]
-        SEG["segment (refs [p1, p2])"]
-        CIRC["circle (refs: [p1, p2, p3])"]
-    end
-    
-    SEG -.->|depends| P1
-    SEG -.->|depends| P2
-    CIRC -.->|depends| P1
-    CIRC -.->|depends| P2
-    CIRC -.->|depends| P3
-    
-    style P1 fill:#f66
-    style P2 fill:#6f6
-    style P3 fill:#66f
+```bash
+npm run test      # Watch mode
+npm run test:run  # Single run
 ```
 
-When `p1` is dragged:
-1. Store updates `p1`
-2. Store notifies: `update("p1")`
-3. Store looks up dependents of `p1` → `{segment, circle}`
-4. Store notifies: `update("segment")`, `update("circle")`
-5. Handlers recalculate derived geometry
+Example test:
 
-## Simplified Usage Example
-
-```javascript
-import { createStore } from "./store.js";
-import { createRenderer } from "./renderer.js";
-import { createCGAHandlers } from "./cgaHandlers.js";
-
-// Set up layers
-const cga = setupCGA();
-const { handlers, up } = createCGAHandlers(cga);
-const store = createStore();
-const renderer = createRenderer(scene, store, handlers);
-
-// Add entities (store doesn't care what 'mv' means)
-store.add({ id: "p1", type: "point", mv: up(1, 0, 0), color: 0xff0000 });
-store.add({ id: "p2", type: "point", mv: up(0, 1, 0), color: 0x00ff00 });
-store.add({ type: "segment", refs: ["p1", "p2"] });
-
-// Updates flow automatically
-store.update("p1", { mv: up(2, 0, 0) });  // segment updates too!
+```typescript
+describe('CGA Points', () => {
+  it('round-trips point coordinates', () => {
+    const coords: Coords3D = [1.5, -2.3, 0.7];
+    const pt = cga.up(coords);
+    const back = cga.down(pt);
+    expect(back![0]).toBeCloseTo(coords[0]);
+    expect(back![1]).toBeCloseTo(coords[1]);
+    expect(back![2]).toBeCloseTo(coords[2]);
+  });
+});
 ```
 
-See paparazzi/store-demo.html and paparazzi/src/example/storeDemo.js for the main entry points
+## Running the Demo
 
-`npm run dev` and goto http://localhost:5173/store-demo to see it running
+```bash
+npm run dev
+# Open http://localhost:5173
+```
+
+Use the slide navigation to browse demos:
+- **Slide 20/22**: Forward kinematics (CGA)
+- **Slide 24/38**: Inverse kinematics with dragging (CGA)
+- **Slide 30**: Circle-circle intersection (CGA)
+- **PGA Demo**: Three planes meeting at a point (PGA)
