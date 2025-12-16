@@ -25,6 +25,29 @@ bs.addBasis('2', +1); // e₂
 bs.addBasis('3', +1); // e₃
 bs.createCayley();
 
+// Manually set duals for PGA (degenerate algebra requires explicit mapping)
+// Copied from ganja.js dual map
+bs.setDual(bs.e, bs.e0123, 1);
+
+bs.setDual(bs.e0, bs.e123, 1);
+bs.setDual(bs.e1, bs.e023, -1);
+bs.setDual(bs.e2, bs.e013, 1);
+bs.setDual(bs.e3, bs.e012, -1);
+
+bs.setDual(bs.e01, bs.e23, 1);
+bs.setDual(bs.e02, bs.e13, -1);
+bs.setDual(bs.e03, bs.e12, 1);
+bs.setDual(bs.e12, bs.e03, 1);
+bs.setDual(bs.e13, bs.e02, -1);
+bs.setDual(bs.e23, bs.e01, 1);
+
+bs.setDual(bs.e012, bs.e3, 1);
+bs.setDual(bs.e013, bs.e2, -1);
+bs.setDual(bs.e023, bs.e1, 1);
+bs.setDual(bs.e123, bs.e0, -1);
+
+bs.setDual(bs.e0123, bs.e, 1);
+
 // === Standard basis elements ===
 /** Degenerate basis (e₀²=0) - represents "direction to infinity" */
 export const e0: MV = bs.multiVector({ e_0: 1 });
