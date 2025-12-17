@@ -12,6 +12,7 @@
   import Slide35Refactored from './Slide35Refactored.svelte';
   import Slide38Refactored from './Slide38Refactored.svelte';
   import PgaDemo from './PgaDemo.svelte';
+  import Spidor from './Spidor.svelte';
   import { Grid, OrbitControls, Gizmo } from '@threlte/extras';
   import { hoverInfo, unpinHoverInfo, isPinned } from '../stores/hoverInfo';
   import { orbitEnabled } from '../stores/orbitControl';
@@ -51,12 +52,13 @@
   let showSlide35 = $state(false);
   let showSlide38 = $state(false);
   let showPgaDemo = $state(false);
+  let showSpidor = $state(false);
   let showCayley = $state(false);
 
   // Available algebras for Cayley table viewer
   const algebras = [
-    { id: 'cga', name: 'CGA (4,1)', basisSet: cgaBasisSet },
-    { id: 'pga', name: 'PGA (3,0,1)', basisSet: pgaBasisSet }
+    { id: 'cga', name: 'CGA (4,1)', basisSet: cgaBasisSet }
+    , { id: 'pga', name: 'PGA (3,0,1)', basisSet: pgaBasisSet }
   ];
   let selectedAlgebra = $state('cga');
 
@@ -141,6 +143,16 @@
         showPgaDemo = v;
       }
     }
+    , {
+      id: 100
+      , name: 'Spidor (PGA)'
+      , get show() {
+        return showSpidor;
+      }
+      , set show(v) {
+        showSpidor = v;
+      }
+    }
   ];
 
   function showOnly(id: number) {
@@ -152,6 +164,7 @@
     showSlide35 = id === 35;
     showSlide38 = id === 38;
     showPgaDemo = id === 99;
+    showSpidor = id === 100;
   }
 
   function showAll() {
@@ -163,6 +176,7 @@
     showSlide35 = true;
     showSlide38 = true;
     showPgaDemo = true;
+    showSpidor = true;
   }
 
   function hideAll() {
@@ -174,6 +188,7 @@
     showSlide35 = false;
     showSlide38 = false;
     showPgaDemo = false;
+    showSpidor = false;
   }
 </script>
 
@@ -243,6 +258,9 @@
     {/if}
     {#if showPgaDemo}
       <PgaDemo />
+    {/if}
+    {#if showSpidor}
+      <Spidor />
     {/if}
   </Canvas>
 

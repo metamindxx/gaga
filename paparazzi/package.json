@@ -10,7 +10,9 @@
     "format": "prettier --write . && eslint . --fix",
     "lint": "eslint .",
     "test": "vitest",
-    "test:run": "vitest run"
+    "testPga": "vitest run src/algebra/pga.test.ts",
+    "testCga": "vitest run src/algebra/cga.test.ts",
+    "testAll": "vitest run"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

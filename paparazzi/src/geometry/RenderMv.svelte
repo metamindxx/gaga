@@ -166,10 +166,17 @@
           break;
       }
     } else if (isArray) {
+      // Show each point in the polyline
+      const pts = polylinePoints;
       info.properties = {
-        points: (mv as MV[]).length
+        count: pts.length
         , closed: closed ? 'yes' : 'no'
       };
+      // Add each point as p0, p1, p2, etc.
+      pts.forEach((pt, i) => {
+        info.properties![`p${i}`] =
+          `(${pt[0].toFixed(2)}, ${pt[1].toFixed(2)}, ${pt[2].toFixed(2)})`;
+      });
     }
 
     // Add editable fields if provided

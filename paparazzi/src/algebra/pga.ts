@@ -18,7 +18,28 @@ import { createPgaHelpers, type PgaHelpers } from './pgaHelpers.js';
 import type { Multivector as MV } from './types.js';
 
 // === Create the basis set ===
-const bs = createBasisSet();
+export type PgaBasisSet = ReturnType<typeof createBasisSet> & {
+  e: MV;
+  e0: MV;
+  e1: MV;
+  e2: MV;
+  e3: MV;
+  e01: MV;
+  e02: MV;
+  e03: MV;
+  e12: MV;
+  e13: MV;
+  e23: MV;
+  e012: MV;
+  e013: MV;
+  e023: MV;
+  e123: MV;
+  e0123: MV;
+  I4: MV;
+  one: MV;
+};
+
+const bs = createBasisSet() as PgaBasisSet;
 bs.addBasis('0', 0); // e₀ (degenerate, e₀²=0)
 bs.addBasis('1', +1); // e₁
 bs.addBasis('2', +1); // e₂
@@ -65,10 +86,12 @@ export const e3: MV = bs.multiVector({ e_3: 1 });
 export const e123: MV = bs.multiVector({ e_123: 1 });
 
 /** Full pseudoscalar (e₀e₁e₂e₃) */
-export const I4: MV = bs.multiVector({ e_0123: 1 });
+export const e0123: MV = bs.multiVector({ e_0123: 1 });
+export const I4: MV = e0123; // Alias for full pseudoscalar
 
 /** Scalar unit */
 export const one: MV = bs.multiVector({ e_: 1 });
+export const e = one; // Alias for scalar unit
 
 // === Derived basis bivectors ===
 /** Bivector e₀₁ */
@@ -84,7 +107,7 @@ export const e03: MV = e0.op(e3);
 export const e23: MV = e2.op(e3);
 
 /** Bivector e₃₁ */
-export const e31: MV = e3.op(e1);
+export const e13: MV = e1.op(e3);
 
 /** Bivector e₁₂ */
 export const e12: MV = e1.op(e2);

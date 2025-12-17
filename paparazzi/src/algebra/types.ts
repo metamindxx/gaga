@@ -1,7 +1,7 @@
 /**
  * Algebra Types - Core type definitions
  */
-
+import type { MultiVector } from '../basisSet';
 export type Vec3 = [number, number, number];
 
 /**
@@ -9,5 +9,5 @@ export type Vec3 = [number, number, number];
  * Uses 'any' for flexibility with different MV implementations.
  * The actual basisSet.MultiVector type is stricter.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Multivector = any;
+
+export type Multivector = MultiVector;

@@ -8,7 +8,7 @@
 
   import { T } from '@threlte/core';
   import { MeshLineGeometry, MeshLineMaterial, Text } from '@threlte/extras';
-  import { Vector3 } from 'three';
+  import { Vector3, CylinderGeometry, Quaternion } from 'three';
   import type { Coords3D } from '../primitives/types.js';
 
   interface Props {
@@ -53,16 +53,46 @@
     , (start[2] + end[2]) / 2
   ]);
 
-  // Label font size: based on segment length
+  // Segment length
   const segmentLength = $derived(
     Math.sqrt((end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2 + (end[2] - start[2]) ** 2)
   );
+
+  // Hitbox: invisible cylinder for raycasting
+  const hitboxRadius = $derived(Math.max(lineWidth * 2, 0.03));
+
+  // Cylinder position (midpoint) and rotation
+  const hitboxPosition: Coords3D = $derived(labelPosition);
+
+  // Calculate rotation to align cylinder with segment
+  const hitboxRotation = $derived.by((): [number, number, number, number] => {
+    const dir = new Vector3(end[0] - start[0], end[1] - start[1], end[2] - start[2]).normalize();
+    const up = new Vector3(0, 1, 0);
+    const quaternion = new Quaternion();
+    quaternion.setFromUnitVectors(up, dir);
+    return [quaternion.x, quaternion.y, quaternion.z, quaternion.w];
+  });
 </script>
 
-<T.Mesh {onclick} {onpointerenter} {onpointerleave}>
+<!-- Visible line -->
+<T.Mesh>
   <MeshLineGeometry {points} />
   <MeshLineMaterial {color} width={lineWidth} {opacity} transparent={opacity < 1} />
 </T.Mesh>
+
+<!-- Invisible hitbox for raycasting -->
+{#if onclick || onpointerenter || onpointerleave}
+  <T.Mesh
+    position={hitboxPosition}
+    quaternion={hitboxRotation}
+    {onclick}
+    {onpointerenter}
+    {onpointerleave}
+  >
+    <T.CylinderGeometry args={[hitboxRadius, hitboxRadius, segmentLength, 6]} />
+    <T.MeshBasicMaterial visible={false} />
+  </T.Mesh>
+{/if}
 
 {#if label}
   <Text

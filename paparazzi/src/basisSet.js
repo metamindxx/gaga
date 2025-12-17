@@ -4,7 +4,7 @@
  *********************/
 
 // ignore unused variables 'p', 'q', 'r' for now
- 
+
 export function createBasisSet(p, q, r) {
   var bs = {
     // basis: e0, e1, e2, ex, ey, ez, et
@@ -557,10 +557,10 @@ export function createBasisSet(p, q, r) {
     // <mv * ~mv>
     mv.normSq = function () {
       var mvResult = this.gp(this.reverse());
-      //console.log('normSq.grade: ' + mvResult.grade)
-      //mvResult.strLog('normSq.mvResult: ')
-      //console.log('normSq: ' + mvResult.bladeIdx[bs.bases[0].id].mul)
-      return mvResult.bladeIdx[bs.bases[0].id].mul;
+      // console.log('normSq.grade: ' + mvResult.grade)
+      // mvResult.strLog('normSq.mvResult: ')
+      // console.log('normSq: ' + mvResult.bladeIdx[bs.bases[0].id])
+      return mvResult.bladeIdx[bs.bases[0].id]?.mul ?? 0;
     };
     mv.norm = function () {
       // with a hyperbolic metric, normSq can be negative for improper things.
@@ -748,7 +748,10 @@ export function createBasisSet(p, q, r) {
         if (bladeResult) {
           bladeResult.mul -= mv2Blade.mul;
         } else {
-          mvResult.pushBlade(mv2Blade.copy());
+          // blade doesn't exist - add it with negated multiplier
+          var negatedBlade = mv2Blade.copy();
+          negatedBlade.mul = -negatedBlade.mul;
+          mvResult.pushBlade(negatedBlade);
         }
       }
       return mvResult;
@@ -943,14 +946,23 @@ export function createBasisSet(p, q, r) {
       return res;
     };
     mv.join = function (b) {
-      // a V b = !( !a * !b )
-      var res = this.dual().op(b.dual()).unDual();
+      // a V b = (-1)**(grade(a)*grade(b)) * !( !a ^ !b )
+      // Sign factor from ganja.js regressive product convention
+      var g1 = this.grade();
+      var g2 = b.grade();
+      var sign = Math.pow(-1, g1 * g2);
+      var res = this.dual().op(b.dual()).unDual().smul(sign);
       res.components = [];
       res.copyComponents(this);
       res.copyComponents(b);
 
       //			console.log('res.components:', res.components)
       return res;
+    };
+
+    // sandwich product
+    mv.sandwich = function (target) {
+      return this.gp(target).gp(this.reverse());
     };
 
     mv.copyComponents = function (b) {

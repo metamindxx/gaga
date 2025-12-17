@@ -57,6 +57,7 @@ export interface MultiVector {
   dot(other: MultiVector): MultiVector;
   projectOnto(other: MultiVector): MultiVector;
   join(other: MultiVector): MultiVector;
+  sandwich(other: MultiVector): MultiVector;
   selectGrade(grade: number): MultiVector;
   reverse(): MultiVector;
   involute(): MultiVector;
