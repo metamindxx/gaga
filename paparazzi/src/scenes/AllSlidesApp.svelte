@@ -39,7 +39,7 @@
   let theme = $state<'light' | 'dark'>(getInitialTheme());
 
   // Global pause: stops all Threlte scheduler stages (pauses all useTask loops).
-  let paused = $state(true);
+  let paused = $state(false);
 
   // Increment to discard the current Canvas/scene instance and create a new one.
   let resetKey = $state(0);
