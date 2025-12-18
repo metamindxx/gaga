@@ -20,6 +20,9 @@
    *
    *   Closed polygon:
    *     <RenderMv mv={[p1, p2, p3, p4]} closed />
+   *
+   *   Draggable point (two-way binding):
+   *     <RenderMv bind:mv={point} draggable />
    */
 
   //   import { Point, Circle, Sphere, Segment } from './index.js';
@@ -28,6 +31,7 @@
   import Sphere from './Sphere.svelte';
   import Segment from './Segment.svelte';
   import Plane from './Plane.svelte';
+  import { useDrag } from '../composables/useDrag.svelte';
   import type { GeoPrimitive, Coords3D, Point3D } from '../primitives/types.js';
   import {
     pinHoverInfo
@@ -63,10 +67,14 @@
     editableFields?: EditableField[];
     /** Action buttons to show in the infobox when pinned */
     actions?: ActionButton[];
+    /** Pointer down handler for drag initiation */
+    onpointerdown?: (event: { stopPropagation: () => void }) => void;
+    /** Enable dragging for points */
+    draggable?: boolean;
   }
 
   let {
-    mv
+    mv = $bindable()
     , color = 0x000000
     , opacity = 1
     , radius
@@ -75,6 +83,8 @@
     , label
     , editableFields
     , actions
+    , onpointerdown
+    , draggable = true
   }: Props = $props();
 
   // Unique ID for this RenderMv instance
@@ -101,6 +111,47 @@
     }
     return points;
   });
+
+  // Get coordinates from current MV for drag plane positioning
+  function getPosition(): Coords3D {
+    if (primitive?.type === 'point') {
+      return primitive.coords;
+    }
+    return [0, 0, 0];
+  }
+
+  // Create new MV from coordinates using the algebra's helper
+  function createMvFromCoords(coords: Coords3D): MV {
+    // Use the algebra's point() helper if available
+    const helpers = mv?.bs?.helpers;
+    if (helpers?.point) {
+      return helpers.point(coords);
+    }
+    // Fallback: try to find point function on the MV's basisSet
+    return null;
+  }
+
+  // Drag handler - creates new MV and updates via binding
+  function handleDragCoords(coords: Coords3D) {
+    const newMv = createMvFromCoords(coords);
+    if (newMv) {
+      mv = newMv;
+    }
+  }
+
+  // Always set up drag handling - will be no-op if not draggable
+  const drag = useDrag({
+    getPosition
+    , onDrag: handleDragCoords
+  });
+
+  // Combined pointer down handler
+  function handlePointerDown(event: { stopPropagation: () => void }) {
+    if (draggable) {
+      drag.onPointerDown(event);
+    }
+    onpointerdown?.(event);
+  }
 
   // Generate hover info from the multivector
   function getHoverInfo(): HoverInfo {
@@ -215,7 +266,19 @@
   function handlePointerLeave() {
     clearHoverInfo();
   }
+
+  // Window event handlers for dragging
+  function handleWindowPointerMove(event: PointerEvent) {
+    drag.onPointerMove(event);
+  }
+
+  function handleWindowPointerUp() {
+    drag.onPointerUp();
+  }
 </script>
+
+<!-- Window event listeners for drag handling (no-op when not draggable or not dragging) -->
+<svelte:window onpointermove={handleWindowPointerMove} onpointerup={handleWindowPointerUp} />
 
 {#if isArray}
   <!-- Array mode: render as polyline/polygon -->
@@ -254,6 +317,7 @@
       {color}
       {opacity}
       {label}
+      onpointerdown={draggable ? handlePointerDown : onpointerdown}
       onclick={handleClick}
       onpointerenter={handlePointerEnter}
       onpointerleave={handlePointerLeave}

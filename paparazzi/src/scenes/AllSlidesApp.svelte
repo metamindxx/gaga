@@ -12,7 +12,10 @@
   import Slide35Refactored from './Slide35Refactored.svelte';
   import Slide38Refactored from './Slide38Refactored.svelte';
   import PgaDemo from './PgaDemo.svelte';
-  import Spidor from './Spidor.svelte';
+  import SpidorFeetDemo from './spidor/SpidorFeetDemo.svelte';
+  import SpidorFull from './spidor/SpidorFull.svelte';
+  import SpidorFootDemo from './spidor/SpidorFootDemo.svelte';
+  import SpidorLegDemo from './spidor/SpidorLegDemo.svelte';
   import { Grid, OrbitControls, Gizmo } from '@threlte/extras';
   import { hoverInfo, unpinHoverInfo, isPinned } from '../stores/hoverInfo';
   import { orbitEnabled } from '../stores/orbitControl';
@@ -53,7 +56,34 @@
   let showSlide38 = $state(false);
   let showPgaDemo = $state(false);
   let showSpidor = $state(false);
+  let showSpidorFull = $state(false);
+  let showSpidorFoot = $state(false);
+  let showSpidorLeg = $state(false);
   let showCayley = $state(false);
+
+  // SpidorLeg configuration
+  let spidorSegmentCount = $state(3);
+  let spidorSegmentLength = $state(0.2);
+  let spidorLockToPlane = $state(false);
+  let spidorSetKnee = $state(false);
+  let spidorKneePosition = $state(0.9);
+  let spidorSolveN = $state(1);
+
+  // SpidorFeet stepping configuration
+  let spidorStepMinDist = $state(0.12);
+  let spidorStepDurationMs = $state(220);
+  let spidorMinRestMs = $state(120);
+  let spidorStepFinishDist = $state(0.03);
+
+  // SpidorFoot demo configuration
+  let spidorFootStepMinDist = $state(0.12);
+  let spidorFootStepDurationMs = $state(220);
+  let spidorFootMinRestMs = $state(120);
+  let spidorFootStepFinishDist = $state(0.03);
+  let spidorFootNeighborA = $state(false);
+  let spidorFootNeighborB = $state(false);
+  let spidorFootTargetRadius = $state(0.6);
+  let spidorFootTargetSpeed = $state(0.35);
 
   // Available algebras for Cayley table viewer
   const algebras = [
@@ -145,12 +175,42 @@
     }
     , {
       id: 100
-      , name: 'Spidor (PGA)'
+      , name: 'Spidor Leg'
+      , get show() {
+        return showSpidorLeg;
+      }
+      , set show(v) {
+        showSpidorLeg = v;
+      }
+    }
+    , {
+      id: 101
+      , name: 'Spidor Foot'
+      , get show() {
+        return showSpidorFoot;
+      }
+      , set show(v) {
+        showSpidorFoot = v;
+      }
+    }
+    , {
+      id: 102
+      , name: 'Spidor Feet'
       , get show() {
         return showSpidor;
       }
       , set show(v) {
         showSpidor = v;
+      }
+    }
+    , {
+      id: 103
+      , name: 'Spidor Full'
+      , get show() {
+        return showSpidorFull;
+      }
+      , set show(v) {
+        showSpidorFull = v;
       }
     }
   ];
@@ -164,7 +224,10 @@
     showSlide35 = id === 35;
     showSlide38 = id === 38;
     showPgaDemo = id === 99;
-    showSpidor = id === 100;
+    showSpidorLeg = id === 100;
+    showSpidorFoot = id === 101;
+    showSpidor = id === 102;
+    showSpidorFull = id === 103;
   }
 
   function showAll() {
@@ -177,6 +240,9 @@
     showSlide38 = true;
     showPgaDemo = true;
     showSpidor = true;
+    showSpidorLeg = true;
+    showSpidorFoot = true;
+    showSpidorFull = true;
   }
 
   function hideAll() {
@@ -189,6 +255,9 @@
     showSlide38 = false;
     showPgaDemo = false;
     showSpidor = false;
+    showSpidorLeg = false;
+    showSpidorFoot = false;
+    showSpidorFull = false;
   }
 </script>
 
@@ -260,7 +329,42 @@
       <PgaDemo />
     {/if}
     {#if showSpidor}
-      <Spidor />
+      <SpidorFeetDemo
+        stepMinDist={spidorStepMinDist}
+        stepDurationMs={spidorStepDurationMs}
+        minRestMs={spidorMinRestMs}
+        stepFinishDist={spidorStepFinishDist}
+      />
+    {/if}
+    {#if showSpidorLeg}
+      <SpidorLegDemo
+        segmentCount={spidorSegmentCount}
+        segmentLength={spidorSegmentLength}
+        lockToPlane={spidorLockToPlane}
+        setKnee={spidorSetKnee}
+        kneePosition={spidorKneePosition}
+        solveN={spidorSolveN}
+      />
+    {/if}
+    {#if showSpidorFoot}
+      <SpidorFootDemo
+        stepMinDist={spidorFootStepMinDist}
+        stepDurationMs={spidorFootStepDurationMs}
+        minRestMs={spidorFootMinRestMs}
+        stepFinishDist={spidorFootStepFinishDist}
+        neighborA={spidorFootNeighborA}
+        neighborB={spidorFootNeighborB}
+        targetRadius={spidorFootTargetRadius}
+        targetSpeed={spidorFootTargetSpeed}
+      />
+    {/if}
+    {#if showSpidorFull}
+      <SpidorFull
+        stepMinDist={spidorStepMinDist}
+        stepDurationMs={spidorStepDurationMs}
+        minRestMs={spidorMinRestMs}
+        stepFinishDist={spidorStepFinishDist}
+      />
     {/if}
   </Canvas>
 
@@ -285,6 +389,118 @@
         </label>
       {/each}
     </div>
+
+    {#if showSpidorLeg}
+      <div class="scene-controls">
+        <h2>Spidor Leg</h2>
+        <label class="control-row">
+          <span>Segments:</span>
+          <input type="range" min="2" max="8" step="1" bind:value={spidorSegmentCount} />
+          <span class="control-value">{spidorSegmentCount}</span>
+        </label>
+        <label class="control-row">
+          <span>Segment:</span>
+          <input type="range" min="0.05" max="0.5" step="0.01" bind:value={spidorSegmentLength} />
+          <span class="control-value">{spidorSegmentLength.toFixed(2)}</span>
+        </label>
+        <label class="control-row">
+          <input type="checkbox" bind:checked={spidorLockToPlane} />
+          <span>Constraint: Lock to plane</span>
+        </label>
+        <label class="control-row">
+          <input type="checkbox" bind:checked={spidorSetKnee} />
+          <span>Constraint: Set knee</span>
+        </label>
+        {#if spidorSetKnee}
+          <label class="control-row">
+            <span>Knee pos:</span>
+            <input type="range" min="0" max="1" step="0.01" bind:value={spidorKneePosition} />
+            <span class="control-value">{spidorKneePosition.toFixed(2)}</span>
+          </label>
+        {/if}
+        <label class="control-row">
+          <span>Iterations:</span>
+          <input type="range" min="1" max="10" step="1" bind:value={spidorSolveN} />
+          <span class="control-value">{spidorSolveN}</span>
+        </label>
+      </div>
+    {/if}
+
+    {#if showSpidor || showSpidorFull}
+      <div class="scene-controls">
+        <h2>Spidor (PGA)</h2>
+        <label class="control-row">
+          <span>Min dist:</span>
+          <input type="range" min="0" max="0.5" step="0.01" bind:value={spidorStepMinDist} />
+          <span class="control-value">{spidorStepMinDist.toFixed(2)}</span>
+        </label>
+        <label class="control-row">
+          <span>Finish:</span>
+          <input type="range" min="0" max="0.2" step="0.005" bind:value={spidorStepFinishDist} />
+          <span class="control-value">{spidorStepFinishDist.toFixed(3)}</span>
+        </label>
+        <label class="control-row">
+          <span>Step ms:</span>
+          <input type="range" min="50" max="800" step="10" bind:value={spidorStepDurationMs} />
+          <span class="control-value">{spidorStepDurationMs}</span>
+        </label>
+        <label class="control-row">
+          <span>Rest ms:</span>
+          <input type="range" min="0" max="800" step="10" bind:value={spidorMinRestMs} />
+          <span class="control-value">{spidorMinRestMs}</span>
+        </label>
+      </div>
+    {/if}
+
+    {#if showSpidorFoot}
+      <div class="scene-controls">
+        <h2>Spidor Foot</h2>
+        <label class="control-row">
+          <span>Min dist:</span>
+          <input type="range" min="0" max="0.5" step="0.01" bind:value={spidorFootStepMinDist} />
+          <span class="control-value">{spidorFootStepMinDist.toFixed(2)}</span>
+        </label>
+        <label class="control-row">
+          <span>Finish:</span>
+          <input
+            type="range"
+            min="0"
+            max="0.2"
+            step="0.005"
+            bind:value={spidorFootStepFinishDist}
+          />
+          <span class="control-value">{spidorFootStepFinishDist.toFixed(3)}</span>
+        </label>
+        <label class="control-row">
+          <span>Step ms:</span>
+          <input type="range" min="50" max="800" step="10" bind:value={spidorFootStepDurationMs} />
+          <span class="control-value">{spidorFootStepDurationMs}</span>
+        </label>
+        <label class="control-row">
+          <span>Rest ms:</span>
+          <input type="range" min="0" max="800" step="10" bind:value={spidorFootMinRestMs} />
+          <span class="control-value">{spidorFootMinRestMs}</span>
+        </label>
+        <label class="control-row">
+          <span>Target r:</span>
+          <input type="range" min="0" max="2" step="0.01" bind:value={spidorFootTargetRadius} />
+          <span class="control-value">{spidorFootTargetRadius.toFixed(2)}</span>
+        </label>
+        <label class="control-row">
+          <span>Target v:</span>
+          <input type="range" min="0" max="2" step="0.01" bind:value={spidorFootTargetSpeed} />
+          <span class="control-value">{spidorFootTargetSpeed.toFixed(2)}</span>
+        </label>
+        <label class="control-row">
+          <input type="checkbox" bind:checked={spidorFootNeighborA} />
+          <span>Neighbor A moving</span>
+        </label>
+        <label class="control-row">
+          <input type="checkbox" bind:checked={spidorFootNeighborB} />
+          <span>Neighbor B moving</span>
+        </label>
+      </div>
+    {/if}
 
     <div class="legend">
       <h2>Controls</h2>
@@ -502,6 +718,64 @@
     color: #fff;
   }
 
+  .scene-controls {
+    margin-top: 12px;
+    padding: 10px;
+    background: rgba(68, 170, 255, 0.1);
+    border: 1px solid #4af;
+    border-radius: 6px;
+  }
+
+  .scene-controls h2 {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    color: #4af;
+  }
+
+  .control-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .control-row span:first-child {
+    min-width: 60px;
+    color: #aaa;
+  }
+
+  .control-row input[type='range'] {
+    flex: 1;
+    height: 4px;
+    appearance: none;
+    background: #444;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+
+  .control-row input[type='range']::-webkit-slider-thumb {
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #4af;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .control-row input[type='checkbox'] {
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .control-value {
+    min-width: 32px;
+    text-align: right;
+    font-family: monospace;
+    color: #cfc;
+  }
+
   .legend,
   .architecture {
     margin-top: 12px;
@@ -560,11 +834,6 @@
 
   .infobox.pinned {
     border-color: #f84;
-  }
-
-  .pin-indicator {
-    margin-left: auto;
-    font-size: 12px;
   }
 
   .infobox-header {

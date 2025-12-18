@@ -54,9 +54,11 @@
   ]);
 
   // Segment length
-  const segmentLength = $derived(
-    Math.sqrt((end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2 + (end[2] - start[2]) ** 2)
-  );
+  const segmentLength = $derived.by(() => {
+    return Math.sqrt(
+      (end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2 + (end[2] - start[2]) ** 2
+    );
+  });
 
   // Hitbox: invisible cylinder for raycasting
   const hitboxRadius = $derived(Math.max(lineWidth * 2, 0.03));
