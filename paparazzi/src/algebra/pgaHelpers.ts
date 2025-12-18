@@ -187,25 +187,28 @@ export function createPgaHelpers(basis: PgaBasis) {
    * Line in PGA is a bivector with direction and moment
    */
   function classifyGrade2(mv: MV): Line3D | null {
-    // Direction (Euclidean part): e23, e31, e12
     const dx = mv.basisSVal('e_23');
-    const dy = mv.basisSVal('e_31') ?? -mv.basisSVal('e_13');
+    const dy = -mv.basisSVal('e_13');
     const dz = mv.basisSVal('e_12');
+    const mx = mv.basisSVal('e_01');
+    const my = mv.basisSVal('e_02');
+    const mz = mv.basisSVal('e_03');
 
+    // These six coefficients are (up to basis/sign conventions) the Plücker coordinates:
+    // direction d and moment m where m = p × d.
+    // Scaling of a Plücker line is arbitrary, so if we normalize d we must normalize m
+    // by the same scale to keep the represented line invariant.
     const mag = Math.sqrt(dx * dx + dy * dy + dz * dz);
     if (mag < EPSILON) return null;
 
     const direction: Coords3D = [dx / mag, dy / mag, dz / mag];
+    const moment: Coords3D = [mx / mag, my / mag, mz / mag];
 
-    // Moment (ideal part): e01, e02, e03
-    const mx = mv.basisSVal('e_01') / mag;
-    const my = mv.basisSVal('e_02') / mag;
-    const mz = mv.basisSVal('e_03') / mag;
-
-    // Point on line closest to origin: p = d × m
-    const px = direction[1] * mz - direction[2] * my;
-    const py = direction[2] * mx - direction[0] * mz;
-    const pz = direction[0] * my - direction[1] * mx;
+    // A convenient point on the line is the point closest to the origin:
+    // p0 = d × m  (with ||d|| = 1)
+    const px = direction[1] * moment[2] - direction[2] * moment[1];
+    const py = direction[2] * moment[0] - direction[0] * moment[2];
+    const pz = direction[0] * moment[1] - direction[1] * moment[0];
 
     return { type: 'line', point: [px, py, pz], direction };
   }

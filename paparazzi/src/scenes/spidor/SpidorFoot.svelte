@@ -3,10 +3,12 @@
   import { untrack } from 'svelte';
   import { Tween } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
+  import { readable } from 'svelte/store';
 
   import type { Multivector } from '../../algebra/types';
   import RenderMv from '../../geometry/RenderMv.svelte';
   import { e0, pga } from '../../algebra/pga';
+  import { getSpidorFullViz } from './spidorFullViz';
 
   type Coords3D = [number, number, number];
 
@@ -118,10 +120,14 @@
     if (!tween) return;
     tick(performance.now());
   });
+
+  const showViz = getSpidorFullViz() ?? readable(true);
 </script>
 
 {#if showTarget}
   <RenderMv mv={target} color={targetColor} radius={targetRadius} draggable={false} />
 {/if}
 
-<RenderMv mv={foot} color={footColor} radius={footRadius} {draggable} />
+{#if $showViz}
+  <RenderMv mv={foot} color={footColor} radius={footRadius} {draggable} />
+{/if}

@@ -16,6 +16,7 @@
   import SpidorFull from './spidor/SpidorFull.svelte';
   import SpidorFootDemo from './spidor/SpidorFootDemo.svelte';
   import SpidorLegDemo from './spidor/SpidorLegDemo.svelte';
+  import ThreltePause from './ThreltePause.svelte';
   import { Grid, OrbitControls, Gizmo } from '@threlte/extras';
   import { hoverInfo, unpinHoverInfo, isPinned } from '../stores/hoverInfo';
   import { orbitEnabled } from '../stores/orbitControl';
@@ -37,8 +38,22 @@
 
   let theme = $state<'light' | 'dark'>(getInitialTheme());
 
+  // Global pause: stops all Threlte scheduler stages (pauses all useTask loops).
+  let paused = $state(true);
+
+  // Increment to discard the current Canvas/scene instance and create a new one.
+  let resetKey = $state(0);
+
   function toggleTheme() {
     theme = theme === 'light' ? 'dark' : 'light';
+  }
+
+  function togglePaused() {
+    paused = !paused;
+  }
+
+  function resetScene() {
+    resetKey += 1;
   }
 
   // Theme-dependent colors
@@ -68,6 +83,15 @@
   let spidorSetKnee = $state(false);
   let spidorKneePosition = $state(0.9);
   let spidorSolveN = $state(1);
+
+  // SpidorFull leg configuration (separate from SpidorLeg demo)
+  let spidorFullSegmentCount = $state(3);
+  let spidorFullSegmentLength = $state(0.2);
+  let spidorFullLockToPlane = $state(true);
+  let spidorFullSetKnee = $state(true);
+  let spidorFullKneePosition = $state(0.9);
+  let spidorFullSolveN = $state(4);
+  let spidorFullShowViz = $state(true);
 
   // SpidorFeet stepping configuration
   let spidorStepMinDist = $state(0.12);
@@ -262,111 +286,121 @@
 </script>
 
 <div class="container">
-  <Canvas>
-    <!-- Scene background color -->
-    <T.Color args={[bgColor]} attach="background" />
+  {#key resetKey}
+    <Canvas>
+      <ThreltePause {paused} />
+      <!-- Scene background color -->
+      <T.Color args={[bgColor]} attach="background" />
 
-    <!-- Camera -->
-    <T.PerspectiveCamera makeDefault position={[3, 2, 4]} fov={60}>
-      <OrbitControls target={[0, 0.5, 0]} enabled={$orbitEnabled}>
-        <Gizmo
-          type="cube"
-          placement="bottom-left"
-          size={80}
-          x={{ color: '#ff4444', label: 'X' }}
-          y={{ color: '#44ff44', label: 'Y' }}
-          z={{ color: '#4444ff', label: 'Z' }}
-          nx={{ color: '#994444', label: '-X' }}
-          ny={{ color: '#449944', label: '-Y' }}
-          nz={{ color: '#444499', label: '-Z' }}
+      <!-- Camera -->
+      <T.PerspectiveCamera makeDefault position={[3, 2, 4]} fov={60}>
+        <OrbitControls target={[0, 0.5, 0]} enabled={$orbitEnabled}>
+          <Gizmo
+            type="cube"
+            placement="bottom-left"
+            size={80}
+            x={{ color: '#ff4444', label: 'X' }}
+            y={{ color: '#44ff44', label: 'Y' }}
+            z={{ color: '#4444ff', label: 'Z' }}
+            nx={{ color: '#994444', label: '-X' }}
+            ny={{ color: '#449944', label: '-Y' }}
+            nz={{ color: '#444499', label: '-Z' }}
+          />
+        </OrbitControls>
+      </T.PerspectiveCamera>
+
+      <!-- Lighting -->
+      <T.AmbientLight intensity={0.4} />
+      <T.DirectionalLight position={[5, 10, 5]} intensity={0.8} />
+
+      <!-- Grid -->
+      <Grid cellColor={gridCellColor} sectionColor={gridSectionColor} fadeDistance={10} />
+
+      <!-- Axes -->
+      <T.AxesHelper
+        args={[1]}
+        oncreate={(ref) => {
+          ref.setColors('#ff0000', '#00ff00', '#0000ff');
+        }}
+      />
+
+      <!-- Invisible background plane for click-away deselection -->
+      <T.Mesh position={[0, 0, -10]} onclick={unpinHoverInfo}>
+        <T.PlaneGeometry args={[100, 100]} />
+        <T.MeshBasicMaterial visible={false} />
+      </T.Mesh>
+
+      {#if showSlide20}
+        <Slide20Refactored />
+      {/if}
+      {#if showSlide22}
+        <Slide22Refactored />
+      {/if}
+      {#if showSlide24}
+        <Slide24Refactored />
+      {/if}
+      {#if showSlide28}
+        <Slide28Refactored />
+      {/if}
+      {#if showSlide30}
+        <Slide30Refactored />
+      {/if}
+      {#if showSlide35}
+        <Slide35Refactored />
+      {/if}
+      {#if showSlide38}
+        <Slide38Refactored />
+      {/if}
+      {#if showPgaDemo}
+        <PgaDemo />
+      {/if}
+      {#if showSpidor}
+        <SpidorFeetDemo
+          stepMinDist={spidorStepMinDist}
+          stepDurationMs={spidorStepDurationMs}
+          minRestMs={spidorMinRestMs}
+          stepFinishDist={spidorStepFinishDist}
         />
-      </OrbitControls>
-    </T.PerspectiveCamera>
-
-    <!-- Lighting -->
-    <T.AmbientLight intensity={0.4} />
-    <T.DirectionalLight position={[5, 10, 5]} intensity={0.8} />
-
-    <!-- Grid -->
-    <Grid cellColor={gridCellColor} sectionColor={gridSectionColor} fadeDistance={10} />
-
-    <!-- Axes -->
-    <T.AxesHelper
-      args={[1]}
-      oncreate={(ref) => {
-        ref.setColors('#ff0000', '#00ff00', '#0000ff');
-      }}
-    />
-
-    <!-- Invisible background plane for click-away deselection -->
-    <T.Mesh position={[0, 0, -10]} onclick={unpinHoverInfo}>
-      <T.PlaneGeometry args={[100, 100]} />
-      <T.MeshBasicMaterial visible={false} />
-    </T.Mesh>
-
-    {#if showSlide20}
-      <Slide20Refactored />
-    {/if}
-    {#if showSlide22}
-      <Slide22Refactored />
-    {/if}
-    {#if showSlide24}
-      <Slide24Refactored />
-    {/if}
-    {#if showSlide28}
-      <Slide28Refactored />
-    {/if}
-    {#if showSlide30}
-      <Slide30Refactored />
-    {/if}
-    {#if showSlide35}
-      <Slide35Refactored />
-    {/if}
-    {#if showSlide38}
-      <Slide38Refactored />
-    {/if}
-    {#if showPgaDemo}
-      <PgaDemo />
-    {/if}
-    {#if showSpidor}
-      <SpidorFeetDemo
-        stepMinDist={spidorStepMinDist}
-        stepDurationMs={spidorStepDurationMs}
-        minRestMs={spidorMinRestMs}
-        stepFinishDist={spidorStepFinishDist}
-      />
-    {/if}
-    {#if showSpidorLeg}
-      <SpidorLegDemo
-        segmentCount={spidorSegmentCount}
-        segmentLength={spidorSegmentLength}
-        lockToPlane={spidorLockToPlane}
-        setKnee={spidorSetKnee}
-        kneePosition={spidorKneePosition}
-        solveN={spidorSolveN}
-      />
-    {/if}
-    {#if showSpidorFoot}
-      <SpidorFootDemo
-        stepMinDist={spidorFootStepMinDist}
-        stepDurationMs={spidorFootStepDurationMs}
-        minRestMs={spidorFootMinRestMs}
-        stepFinishDist={spidorFootStepFinishDist}
-        neighborA={spidorFootNeighborA}
-        neighborB={spidorFootNeighborB}
-        targetRadius={spidorFootTargetRadius}
-        targetSpeed={spidorFootTargetSpeed}
-      />
-    {/if}
-    {#if showSpidorFull}
-      <SpidorFull
-        stepMinDist={spidorStepMinDist}
-        stepDurationMs={spidorStepDurationMs}
-        minRestMs={spidorMinRestMs}
-        stepFinishDist={spidorStepFinishDist}
-      />
-    {/if}
-  </Canvas>
+      {/if}
+      {#if showSpidorLeg}
+        <SpidorLegDemo
+          segmentCount={spidorSegmentCount}
+          segmentLength={spidorSegmentLength}
+          lockToPlane={spidorLockToPlane}
+          setKnee={spidorSetKnee}
+          kneePosition={spidorKneePosition}
+          solveN={spidorSolveN}
+        />
+      {/if}
+      {#if showSpidorFoot}
+        <SpidorFootDemo
+          stepMinDist={spidorFootStepMinDist}
+          stepDurationMs={spidorFootStepDurationMs}
+          minRestMs={spidorFootMinRestMs}
+          stepFinishDist={spidorFootStepFinishDist}
+          neighborA={spidorFootNeighborA}
+          neighborB={spidorFootNeighborB}
+          targetRadius={spidorFootTargetRadius}
+          targetSpeed={spidorFootTargetSpeed}
+        />
+      {/if}
+      {#if showSpidorFull}
+        <SpidorFull
+          stepMinDist={spidorStepMinDist}
+          stepDurationMs={spidorStepDurationMs}
+          minRestMs={spidorMinRestMs}
+          stepFinishDist={spidorStepFinishDist}
+          segmentCount={spidorFullSegmentCount}
+          segmentLength={spidorFullSegmentLength}
+          lockToPlane={spidorFullLockToPlane}
+          setKnee={spidorFullSetKnee}
+          kneePosition={spidorFullKneePosition}
+          solveN={spidorFullSolveN}
+          showViz={spidorFullShowViz}
+        />
+      {/if}
+    </Canvas>
+  {/key}
 
   <div class="controls">
     <h1>Geometric Algebra Demos</h1>
@@ -375,6 +409,8 @@
     <div class="button-row">
       <button onclick={showAll}>Show All</button>
       <button onclick={hideAll}>Hide All</button>
+      <button onclick={togglePaused}>{paused ? 'Resume' : 'Pause'}</button>
+      <button onclick={resetScene}>Reset</button>
       <button onclick={toggleTheme}>{theme}</button>
       <button onclick={() => (showCayley = !showCayley)}>Cayley</button>
     </div>
@@ -422,6 +458,52 @@
           <span>Iterations:</span>
           <input type="range" min="1" max="10" step="1" bind:value={spidorSolveN} />
           <span class="control-value">{spidorSolveN}</span>
+        </label>
+      </div>
+    {/if}
+
+    {#if showSpidorFull}
+      <div class="scene-controls">
+        <h2>Spidor Full (Legs)</h2>
+        <label class="control-row">
+          <input type="checkbox" bind:checked={spidorFullShowViz} />
+          <span>Show targets/feet points</span>
+        </label>
+        <label class="control-row">
+          <span>Segments:</span>
+          <input type="range" min="2" max="8" step="1" bind:value={spidorFullSegmentCount} />
+          <span class="control-value">{spidorFullSegmentCount}</span>
+        </label>
+        <label class="control-row">
+          <span>Segment:</span>
+          <input
+            type="range"
+            min="0.05"
+            max="0.5"
+            step="0.01"
+            bind:value={spidorFullSegmentLength}
+          />
+          <span class="control-value">{spidorFullSegmentLength.toFixed(2)}</span>
+        </label>
+        <label class="control-row">
+          <input type="checkbox" bind:checked={spidorFullLockToPlane} />
+          <span>Constraint: Lock to plane</span>
+        </label>
+        <label class="control-row">
+          <input type="checkbox" bind:checked={spidorFullSetKnee} />
+          <span>Constraint: Set knee</span>
+        </label>
+        {#if spidorFullSetKnee}
+          <label class="control-row">
+            <span>Knee pos:</span>
+            <input type="range" min="0" max="1" step="0.01" bind:value={spidorFullKneePosition} />
+            <span class="control-value">{spidorFullKneePosition.toFixed(2)}</span>
+          </label>
+        {/if}
+        <label class="control-row">
+          <span>Iterations:</span>
+          <input type="range" min="1" max="10" step="1" bind:value={spidorFullSolveN} />
+          <span class="control-value">{spidorFullSolveN}</span>
         </label>
       </div>
     {/if}

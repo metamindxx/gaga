@@ -3,7 +3,9 @@
   import RenderMv from '../../geometry/RenderMv.svelte';
   import type { Multivector } from '../../algebra/types';
   import { interactivity } from '@threlte/extras';
-  import { e0, e1, e2 } from '../../algebra/pga';
+  import { e0, e2, pga } from '../../algebra/pga';
+  import { getSpidorFullViz } from './spidorFullViz';
+  import { readable } from 'svelte/store';
 
   interactivity();
 
@@ -40,10 +42,52 @@
       .gp(e0.dual())
       .exp(-0.5 * dist);
 
+  function mvPointCoords(mv: Multivector): [number, number, number] {
+    return (pga.pointCoords(mv.selectGrade(3)) ?? [0, 0, 0]) as [number, number, number];
+  }
+
+  function initPointsInBaseTargetPlane(n: number) {
+    const [bx, by, bz] = mvPointCoords(base);
+    const [tx, _ty, tz] = mvPointCoords(target);
+
+    // Direction on the ground (x–z) from base to target; defines the vertical plane we want.
+    const gx = tx - bx;
+    const gz = tz - bz;
+    const gmag = Math.hypot(gx, gz);
+
+    // Yaw angle about +Y (e2) that takes the reference vertical plane (x–y, z=0)
+    // into the vertical plane spanned by {up, base→target}.
+    // If base≈target in xz, pick 0.
+    const yaw = gmag > 1e-10 ? Math.atan2(gz, gx) : 0;
+
+    // Rotor about vertical axis.
+    const R = pga.rotor([0, 1, 0], -yaw);
+
+    // Translation motor to move origin to base.
+    const bmag = Math.hypot(bx, by, bz);
+    const T =
+      bmag > 1e-10
+        ? pga.translator([bx / bmag, by / bmag, bz / bmag], bmag)
+        : pga.translator([1, 0, 0], 0);
+
+    // Compose: first rotate reference chain into the correct vertical plane, then translate to base.
+    const M = T.gp(R);
+
+    // Reference chain is built in the x–y vertical plane (z=0).
+    points = Array.from({ length: n }, (_, i) => {
+      const x = i * segmentLength;
+      // Give a tiny initial lift so the solver has a stable knee direction.
+      const y = i === 1 || i === n - 1 ? segmentLength : 0;
+      const p = pga.point([x, y, 0]);
+      return pga.apply(M, p).selectGrade(3);
+    });
+  }
+
   function solveIK() {
     const n = segmentCount + 1;
-    if (points.length !== n)
-      points = [...Array(n)].map((_, i) => e0.add(e1.smul(i * segmentLength)).dual());
+    if (points.length !== n) {
+      initPointsInBaseTargetPlane(n);
+    }
 
     for (let s = 0; s < solveN; s++) {
       // Backward pass: pin endpoints, then walk segments back from the target
@@ -93,8 +137,16 @@
       solveIK();
     }
   });
+
+  const kneeLine = $derived(lerp(base, target, kneePosition).gp(e2).selectGrade(2));
+  $inspect(pga.classify(kneeLine));
+
+  const showViz = getSpidorFullViz() ?? readable(true);
 </script>
 
+{#if $showViz}
+  <RenderMv mv={kneeLine} />
+{/if}
 <!-- Render each point of spidor leg -->
 {#each points as p}
   <RenderMv mv={p} color="#5C4033" draggable={false} radius={0.015} />

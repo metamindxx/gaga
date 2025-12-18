@@ -1,7 +1,7 @@
 <script lang="ts">
   import { T } from '@threlte/core';
   import { MeshLineGeometry, MeshLineMaterial } from '@threlte/extras';
-  import { Vector3, Color, type ColorRepresentation } from 'three';
+  import { Vector3, Color, DoubleSide, type ColorRepresentation } from 'three';
   import type { Snippet } from 'svelte';
 
   type Point = [number, number, number] | { x: number; y: number; z: number };
@@ -44,12 +44,12 @@
 </script>
 
 {#if points.length >= 2}
-  <T.Mesh>
+  <T.Mesh frustumCulled={false}>
     <MeshLineGeometry points={vector3Points} />
     {#if children}
       {@render children()}
     {:else}
-      <MeshLineMaterial {color} {width} {opacity} {transparent} {attenuate} />
+      <MeshLineMaterial {color} {width} {opacity} {transparent} {attenuate} side={DoubleSide} />
     {/if}
   </T.Mesh>
 {/if}

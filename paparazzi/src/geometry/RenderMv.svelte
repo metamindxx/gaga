@@ -31,6 +31,7 @@
   import Sphere from './Sphere.svelte';
   import Segment from './Segment.svelte';
   import Plane from './Plane.svelte';
+  import Line from './Line.svelte';
   import { useDrag } from '../composables/useDrag.svelte';
   import type { GeoPrimitive, Coords3D, Point3D } from '../primitives/types.js';
   import {
@@ -383,21 +384,10 @@
       onpointerleave={handlePointerLeave}
     />
   {:else if primitive.type === 'line'}
-    <!-- Line: render as a long segment through the point -->
-    {@const extent = 10}
-    {@const start = [
-      primitive.point[0] - primitive.direction[0] * extent
-      , primitive.point[1] - primitive.direction[1] * extent
-      , primitive.point[2] - primitive.direction[2] * extent
-    ] as [number, number, number]}
-    {@const end = [
-      primitive.point[0] + primitive.direction[0] * extent
-      , primitive.point[1] + primitive.direction[1] * extent
-      , primitive.point[2] + primitive.direction[2] * extent
-    ] as [number, number, number]}
-    <Segment
-      {start}
-      {end}
+    <Line
+      point={primitive.point}
+      direction={primitive.direction}
+      extent={10}
       {color}
       {lineWidth}
       {opacity}

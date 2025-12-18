@@ -1,12 +1,14 @@
 <script lang="ts">
   import { useTask } from '@threlte/core';
   import { interactivity } from '@threlte/extras';
+  import { writable } from 'svelte/store';
   import type { Multivector } from '../../algebra/types';
   import { e0, e1, e2, e13, pga } from '../../algebra/pga';
 
   import RenderMv from '../../geometry/RenderMv.svelte';
   import SpidorFeet from './SpidorFeet.svelte';
   import SpidorLeg from './SpidorLeg.svelte';
+  import { setSpidorFullViz } from './spidorFullViz';
 
   interactivity();
 
@@ -15,12 +17,37 @@
     , stepDurationMs = 220
     , minRestMs = 120
     , stepFinishDist = 0.03
+
+    , segmentCount = 3
+    , segmentLength = 0.2
+    , lockToPlane = true
+    , setKnee = true
+    , kneePosition = 0.9
+    , solveN = 4
+
+    , showViz = true
   }: {
     stepMinDist?: number;
     stepDurationMs?: number;
     minRestMs?: number;
     stepFinishDist?: number;
+
+    segmentCount?: number;
+    segmentLength?: number;
+    lockToPlane?: boolean;
+    setKnee?: boolean;
+    kneePosition?: number;
+    solveN?: number;
+
+    showViz?: boolean;
   } = $props();
+
+  const showVizStore = writable(showViz);
+  setSpidorFullViz(showVizStore);
+
+  $effect(() => {
+    showVizStore.set(showViz);
+  });
 
   const LEG_COUNT = 8;
   const BODY_HEIGHT = 0.25;
@@ -85,11 +112,12 @@
     <SpidorLeg
       base={body}
       target={foot}
-      segmentCount={3}
-      segmentLength={0.2}
-      lockToPlane
-      setKnee
-      solveN={4}
+      {segmentCount}
+      {segmentLength}
+      {lockToPlane}
+      {setKnee}
+      {kneePosition}
+      {solveN}
     />
   {/each}
 {/if}

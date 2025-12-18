@@ -1,10 +1,12 @@
 <script lang="ts">
   import { useTask } from '@threlte/core';
   import { interactivity } from '@threlte/extras';
+  import { readable } from 'svelte/store';
   import type { Multivector } from '../../algebra/types';
   import RenderMv from '../../geometry/RenderMv.svelte';
 
   import SpidorFoot from './SpidorFoot.svelte';
+  import { getSpidorFullViz } from './spidorFullViz';
 
   interactivity();
 
@@ -26,6 +28,8 @@
 
   type LegState = { foot: Multivector; moving: boolean };
   let legs = $state<LegState[]>([]);
+
+  const showViz = getSpidorFullViz() ?? readable(true);
 
   const legCount = $derived(targets.length);
 
@@ -52,9 +56,11 @@
   });
 </script>
 
-{#each targets as target}
-  <RenderMv mv={target} color={0x444444} radius={0.01} draggable={false} />
-{/each}
+{#if $showViz}
+  {#each targets as target}
+    <RenderMv mv={target} color={0x444444} radius={0.01} draggable={false} />
+  {/each}
+{/if}
 
 <!-- {#if ready} -->
 {#each legs as leg, i (i)}

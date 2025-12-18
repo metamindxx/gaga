@@ -12,6 +12,7 @@ export { default as Circle } from './Circle.svelte';
 export { default as Sphere } from './Sphere.svelte';
 export { default as Plane } from './Plane.svelte';
 export { default as Direction } from './Direction.svelte';
+export { default as Line } from './Line.svelte';
 export { default as LineSegments } from './LineSegments.svelte';
 
 // Semantic geometry collections (accept MVs or positions)

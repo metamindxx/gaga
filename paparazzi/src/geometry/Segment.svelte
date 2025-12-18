@@ -8,7 +8,7 @@
 
   import { T } from '@threlte/core';
   import { MeshLineGeometry, MeshLineMaterial, Text } from '@threlte/extras';
-  import { Vector3, CylinderGeometry, Quaternion } from 'three';
+  import { Vector3, CylinderGeometry, Quaternion, DoubleSide } from 'three';
   import type { Coords3D } from '../primitives/types.js';
 
   interface Props {
@@ -77,9 +77,15 @@
 </script>
 
 <!-- Visible line -->
-<T.Mesh>
+<T.Mesh frustumCulled={false}>
   <MeshLineGeometry {points} />
-  <MeshLineMaterial {color} width={lineWidth} {opacity} transparent={opacity < 1} />
+  <MeshLineMaterial
+    {color}
+    width={lineWidth}
+    {opacity}
+    transparent={opacity < 1}
+    side={DoubleSide}
+  />
 </T.Mesh>
 
 <!-- Invisible hitbox for raycasting -->
