@@ -870,3 +870,108 @@ describe('PGA Spidor Operations', () => {
     expect(center.basisSVal('e_012')).toBeCloseTo(0);
   });
 });
+
+// ============================================================================
+// projectOnto Tests
+// ============================================================================
+describe('PGA projectOnto', () => {
+  // In ganja.js, projection is typically written as:
+  //   project(a, b) = (a | b) / b
+  // (equivalently (a | b) * b.Inverse when b has an inverse)
+
+  // a = 3e1 + 4e2; b = e1; p = (a | b) / b
+  it('projects Euclidean vector onto axis', () => {
+    const a = multiVector({ e_1: 3, e_2: 4 });
+    const p = a.projectOnto(e1);
+
+    expect(p.basisSVal('e_1')).toBeCloseTo(3);
+    expect(p.basisSVal('e_2')).toBeCloseTo(0);
+    expect(p.basisSVal('e_3')).toBeCloseTo(0);
+    expect(p.basisSVal('e_0')).toBeCloseTo(0);
+  });
+
+  // a = 3e1 + 4e2; b = 2e1; p = (a | b) / b
+  it('is invariant to target scaling (vector)', () => {
+    const a = multiVector({ e_1: 3, e_2: 4 });
+    const b = e1.smul(2);
+    const p = a.projectOnto(b);
+
+    expect(p.basisSVal('e_1')).toBeCloseTo(3);
+    expect(p.basisSVal('e_2')).toBeCloseTo(0);
+  });
+
+  // a = 3e1 + 4e2; b = 5e1; p = (a | b) / b; r = a - p;
+  it('residual is orthogonal to target (vector)', () => {
+    const a = multiVector({ e_1: 3, e_2: 4 });
+    const b = e1.smul(5);
+    const p = a.projectOnto(b);
+    const r = a.sub(p);
+
+    // For vectors, orthogonality means (r | b) == 0 (scalar)
+    expect(r.dot(b).basisSVal('e_')).toBeCloseTo(0);
+
+  });
+
+  // a = 3e1 + 4e2; b = e1 + e2; p1 = (a | b) / b; p2 = (p1 | b) / b;
+  it('is idempotent (project(project(a,b),b) == project(a,b))', () => {
+    const a = multiVector({ e_1: 3, e_2: 4 });
+    const b = multiVector({ e_1: 1, e_2: 1 });
+
+    const p1 = a.projectOnto(b);
+    const p2 = p1.projectOnto(b);
+
+    expect(p2.basisSVal('e_1')).toBeCloseTo(p1.basisSVal('e_1'));
+    expect(p2.basisSVal('e_2')).toBeCloseTo(p1.basisSVal('e_2'));
+    expect(p2.basisSVal('e_3')).toBeCloseTo(p1.basisSVal('e_3'));
+    expect(p2.basisSVal('e_0')).toBeCloseTo(p1.basisSVal('e_0'));
+  });
+
+  // a = 1e12 + 2e13; b = e12; p = (a | b) / b
+  it('projects bivector onto bivector (extracts matching component)', () => {
+    const a = multiVector({ e_12: 2, e_13: 2 });
+    const p = a.projectOnto(e12);
+
+    expect(p.basisSVal('e_12')).toBeCloseTo(2);
+    expect(p.basisSVal('e_13')).toBeCloseTo(0);
+    expect(p.basisSVal('e_23')).toBeCloseTo(0);
+  });
+
+  it('projects point onto plane (y = 0)', () => {
+    const pt = pga.point([1, 2, 3]);
+    const plane = pga.plane([0, 1, 0], 0);
+
+    // Projection can introduce tiny non-grade-3 noise; select grade 3 to clean up
+    const projected = pt.projectOnto(plane).selectGrade(3);
+    const prim = pga.classify(projected);
+
+    expect(prim).not.toBeNull();
+    expect(prim?.type).toBe('point');
+    if (prim?.type === 'point') {
+      expect(prim.coords[0]).toBeCloseTo(1);
+      expect(prim.coords[1]).toBeCloseTo(0);
+      expect(prim.coords[2]).toBeCloseTo(3);
+    }
+  });
+
+  it('projects point onto line (point.gp(e2))', () => {
+    // Mirrors how SpidorLeg computes kneeLine
+    //   kneeLine = lerp(base, target, t).gp(e2)
+    const base = pga.point([0, 0, 0]);
+    const target = pga.point([1, 0, 0]);
+    const mid = base.smul(0.5).add(target.smul(0.5));
+    const kneeLine = mid.gp(e2);
+
+    const pt = pga.point([0.5, 2, 0]);
+    const projected = pt.projectOnto(kneeLine).selectGrade(3);
+    const prim = pga.classify(projected);
+
+    expect(prim).not.toBeNull();
+    expect(prim?.type).toBe('point');
+
+    // The projected point should lie on the line's carrier.
+    // For a point P on line L (grade-2), we expect P ^ L == 0.
+    const lineBlade = kneeLine.selectGrade(2);
+    const join = projected.op(lineBlade);
+    expect(join.norm()).toBeCloseTo(0);
+  });
+});
