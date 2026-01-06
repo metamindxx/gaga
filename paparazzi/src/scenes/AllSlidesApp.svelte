@@ -77,6 +77,7 @@
   let showSpidorLeg = $state(false);
   let showPgaDynamics = $state(true);
   let showCayley = $state(false);
+  let controlsCollapsed = $state(false);
 
   // SpidorLeg configuration
   let spidorSegmentCount = $state(3);
@@ -420,7 +421,11 @@
     </Canvas>
   {/key}
 
-  <div class="controls">
+  <div class="controls" class:collapsed={controlsCollapsed}>
+    <button class="collapse-btn" onclick={() => (controlsCollapsed = !controlsCollapsed)}>
+      {controlsCollapsed ? '▶' : '◀'}
+    </button>
+    {#if !controlsCollapsed}
     <h1>Geometric Algebra Demos</h1>
     <p class="subtitle">CGA & PGA with algebra-renderer decoupling</p>
 
@@ -615,6 +620,7 @@
       <h2>Architecture</h2>
       <p><code>$state(MV)</code> → <code>$derived(coords)</code> → render</p>
     </div>
+    {/if}
   </div>
 
   {#if $hoverInfo}
@@ -725,6 +731,36 @@
     font-family: system-ui, sans-serif;
     max-height: calc(100vh - 40px);
     overflow-y: auto;
+  }
+
+  .controls.collapsed {
+    padding: 8px;
+    min-width: auto;
+  }
+
+  .collapse-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #335;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .collapse-btn:hover {
+    background: #447;
+  }
+
+  .controls.collapsed .collapse-btn {
+    position: static;
   }
 
   .controls h1 {
