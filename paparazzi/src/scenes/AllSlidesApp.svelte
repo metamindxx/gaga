@@ -12,6 +12,7 @@
   import Slide35Refactored from './Slide35Refactored.svelte';
   import Slide38Refactored from './Slide38Refactored.svelte';
   import PgaDemo from './PgaDemo.svelte';
+  import PgaDynamics from './PgaDynamics.svelte';
   import SpidorFeetDemo from './spidor/SpidorFeetDemo.svelte';
   import SpidorFull from './spidor/SpidorFull.svelte';
   import SpidorFootDemo from './spidor/SpidorFootDemo.svelte';
@@ -62,7 +63,7 @@
   const gridSectionColor = $derived(theme === 'light' ? '#aaaacc' : '#333344');
 
   // Toggle states for each slide
-  let showSlide20 = $state(true);
+  let showSlide20 = $state(false);
   let showSlide22 = $state(false);
   let showSlide24 = $state(false);
   let showSlide28 = $state(false);
@@ -74,6 +75,7 @@
   let showSpidorFull = $state(false);
   let showSpidorFoot = $state(false);
   let showSpidorLeg = $state(false);
+  let showPgaDynamics = $state(true);
   let showCayley = $state(false);
 
   // SpidorLeg configuration
@@ -237,6 +239,16 @@
         showSpidorFull = v;
       }
     }
+    , {
+      id: 110
+      , name: 'PGA Dynamics'
+      , get show() {
+        return showPgaDynamics;
+      }
+      , set show(v) {
+        showPgaDynamics = v;
+      }
+    }
   ];
 
   function showOnly(id: number) {
@@ -252,6 +264,7 @@
     showSpidorFoot = id === 101;
     showSpidor = id === 102;
     showSpidorFull = id === 103;
+    showPgaDynamics = id === 110;
   }
 
   function showAll() {
@@ -263,6 +276,7 @@
     showSlide35 = true;
     showSlide38 = true;
     showPgaDemo = true;
+    showPgaDynamics = true;
     showSpidor = true;
     showSpidorLeg = true;
     showSpidorFoot = true;
@@ -282,6 +296,7 @@
     showSpidorLeg = false;
     showSpidorFoot = false;
     showSpidorFull = false;
+    showPgaDynamics = false;
   }
 </script>
 
@@ -398,6 +413,9 @@
           solveN={spidorFullSolveN}
           showViz={spidorFullShowViz}
         />
+      {/if}
+      {#if showPgaDynamics}
+        <PgaDynamics />
       {/if}
     </Canvas>
   {/key}
