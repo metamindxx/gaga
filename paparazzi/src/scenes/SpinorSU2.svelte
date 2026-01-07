@@ -53,10 +53,10 @@
     //             [ix -  y,  w - iz]]
     //
     // Matching coefficients with [[a, -b*], [b, a*]]:
-    //   a = w + iz    ->    w = Re(a) = ar,  z = Im(a) = ai
-    //   b = ix - y    ->    x = Im(b) = bi,  y = -Re(b) = -br
+    //    a  = w + iz  ->    w = Re(a) = ar,  z =  Im(a) =  ai
+    //    b  = ix - y  ->    x = Im(b) = bi,  y = -Re(b) = -br
     //   -b* = ix + y  ->    (consistent)
-    //   a* = w - iz   ->    (consistent)
+    //    a* = w - iz  ->    (consistent)
     //
     // As PGA bivector:
     //   i σx <-> e23  (rotation about x)
