@@ -38,14 +38,19 @@
     //   exp(i θ/2 σz) rotates flagpole by θ about z-axis
     //
     // A general unitary 2x2 matrix with det=1 has form:
-    //   U = [[a, -b*], [b, a*]]  with |a|² + |b|² = 1
+    //   U = [[a, -b*], 
+    //        [b,  a*]]  with |a|² + |b|² = 1
     //
     // Expanding U = w*I + x*(i σx) + y*(i σy) + z*(i σz):
-    //   i σx = [[0,i],[i,0]]
-    //   i σy = [[0,1],[-1,0]]
-    //   i σz = [[i,0],[0,-i]]
+    //   i σx = [[ 0, i],
+    //           [ i, 0]]
+    //   i σy = [[ 0, 1],
+    //           [-1, 0]]
+    //   i σz = [[ i, 0],
+    //           [ 0,-i]]
     //
-    // Gives: U = [[w + iz, ix + y], [ix - y, w - iz]]
+    // Gives: U = [[ w + iz, ix +  y], 
+    //             [ix -  y,  w - iz]]
     //
     // Matching coefficients with [[a, -b*], [b, a*]]:
     //   a = w + iz    ->    w = Re(a) = ar,  z = Im(a) = ai
