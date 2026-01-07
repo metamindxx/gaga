@@ -13,6 +13,7 @@
   import Slide38Refactored from './Slide38Refactored.svelte';
   import PgaDemo from './PgaDemo.svelte';
   import PgaDynamics from './PgaDynamics.svelte';
+  import SpinorSU2 from './SpinorSU2.svelte';
   import SpidorFeetDemo from './spidor/SpidorFeetDemo.svelte';
   import SpidorFull from './spidor/SpidorFull.svelte';
   import SpidorFootDemo from './spidor/SpidorFootDemo.svelte';
@@ -75,9 +76,14 @@
   let showSpidorFull = $state(false);
   let showSpidorFoot = $state(false);
   let showSpidorLeg = $state(false);
-  let showPgaDynamics = $state(true);
+  let showPgaDynamics = $state(false);
+  let showSpinorSU2 = $state(true);
   let showCayley = $state(false);
   let controlsCollapsed = $state(false);
+
+  // SpinorSU2 configuration
+  let spinorLockPt1 = $state(false);
+  let spinorLockPt2 = $state(false);
 
   // SpidorLeg configuration
   let spidorSegmentCount = $state(3);
@@ -250,6 +256,16 @@
         showPgaDynamics = v;
       }
     }
+    , {
+      id: 111
+      , name: 'Spinor SU(2)'
+      , get show() {
+        return showSpinorSU2;
+      }
+      , set show(v) {
+        showSpinorSU2 = v;
+      }
+    }
   ];
 
   function showOnly(id: number) {
@@ -266,6 +282,7 @@
     showSpidor = id === 102;
     showSpidorFull = id === 103;
     showPgaDynamics = id === 110;
+    showSpinorSU2 = id === 111;
   }
 
   function showAll() {
@@ -282,6 +299,7 @@
     showSpidorLeg = true;
     showSpidorFoot = true;
     showSpidorFull = true;
+    showSpinorSU2 = true;
   }
 
   function hideAll() {
@@ -298,6 +316,7 @@
     showSpidorFoot = false;
     showSpidorFull = false;
     showPgaDynamics = false;
+    showSpinorSU2 = false;
   }
 </script>
 
@@ -418,6 +437,9 @@
       {#if showPgaDynamics}
         <PgaDynamics />
       {/if}
+      {#if showSpinorSU2}
+        <SpinorSU2 lockPt1={spinorLockPt1} lockPt2={spinorLockPt2} />
+      {/if}
     </Canvas>
   {/key}
 
@@ -448,6 +470,20 @@
         </label>
       {/each}
     </div>
+
+    {#if showSpinorSU2}
+      <div class="scene-controls">
+        <h2>Spinor SU(2)</h2>
+        <label class="control-row">
+          <input type="checkbox" bind:checked={spinorLockPt1} />
+          <span>Lock pt1 (a component)</span>
+        </label>
+        <label class="control-row">
+          <input type="checkbox" bind:checked={spinorLockPt2} />
+          <span>Lock pt2 (b component)</span>
+        </label>
+      </div>
+    {/if}
 
     {#if showSpidorLeg}
       <div class="scene-controls">

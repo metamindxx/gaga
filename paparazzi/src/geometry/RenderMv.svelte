@@ -72,6 +72,14 @@
     onpointerdown?: (event: { stopPropagation: () => void }) => void;
     /** Enable dragging for points */
     draggable?: boolean;
+    /** Constraint plane for dragging: [normal, pointOnPlane] - locks drag to this plane */
+    constraintPlane?: [Coords3D, Coords3D] | MV | null;
+    /** Called when drag starts */
+    ondragstart?: () => void;
+    /** Called when drag ends */
+    ondragend?: () => void;
+    /** Called during drag with new coordinates - handle state update yourself */
+    ondrag?: (coords: Coords3D) => void;
   }
 
   let {
@@ -86,6 +94,10 @@
     , actions
     , onpointerdown
     , draggable = true
+    , constraintPlane
+    , ondragstart
+    , ondragend
+    , ondrag
   }: Props = $props();
 
   // Unique ID for this RenderMv instance
@@ -134,6 +146,12 @@
 
   // Drag handler - creates new MV and updates via binding
   function handleDragCoords(coords: Coords3D) {
+    // If ondrag callback is provided, let it handle the update
+    if (ondrag) {
+      ondrag(coords);
+      return;
+    }
+    // Default: create MV and update via binding
     const newMv = createMvFromCoords(coords);
     if (newMv) {
       mv = newMv;
@@ -144,6 +162,9 @@
   const drag = useDrag({
     getPosition
     , onDrag: handleDragCoords
+    , constraintPlane
+    , onDragStart: ondragstart
+    , onDragEnd: ondragend
   });
 
   // Combined pointer down handler

@@ -16,8 +16,9 @@
 
 import { useThrelte } from '@threlte/core';
 import * as THREE from 'three';
+import { Coords3D } from '../primitives/types';
+import { Multivector as MV } from '../algebra/types.js';
 import { enableOrbit, disableOrbit } from '../stores/orbitControl';
-import type { Coords3D } from '../primitives/types';
 
 export interface UseDragOptions {
   /** Get the current position to create the drag plane through */
@@ -28,6 +29,8 @@ export interface UseDragOptions {
   onDragStart?: () => void;
   /** Called when drag ends (optional) */
   onDragEnd?: () => void;
+  /** Optional constraint plane [normal, pointOnPlane] - if provided, drag is locked to this plane */
+  constraintPlane?: [Coords3D, Coords3D] | MV | null;
 }
 
 export interface UseDragReturn {
@@ -57,11 +60,37 @@ export function useDrag(options: UseDragOptions): UseDragReturn {
     isDragging = true;
     disableOrbit();
 
-    // Create drag plane facing camera, passing through current position
-    const cameraDir = new THREE.Vector3();
-    camera.current.getWorldDirection(cameraDir);
-    const pos = options.getPosition();
-    dragPlane.setFromNormalAndCoplanarPoint(cameraDir, new THREE.Vector3(...pos));
+    // Check for constraint plane, otherwise use camera-facing plane
+    const constraint = options.constraintPlane;
+    if (!constraint) {
+      // Default: create drag plane facing camera, passing through current position
+      const cameraDir = new THREE.Vector3();
+      camera.current.getWorldDirection(cameraDir);
+      const pos = options.getPosition();
+      dragPlane.setFromNormalAndCoplanarPoint(cameraDir, new THREE.Vector3(...pos));
+    } else if (Array.isArray(constraint)) {
+      // Array format: [normal, pointOnPlane]
+      const [normal, pointOnPlane] = constraint;
+      dragPlane.setFromNormalAndCoplanarPoint(
+        new THREE.Vector3(...normal).normalize(),
+        new THREE.Vector3(...pointOnPlane)
+      );
+    } else if (typeof constraint === 'object' && constraint.classify) {
+      // MV format: extract normal and point from plane classification
+      const classification = constraint.classify?.();
+      if (classification?.type === 'plane') {
+        dragPlane.setFromNormalAndCoplanarPoint(
+          new THREE.Vector3(...classification.normal).normalize(),
+          new THREE.Vector3(...classification.point)
+        );
+      } else {
+        console.warn('useDrag: constraintPlane MV is not a plane, falling back to camera plane');
+        const cameraDir = new THREE.Vector3();
+        camera.current.getWorldDirection(cameraDir);
+        const pos = options.getPosition();
+        dragPlane.setFromNormalAndCoplanarPoint(cameraDir, new THREE.Vector3(...pos));
+      }
+    }
 
     event.stopPropagation();
     options.onDragStart?.();
@@ -91,11 +120,11 @@ export function useDrag(options: UseDragOptions): UseDragReturn {
   }
 
   return {
-    onPointerDown
-    , onPointerMove
-    , onPointerUp
-    , get isDragging() {
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    get isDragging() {
       return isDragging;
-    }
+    },
   };
 }
