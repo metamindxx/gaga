@@ -13,7 +13,7 @@
  * ```
  */
 
-import { createBasisSet } from '../basisSet.js';
+import { createBasisSet } from '../basisSet';
 import { createPgaHelpers, type PgaHelpers } from './pgaHelpers.js';
 import type { Multivector as MV } from './types.js';
 

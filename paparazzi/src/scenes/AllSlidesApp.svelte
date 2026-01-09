@@ -1,7 +1,7 @@
 <script lang="ts">
   /**
    * AllSlidesApp.svelte
-   * 
+   *
    * A unified viewer for all Geometric Algebra demo slides.
    * Renders multiple slides in a single Threlte (Three.js) canvas with:
    *   - Toggle controls for each slide's visibility
@@ -21,31 +21,32 @@
   import { Grid, OrbitControls, Gizmo } from '@threlte/extras';
 
   // Demo slide components - each demonstrates a different GA concept
-  import Slide20Refactored from './Slide20Refactored.svelte';  // Robot arm forward kinematics (3D)
-  import Slide22Refactored from './Slide22Refactored.svelte';  // Robot arm FK using CGA
-  import Slide24Refactored from './Slide24Refactored.svelte';  // Robot arm inverse kinematics
-  import Slide28Refactored from './Slide28Refactored.svelte';  // Agile eye gimbal (2-DOF)
-  import Slide30Refactored from './Slide30Refactored.svelte';  // Agile eye gimbal (3-DOF)
-  import Slide35Refactored from './Slide35Refactored.svelte';  // Delta robot forward kinematics
-  import Slide38Refactored from './Slide38Refactored.svelte';  // Delta robot inverse kinematics
-  import PgaDemo from './PgaDemo.svelte';                      // PGA fundamentals demo
-  import PgaDynamics from './PgaDynamics.svelte';              // PGA rigid body dynamics
-  import SpinorSU2 from './SpinorSU2.svelte';                  // SU(2) spinor visualization
-  import DoubletsSU2 from './DoubletsSU2.svelte';          // SU(2) x U(1) doublet flags
-  import Dandelion from './Dandelion.svelte';              // Dandelion doublet pattern
+  import Slide20Refactored from './Slide20Refactored.svelte'; // Robot arm forward kinematics (3D)
+  import Slide22Refactored from './Slide22Refactored.svelte'; // Robot arm FK using CGA
+  import Slide24Refactored from './Slide24Refactored.svelte'; // Robot arm inverse kinematics
+  import Slide28Refactored from './Slide28Refactored.svelte'; // Agile eye gimbal (2-DOF)
+  import Slide30Refactored from './Slide30Refactored.svelte'; // Agile eye gimbal (3-DOF)
+  import Slide35Refactored from './Slide35Refactored.svelte'; // Delta robot forward kinematics
+  import Slide38Refactored from './Slide38Refactored.svelte'; // Delta robot inverse kinematics
+  import PgaDemo from './PgaDemo.svelte'; // PGA fundamentals demo
+  import PgaDynamics from './PgaDynamics.svelte'; // PGA rigid body dynamics
+  import SpinorSU2 from './SpinorSU2.svelte'; // SU(2) spinor visualization
+  import DoubletsSU2 from './DoubletsSU2.svelte'; // SU(2) x U(1) doublet flags
+  import Dandelion from './Dandelion.svelte'; // Dandelion doublet pattern
 
   // Spidor (spider robot) demos
-  import SpidorLegDemo from './spidor/SpidorLegDemo.svelte';   // Single leg IK
+  import SpidorLegDemo from './spidor/SpidorLegDemo.svelte'; // Single leg IK
   import SpidorFootDemo from './spidor/SpidorFootDemo.svelte'; // Foot placement with neighbors
   import SpidorFeetDemo from './spidor/SpidorFeetDemo.svelte'; // Multiple feet coordination
-  import SpidorFull from './spidor/SpidorFull.svelte';         // Full spider walking
+  import SpidorFull from './spidor/SpidorFull.svelte'; // Full spider walking
 
   // Utility components and stores
   import ThreltePause from './ThreltePause.svelte';
   import { hoverInfo, unpinHoverInfo, isPinned } from '../stores/hoverInfo';
   import { orbitEnabled } from '../stores/orbitControl';
   import { cgaBasisSet } from '../algebra/cga';
-  import { pgaBasisSet } from '../algebra/pga';
+  import { pgaBasisSet, pga } from '../algebra/pga';
+  import type { Multivector as MV } from '../algebra/types.js';
 
   // ============================================================================
   // SLIDE REGISTRY
@@ -56,22 +57,22 @@
    * IDs roughly correspond to original presentation slide numbers.
    */
   const slideNames: Record<number, string> = {
-    20: 'Robot Arm FK (3D)',
-    22: 'Robot Arm FK (CGA)',
-    24: 'Robot Arm IK',
-    28: 'Agile Eye 2-DOF',
-    30: 'Agile Eye 3-DOF',
-    35: 'Delta Robot FK',
-    38: 'Delta Robot IK',
-    99: 'PGA Demo',
-    100: 'Spidor Leg',
-    101: 'Spidor Foot',
-    102: 'Spidor Feet',
-    103: 'Spidor Full',
-    110: 'PGA Dynamics',
-    111: 'Spinor SU(2)',
-    112: 'Doublets SU(2)×U(1)',
-    113: 'Dandelion'
+    20: 'Robot Arm FK (3D)'
+    , 22: 'Robot Arm FK (CGA)'
+    , 24: 'Robot Arm IK'
+    , 28: 'Agile Eye 2-DOF'
+    , 30: 'Agile Eye 3-DOF'
+    , 35: 'Delta Robot FK'
+    , 38: 'Delta Robot IK'
+    , 99: 'PGA Demo'
+    , 100: 'Spidor Leg'
+    , 101: 'Spidor Foot'
+    , 102: 'Spidor Feet'
+    , 103: 'Spidor Full'
+    , 110: 'PGA Dynamics'
+    , 111: 'Spinor SU(2)'
+    , 112: 'Doublets SU(2)'
+    , 113: 'Dandelion SU(2)'
   };
 
   /** All available slide IDs */
@@ -87,22 +88,22 @@
    */
   const slideGroups = [
     {
-      id: 'robot',
-      name: 'Robot Demos',
-      icon: '🤖',
-      slideIds: [20, 22, 24, 28, 30, 35, 38]
-    },
-    {
-      id: 'spidor',
-      name: 'Spidor Demos',
-      icon: '🕷️',
-      slideIds: [100, 101, 102, 103]
-    },
-    {
-      id: 'pga',
-      name: 'PGA Demos',
-      icon: '📐',
-      slideIds: [99, 110, 111, 112, 113]
+      id: 'robot'
+      , name: 'Robot Demos'
+      , icon: '🤖'
+      , slideIds: [20, 22, 24, 28, 30, 35, 38]
+    }
+    , {
+      id: 'spidor'
+      , name: 'Spidor Demos'
+      , icon: '🕷️'
+      , slideIds: [100, 101, 102, 103]
+    }
+    , {
+      id: 'pga'
+      , name: 'PGA Demos'
+      , icon: '📐'
+      , slideIds: [99, 110, 111, 112, 113]
     }
   ] as const;
 
@@ -129,9 +130,9 @@
 
   /** Which accordion groups are expanded (group id → boolean) */
   let accordionExpanded = $state<Record<string, boolean>>({
-    robot: false,
-    spidor: false,
-    pga: true  // Default to PGA expanded since slide 111 is initially visible
+    robot: false
+    , spidor: false
+    , pga: true // Default to PGA expanded since slide 111 is initially visible
   });
 
   /** Whether the Cayley table modal is shown */
@@ -142,57 +143,64 @@
 
   /** Available algebras for Cayley table display */
   const cayleyTableAlgebras = [
-    { id: 'cga', name: 'CGA (4,1)', basisSet: cgaBasisSet },
-    { id: 'pga', name: 'PGA (3,0,1)', basisSet: pgaBasisSet }
+    { id: 'cga', name: 'CGA (4,1)', basisSet: cgaBasisSet }
+    , { id: 'pga', name: 'PGA (3,0,1)', basisSet: pgaBasisSet }
   ];
 
   // --- Per-Scene Configuration ---
 
-  /** Spinor SU(2) demo: which points are locked in place */
-  let spinorLockConfig = $state({
-    lockPoint1: false,
-    lockPoint2: false
-  });
+  /** Spinor SU(2) demo: current point values */
+  let spinorPt1 = $state<MV>(pga.point([1, 0, 0]));
+  let spinorPt2 = $state<MV>(pga.point([0, 0, 0]));
+
+  // Format spinor point as complex number string
+  function formatSpinorPoint(pt: MV): string {
+    const coords = pga.pointCoords(pt);
+    if (!coords) return '?';
+    const [re, , im] = coords;
+    const sign = im >= 0 ? '+' : '-';
+    return `${re.toFixed(3)} ${sign} ${Math.abs(im).toFixed(3)}i`;
+  }
 
   /** Spidor leg demo: IK solver parameters */
   let spidorLegConfig = $state({
-    segmentCount: 3,
-    segmentLength: 0.2,
-    lockToPlane: false,
-    useKneeHint: false,
-    kneePosition: 0.9,
-    solverIterations: 1
+    segmentCount: 3
+    , segmentLength: 0.2
+    , lockToPlane: false
+    , useKneeHint: false
+    , kneePosition: 0.9
+    , solverIterations: 1
   });
 
   /** Spidor full demo: leg and visualization settings */
   let spidorFullConfig = $state({
-    segmentCount: 3,
-    segmentLength: 0.2,
-    lockToPlane: true,
-    useKneeHint: true,
-    kneePosition: 0.9,
-    solverIterations: 4,
-    showVisualization: true
+    segmentCount: 3
+    , segmentLength: 0.2
+    , lockToPlane: true
+    , useKneeHint: true
+    , kneePosition: 0.9
+    , solverIterations: 4
+    , showVisualization: true
   });
 
   /** Spidor stepping: timing parameters for foot movement */
   let spidorStepConfig = $state({
-    minTriggerDistance: 0.12,    // Min distance before foot starts moving
-    stepDurationMs: 220,          // How long a step takes
-    minRestMs: 120,               // Min time between steps
-    finishThreshold: 0.03         // Distance to consider "arrived"
+    minTriggerDistance: 0.12 // Min distance before foot starts moving
+    , stepDurationMs: 220 // How long a step takes
+    , minRestMs: 120 // Min time between steps
+    , finishThreshold: 0.03 // Distance to consider "arrived"
   });
 
   /** Spidor foot demo: stepping + neighbor + target motion settings */
   let spidorFootConfig = $state({
-    minTriggerDistance: 0.12,
-    stepDurationMs: 220,
-    minRestMs: 120,
-    finishThreshold: 0.03,
-    neighborAMoving: false,
-    neighborBMoving: false,
-    targetRadius: 0.6,
-    targetSpeed: 0.35
+    minTriggerDistance: 0.12
+    , stepDurationMs: 220
+    , minRestMs: 120
+    , finishThreshold: 0.03
+    , neighborAMoving: false
+    , neighborBMoving: false
+    , targetRadius: 0.6
+    , targetSpeed: 0.35
   });
 
   // ============================================================================
@@ -257,12 +265,12 @@
 
   /** Check if any slide in a group is visible */
   function isGroupPartiallyVisible(groupSlideIds: readonly number[]): boolean {
-    return groupSlideIds.some(id => visible[id]);
+    return groupSlideIds.some((id) => visible[id]);
   }
 
   /** Check if all slides in a group are visible */
   function isGroupFullyVisible(groupSlideIds: readonly number[]): boolean {
-    return groupSlideIds.every(id => visible[id]);
+    return groupSlideIds.every((id) => visible[id]);
   }
 </script>
 
@@ -400,8 +408,7 @@
       {#if visible[110]}<PgaDynamics />{/if}
 
       {#if visible[111]}
-        <SpinorSU2
-        />
+        <SpinorSU2 bind:pt1={spinorPt1} bind:pt2={spinorPt2} />
       {/if}
 
       {#if visible[112]}
@@ -427,7 +434,7 @@
     <button
       class="absolute top-2 right-2 bg-indigo-900 hover:bg-indigo-700 border-none rounded w-6 h-6 text-white text-xs flex items-center justify-center cursor-pointer"
       class:!static={collapsed}
-      onclick={() => collapsed = !collapsed}
+      onclick={() => (collapsed = !collapsed)}
     >
       {collapsed ? '▶' : '◀'}
     </button>
@@ -444,7 +451,7 @@
       <div class="flex gap-2 mb-3 flex-wrap">
         <button
           class="flex-1 min-w-12 px-3 py-1.5 border-none rounded bg-indigo-900 hover:bg-indigo-700 text-white text-xs cursor-pointer"
-          onclick={() => paused = !paused}
+          onclick={() => (paused = !paused)}
         >
           {paused ? 'Resume' : 'Pause'}
         </button>
@@ -456,13 +463,13 @@
         </button>
         <button
           class="flex-1 min-w-12 px-3 py-1.5 border-none rounded bg-indigo-900 hover:bg-indigo-700 text-white text-xs cursor-pointer"
-          onclick={() => theme = theme === 'light' ? 'dark' : 'light'}
+          onclick={() => (theme = theme === 'light' ? 'dark' : 'light')}
         >
           {theme}
         </button>
         <button
           class="flex-1 min-w-12 px-3 py-1.5 border-none rounded bg-indigo-900 hover:bg-indigo-700 text-white text-xs cursor-pointer"
-          onclick={() => showCayleyTable = !showCayleyTable}
+          onclick={() => (showCayleyTable = !showCayleyTable)}
         >
           Cayley
         </button>
@@ -501,7 +508,8 @@
               <span
                 class="w-2 h-2 rounded-full"
                 class:bg-green-400={isGroupFullyVisible(group.slideIds)}
-                class:bg-yellow-400={isGroupPartiallyVisible(group.slideIds) && !isGroupFullyVisible(group.slideIds)}
+                class:bg-yellow-400={isGroupPartiallyVisible(group.slideIds) &&
+                  !isGroupFullyVisible(group.slideIds)}
                 class:bg-gray-600={!isGroupPartiallyVisible(group.slideIds)}
               ></span>
 
@@ -524,7 +532,9 @@
             {#if accordionExpanded[group.id]}
               <div class="flex flex-col gap-1 p-2 bg-black/30">
                 {#each group.slideIds as slideId}
-                  <label class="flex items-center gap-2 px-2 py-1.5 bg-white/5 hover:bg-white/10 rounded cursor-pointer">
+                  <label
+                    class="flex items-center gap-2 px-2 py-1.5 bg-white/5 hover:bg-white/10 rounded cursor-pointer"
+                  >
                     <!-- Checkbox to toggle visibility -->
                     <input
                       type="checkbox"
@@ -559,14 +569,18 @@
       {#if visible[111]}
         <fieldset class="mt-3 p-2.5 bg-sky-500/10 border border-sky-400 rounded-md">
           <legend class="text-xs text-sky-400 px-1">Spinor SU(2)</legend>
-          <label class="flex items-center gap-2 text-xs cursor-pointer mb-1">
-            <input type="checkbox" bind:checked={spinorLockConfig.lockPoint1} />
-            Lock pt1 (a)
-          </label>
-          <label class="flex items-center gap-2 text-xs cursor-pointer">
-            <input type="checkbox" bind:checked={spinorLockConfig.lockPoint2} />
-            Lock pt2 (b)
-          </label>
+
+          <!-- Point values display -->
+          <div class="mb-2 p-1.5 bg-black/30 rounded text-xs font-mono">
+            <div class="flex gap-2">
+              <span class="text-gray-400">α:</span>
+              <span class="text-green-300">{formatSpinorPoint(spinorPt1)}</span>
+            </div>
+            <div class="flex gap-2">
+              <span class="text-gray-400">β:</span>
+              <span class="text-green-300">{formatSpinorPoint(spinorPt2)}</span>
+            </div>
+          </div>
         </fieldset>
       {/if}
 
@@ -949,7 +963,9 @@
         {#if $hoverInfo.label}
           <span class="font-bold text-sky-400 text-sm">{$hoverInfo.label}</span>
         {/if}
-        <span class="text-sky-300 text-[11px] uppercase tracking-wide bg-sky-400/15 px-1.5 py-0.5 rounded">
+        <span
+          class="text-sky-300 text-[11px] uppercase tracking-wide bg-sky-400/15 px-1.5 py-0.5 rounded"
+        >
           {$hoverInfo.type}
         </span>
       </div>
@@ -1029,9 +1045,13 @@
   <!-- ======================================================================== -->
 
   {#if showCayleyTable}
-    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/95 rounded-lg max-w-[90vw] max-h-[90vh] overflow-hidden border-2 border-sky-400 flex flex-col">
+    <div
+      class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/95 rounded-lg max-w-[90vw] max-h-[90vh] overflow-hidden border-2 border-sky-400 flex flex-col"
+    >
       <!-- Modal Header -->
-      <div class="flex justify-between items-center px-4 py-3 border-b border-gray-700 bg-black/80 gap-4">
+      <div
+        class="flex justify-between items-center px-4 py-3 border-b border-gray-700 bg-black/80 gap-4"
+      >
         <h3 class="m-0 text-base text-sky-400 whitespace-nowrap">Cayley Table</h3>
 
         <!-- Algebra Selector -->
@@ -1046,7 +1066,7 @@
                 name="algebra"
                 value={algebraOption.id}
                 checked={cayleyTableAlgebra === algebraOption.id}
-                onchange={() => cayleyTableAlgebra = algebraOption.id}
+                onchange={() => (cayleyTableAlgebra = algebraOption.id)}
                 class="cursor-pointer"
               />
               {algebraOption.name}
@@ -1057,15 +1077,17 @@
         <!-- Close Button -->
         <button
           class="bg-transparent border-none text-gray-500 hover:text-white text-2xl cursor-pointer px-1"
-          onclick={() => showCayleyTable = false}
+          onclick={() => (showCayleyTable = false)}
         >
           ×
         </button>
       </div>
 
       <!-- Table Content -->
-      <div class="p-4 overflow-auto text-gray-200 font-mono text-xs [&_table]:border-collapse [&_table]:mx-auto [&_td]:border [&_td]:border-gray-600 [&_td]:px-2 [&_td]:py-1 [&_td]:text-center [&_th]:border [&_th]:border-gray-600 [&_th]:px-2 [&_th]:py-1 [&_th]:text-center [&_th]:bg-gray-800 [&_th]:text-sky-400 [&_th]:font-bold">
-        {@html cayleyTableAlgebras.find(a => a.id === cayleyTableAlgebra)?.basisSet.cayleyHtml()}
+      <div
+        class="p-4 overflow-auto text-gray-200 font-mono text-xs [&_table]:border-collapse [&_table]:mx-auto [&_td]:border [&_td]:border-gray-600 [&_td]:px-2 [&_td]:py-1 [&_td]:text-center [&_th]:border [&_th]:border-gray-600 [&_th]:px-2 [&_th]:py-1 [&_th]:text-center [&_th]:bg-gray-800 [&_th]:text-sky-400 [&_th]:font-bold"
+      >
+        {@html cayleyTableAlgebras.find((a) => a.id === cayleyTableAlgebra)?.basisSet.cayleyHtml()}
       </div>
     </div>
   {/if}

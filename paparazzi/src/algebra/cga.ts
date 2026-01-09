@@ -12,7 +12,7 @@
  * ```
  */
 
-import { createBasisSet } from '../basisSet.js';
+import { createBasisSet } from '../basisSet';
 import { createCgaHelpers, type CgaHelpers } from './cgaHelpers.js';
 import type { Multivector as MV } from './types.js';
 
