@@ -3,6 +3,7 @@
     "allowJs": true,
     "checkJs": true,
     "strictNullChecks": true,
+    "allowArbitraryExtensions": true,
     "module": "esnext",
     "moduleResolution": "Bundler",
     "types": ["svelte", "three"],

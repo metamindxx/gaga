@@ -1,3 +1,4 @@
+import './app.css';
 import AllSlidesApp from './scenes/AllSlidesApp.svelte';
 import { mount } from 'svelte';
 
