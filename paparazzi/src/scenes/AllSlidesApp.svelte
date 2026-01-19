@@ -33,6 +33,8 @@
   import SpinorSU2 from './SpinorSU2.svelte'; // SU(2) spinor visualization
   import DoubletsSU2 from './DoubletsSU2.svelte'; // SU(2) x U(1) doublet flags
   import Dandelion from './Dandelion.svelte'; // Dandelion doublet pattern
+  import Skinning from './Skinning.svelte'; // DQS vs LBS skinning demo
+  import JimmyAnimation from './JimmyAnimation.svelte'; // Motor skinning & animation blending
 
   // Spidor (spider robot) demos
   import SpidorLegDemo from './spidor/SpidorLegDemo.svelte'; // Single leg IK
@@ -73,6 +75,8 @@
     , 111: 'Spinor SU(2)'
     , 112: 'Doublets SU(2)'
     , 113: 'Dandelion SU(2)'
+    , 114: 'DQS Skinning'
+    , 115: 'Jimmy Animation'
   };
 
   /** All available slide IDs */
@@ -103,7 +107,7 @@
       id: 'pga'
       , name: 'PGA Demos'
       , icon: '📐'
-      , slideIds: [99, 110, 111, 112, 113]
+      , slideIds: [99, 110, 111, 112, 113, 114, 115]
     }
   ] as const;
 
@@ -202,6 +206,24 @@
     , targetRadius: 0.6
     , targetSpeed: 0.35
   });
+
+  /** DQS Skinning demo: skinning method and rotation settings */
+  let skinningConfig = $state({
+    useDQS: true
+    , rotationAngle: 0.5
+    , animate: true
+    , animationSpeed: 1.0
+  });
+
+  /** Jimmy Animation demo: animation blending settings */
+  let jimmyConfig = $state({
+    animWeights: [1.0, 0, 0, 0, 0, 0] as number[]  // [Walk, Jump, Run, Stride, Idle, Zombie]
+    , speed: 1.0
+    , debugNoSkinning: false
+    , debugIdentity: false
+  });
+
+  const jimmyAnimNames = ['Walk', 'Jump', 'Run', 'Stride', 'Idle', 'Zombie'];
 
   // ============================================================================
   // DERIVED VALUES (Theme Colors)
@@ -417,6 +439,24 @@
 
       {#if visible[113]}
         <Dandelion />
+      {/if}
+
+      {#if visible[114]}
+        <Skinning
+          useDQS={skinningConfig.useDQS}
+          rotationAngle={skinningConfig.rotationAngle}
+          animate={skinningConfig.animate}
+          animationSpeed={skinningConfig.animationSpeed}
+        />
+      {/if}
+
+      {#if visible[115]}
+        <JimmyAnimation
+          bind:animWeights={jimmyConfig.animWeights}
+          speed={jimmyConfig.speed}
+          debugNoSkinning={jimmyConfig.debugNoSkinning}
+          debugIdentity={jimmyConfig.debugIdentity}
+        />
       {/if}
     </Canvas>
   {/key}
@@ -932,6 +972,131 @@
           <label class="flex items-center gap-2 text-xs cursor-pointer">
             <input type="checkbox" bind:checked={spidorFootConfig.neighborBMoving} />
             Neighbor B moving
+          </label>
+        </fieldset>
+      {/if}
+
+      <!-- DQS Skinning Controls -->
+      {#if visible[114]}
+        <fieldset class="mt-3 p-2.5 bg-sky-500/10 border border-sky-400 rounded-md">
+          <legend class="text-xs text-sky-400 px-1">DQS Skinning</legend>
+
+          <!-- Skinning method toggle -->
+          <label class="flex items-center gap-2 text-xs cursor-pointer mb-2">
+            <input type="checkbox" bind:checked={skinningConfig.useDQS} />
+            <span class:text-green-400={skinningConfig.useDQS} class:text-red-400={!skinningConfig.useDQS}>
+              {skinningConfig.useDQS ? 'Dual Quaternion (DQS)' : 'Linear Blend (LBS)'}
+            </span>
+          </label>
+
+          <!-- Animate toggle -->
+          <label class="flex items-center gap-2 text-xs cursor-pointer mb-2">
+            <input type="checkbox" bind:checked={skinningConfig.animate} />
+            Animate
+          </label>
+
+          <!-- Animation speed (only when animating) -->
+          {#if skinningConfig.animate}
+            <label class="flex items-center gap-2 text-xs mb-1">
+              <span class="min-w-14 text-gray-400">Speed:</span>
+              <input
+                type="range"
+                min="0.1"
+                max="3"
+                step="0.1"
+                bind:value={skinningConfig.animationSpeed}
+                class="flex-1 h-1 appearance-none bg-gray-600 rounded accent-sky-400"
+              />
+              <span class="min-w-8 text-right font-mono text-green-300">
+                {skinningConfig.animationSpeed.toFixed(1)}x
+              </span>
+            </label>
+          {/if}
+
+          <!-- Rotation angle (manual control when not animating) -->
+          {#if !skinningConfig.animate}
+            <label class="flex items-center gap-2 text-xs mb-1">
+              <span class="min-w-14 text-gray-400">Rotation:</span>
+              <input
+                type="range"
+                min="0"
+                max="3.14159"
+                step="0.01"
+                bind:value={skinningConfig.rotationAngle}
+                class="flex-1 h-1 appearance-none bg-gray-600 rounded accent-sky-400"
+              />
+              <span class="min-w-10 text-right font-mono text-green-300">
+                {(skinningConfig.rotationAngle * 180 / Math.PI).toFixed(0)}°
+              </span>
+            </label>
+          {:else}
+            <!-- Show current rotation when animating (read-only) -->
+            <div class="flex items-center gap-2 text-xs mb-1">
+              <span class="min-w-14 text-gray-400">Rotation:</span>
+              <span class="font-mono text-green-300">
+                {(skinningConfig.rotationAngle * 180 / Math.PI).toFixed(0)}°
+              </span>
+            </div>
+          {/if}
+        </fieldset>
+      {/if}
+
+      <!-- Jimmy Animation Controls -->
+      {#if visible[115]}
+        <fieldset class="mt-3 p-2.5 bg-sky-500/10 border border-sky-400 rounded-md">
+          <legend class="text-xs text-sky-400 px-1">Jimmy Animation</legend>
+
+          <!-- Debug: no skinning toggle -->
+          <label class="flex items-center gap-2 text-xs cursor-pointer mb-2">
+            <input type="checkbox" bind:checked={jimmyConfig.debugNoSkinning} />
+            <span class:text-yellow-400={jimmyConfig.debugNoSkinning}>Debug: no skinning</span>
+          </label>
+
+          <!-- Debug: identity transform -->
+          <label class="flex items-center gap-2 text-xs cursor-pointer mb-2">
+            <input type="checkbox" bind:checked={jimmyConfig.debugIdentity} />
+            <span class:text-yellow-400={jimmyConfig.debugIdentity}>Debug: identity transforms</span>
+          </label>
+
+          <!-- Animation weight sliders -->
+          <div class="mt-2 pt-2 border-t border-gray-700">
+            <div class="text-xs text-gray-400 mb-2">Animation Weights:</div>
+            {#each jimmyAnimNames as name, i}
+              <label class="flex items-center gap-2 text-xs mb-1">
+                <span class="min-w-12 text-gray-400">{name}:</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={jimmyConfig.animWeights[i]}
+                  oninput={(e) => {
+                    jimmyConfig.animWeights[i] = parseFloat((e.target as HTMLInputElement).value);
+                    jimmyConfig.animWeights = [...jimmyConfig.animWeights];
+                  }}
+                  class="flex-1 h-1 appearance-none bg-gray-600 rounded accent-sky-400"
+                />
+                <span class="min-w-8 text-right font-mono text-green-300">
+                  {jimmyConfig.animWeights[i].toFixed(2)}
+                </span>
+              </label>
+            {/each}
+          </div>
+
+          <!-- Speed slider -->
+          <label class="flex items-center gap-2 text-xs mb-1">
+            <span class="min-w-14 text-gray-400">Speed:</span>
+            <input
+              type="range"
+              min="0.1"
+              max="3"
+              step="0.1"
+              bind:value={jimmyConfig.speed}
+              class="flex-1 h-1 appearance-none bg-gray-600 rounded accent-sky-400"
+            />
+            <span class="min-w-8 text-right font-mono text-green-300">
+              {jimmyConfig.speed.toFixed(1)}x
+            </span>
           </label>
         </fieldset>
       {/if}
