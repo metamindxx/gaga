@@ -12,7 +12,7 @@
  * ```
  */
 
-import { createBasisSet } from '../basisSet';
+import { createBasisSet } from './basisSet';
 import { createCgaHelpers, type CgaHelpers } from './cgaHelpers.js';
 import type { Multivector as MV } from './types.js';
 
@@ -27,8 +27,8 @@ bs.createCayley();
 
 // Manually set duals for CGA R(4,1) - computed from ganja.js
 // Grade 0 ↔ Grade 5
-bs.setDual(bs.e, bs.e123pm, 1);
-bs.setDual(bs.e123pm, bs.e, -1);
+bs.setDual(bs.e!, bs.e123pm, 1);
+bs.setDual(bs.e123pm, bs.e!, -1);
 
 // Grade 1 ↔ Grade 4
 bs.setDual(bs.e1, bs.e23pm, 1);

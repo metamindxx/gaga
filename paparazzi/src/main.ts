@@ -1,7 +1,7 @@
 import './app.css';
-import AllSlidesApp from './scenes/AllSlidesApp.svelte';
+import App from './scenes/AllScenes.svelte';
 import { mount } from 'svelte';
 
-const app = mount(AllSlidesApp, { target: document.getElementById('app')! });
+const app = mount(App, { target: document.getElementById('app')! });
 
 export default app;

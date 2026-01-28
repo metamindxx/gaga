@@ -7,12 +7,16 @@
     "module": "esnext",
     "moduleResolution": "Bundler",
     "types": ["svelte", "three"],
-    "plugins": [{ "name": "svelte" }],
+    "plugins": [{ "name": "typescript-svelte-plugin" }],
     "target": "ES6",
     "lib": ["ES2017", "DOM"],
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "$lib": ["./src/lib"],
+      "$lib/*": ["./src/lib/*"]
+    }
   },
   "include": [
     "src/**/*.js",

@@ -19,7 +19,7 @@ import type {
   , Direction3D
   , Line3D
   , Plane3D
-} from '../primitives/types.js';
+} from '../geometry/primitives.js';
 import type { Multivector as MV } from './types.js';
 
 /** PGA basis elements required for helpers */
@@ -40,7 +40,7 @@ const EPSILON = 1e-6;
  * Create PGA helper functions bound to a specific basis
  */
 export function createPgaHelpers(basis: PgaBasis) {
-  const { e0, e1, e2, e3, e123, I4, one } = basis;
+  const { e0, e1, e2, e3, e123, one } = basis;
 
   // =========================================================================
   // Core Transformations: point / plane

@@ -19,7 +19,7 @@ import type {
   , Line3D
   , Sphere3D
   , Plane3D
-} from '../primitives/types.js';
+} from '../geometry/primitives.js';
 import type { Multivector as MV } from './types.js';
 
 /** CGA basis elements required for helpers */
@@ -416,10 +416,11 @@ export function createCgaHelpers(basis: CgaBasis) {
         // Direction = pure Euclidean vector (no conformal part)
         return e1.smul(prim.vector[0]).add(e2.smul(prim.vector[1])).add(e3.smul(prim.vector[2]));
 
-      case 'sphere':
+      case 'sphere': {
         // S = c - ½r²nᵢ  (IPNS) or dual for OPNS
         const sphereCenter = up(prim.center);
         return sphereCenter.sub(ni.smul(0.5 * prim.radius * prim.radius)).dual();
+      }
 
       // TODO: circle, plane, line, pointPair embedding
       default:

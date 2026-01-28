@@ -909,7 +909,6 @@ describe('PGA projectOnto', () => {
 
     // For vectors, orthogonality means (r | b) == 0 (scalar)
     expect(r.dot(b).basisSVal('e_')).toBeCloseTo(0);
-
   });
 
   // a = 3e1 + 4e2; b = e1 + e2; p1 = (a | b) / b; p2 = (p1 | b) / b;

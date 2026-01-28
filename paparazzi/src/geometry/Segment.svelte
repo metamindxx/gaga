@@ -8,8 +8,8 @@
 
   import { T } from '@threlte/core';
   import { MeshLineGeometry, MeshLineMaterial, Text } from '@threlte/extras';
-  import { Vector3, CylinderGeometry, Quaternion, DoubleSide } from 'three';
-  import type { Coords3D } from '../primitives/types.js';
+  import { Vector3, Quaternion, DoubleSide } from 'three';
+  import type { Coords3D } from './primitives.js';
 
   interface Props {
     /** Start position */

@@ -6,7 +6,7 @@
    * Internally this is drawn as a long Segment with configurable extent.
    */
 
-  import type { Coords3D } from '../primitives/types.js';
+  import type { Coords3D } from './primitives.js';
   import Segment from './Segment.svelte';
 
   interface Props {

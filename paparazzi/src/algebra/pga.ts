@@ -13,30 +13,32 @@
  * ```
  */
 
-import { createBasisSet } from '../basisSet';
+import { createBasisSet } from './basisSet';
 import { createPgaHelpers, type PgaHelpers } from './pgaHelpers.js';
 import type { Multivector as MV } from './types.js';
 
 // === Create the basis set ===
+import type { Basis } from './basisSet';
+
 export type PgaBasisSet = ReturnType<typeof createBasisSet> & {
-  e: MV;
-  e0: MV;
-  e1: MV;
-  e2: MV;
-  e3: MV;
-  e01: MV;
-  e02: MV;
-  e03: MV;
-  e12: MV;
-  e13: MV;
-  e23: MV;
-  e012: MV;
-  e013: MV;
-  e023: MV;
-  e123: MV;
-  e0123: MV;
-  I4: MV;
-  one: MV;
+  e: Basis;
+  e0: Basis;
+  e1: Basis;
+  e2: Basis;
+  e3: Basis;
+  e01: Basis;
+  e02: Basis;
+  e03: Basis;
+  e12: Basis;
+  e13: Basis;
+  e23: Basis;
+  e012: Basis;
+  e013: Basis;
+  e023: Basis;
+  e123: Basis;
+  e0123: Basis;
+  I4: Basis;
+  one: Basis;
 };
 
 const bs = createBasisSet() as PgaBasisSet;

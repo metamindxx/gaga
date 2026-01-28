@@ -1,7 +1,7 @@
 <script lang="ts">
   import { T } from '@threlte/core';
   import { MeshLineGeometry, MeshLineMaterial } from '@threlte/extras';
-  import { Vector3, Color, DoubleSide, type ColorRepresentation } from 'three';
+  import { Vector3, DoubleSide, type ColorRepresentation } from 'three';
   import type { Snippet } from 'svelte';
 
   type Point = [number, number, number] | { x: number; y: number; z: number };

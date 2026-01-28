@@ -32,18 +32,19 @@
   import Segment from './Segment.svelte';
   import Plane from './Plane.svelte';
   import Line from './Line.svelte';
-  import { useDrag } from '../composables/useDrag.svelte';
-  import type { GeoPrimitive, Coords3D, Point3D } from '../primitives/types.js';
+  import { useThrelte } from '@threlte/core';
+  import { startDrag } from '../stores/dragManager.svelte';
+  import type { GeoPrimitive, Coords3D, Point3D } from './primitives.js';
   import {
     pinHoverInfo
     , setHoverInfo
     , clearHoverInfo
     , triggerHoverUpdate
-    , pinnedId
+    , isPinnedId
     , type HoverInfo
     , type EditableField
     , type ActionButton
-  } from '../stores/hoverInfo.js';
+  } from '../stores/hoverInfo.svelte';
 
   // MV type - any multivector with a classify() method
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -103,9 +104,6 @@
   // Unique ID for this RenderMv instance
   const instanceId = Symbol();
 
-  // Check if this instance is currently pinned
-  let isPinned = $derived($pinnedId === instanceId);
-
   // Check if mv is an array of MVs
   const isArray = $derived(Array.isArray(mv));
 
@@ -158,19 +156,28 @@
     }
   }
 
-  // Always set up drag handling - will be no-op if not draggable
-  const drag = useDrag({
-    getPosition
-    , onDrag: handleDragCoords
-    , constraintPlane
-    , onDragStart: ondragstart
-    , onDragEnd: ondragend
-  });
+  // Get Threlte context for drag manager
+  const { camera, renderer } = useThrelte();
 
   // Combined pointer down handler
   function handlePointerDown(event: { stopPropagation: () => void }) {
     if (draggable) {
-      drag.onPointerDown(event);
+      startDrag({
+        camera: camera.current
+        , renderer: renderer
+        , getPosition
+        , onDrag: handleDragCoords
+        , constraintPlane
+        , onDragStart: ondragstart
+        , onDragEnd: () => {
+          // Trigger hover update when drag ends (if this element is pinned)
+          if (isPinnedId(instanceId)) {
+            triggerHoverUpdate();
+          }
+          ondragend?.();
+        }
+      });
+      event.stopPropagation();
     }
     onpointerdown?.(event);
   }
@@ -265,16 +272,10 @@
     return info;
   }
 
-  // When this instance is pinned and MV changes, trigger update
-  $effect(() => {
-    // Access mv and primitive to track dependencies
-    void mv;
-    void primitive;
-    void polylinePoints;
-    if (isPinned) {
-      triggerHoverUpdate();
-    }
-  });
+  // No $effect needed here anymore - hover info is updated:
+  // 1. On click (pinHoverInfo sets the value)
+  // 2. On drag end (triggerHoverUpdate refreshes from getter)
+  // 3. On hover enter/leave (setHoverInfo/clearHoverInfo)
 
   function handleClick(event: { stopPropagation: () => void }) {
     event.stopPropagation();
@@ -288,19 +289,7 @@
   function handlePointerLeave() {
     clearHoverInfo();
   }
-
-  // Window event handlers for dragging
-  function handleWindowPointerMove(event: PointerEvent) {
-    drag.onPointerMove(event);
-  }
-
-  function handleWindowPointerUp() {
-    drag.onPointerUp();
-  }
 </script>
-
-<!-- Window event listeners for drag handling (no-op when not draggable or not dragging) -->
-<svelte:window onpointermove={handleWindowPointerMove} onpointerup={handleWindowPointerUp} />
 
 {#if isArray}
   <!-- Array mode: render as polyline/polygon -->

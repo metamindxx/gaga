@@ -1,7 +1,7 @@
 /**
  * Algebra Types - Core type definitions
  */
-import type { MultiVector } from '../basisSet';
+import type { MultiVector } from './basisSet';
 export type Vec3 = [number, number, number];
 
 /**

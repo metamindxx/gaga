@@ -12,7 +12,7 @@
   import { T } from '@threlte/core';
   import { Text } from '@threlte/extras';
   import type { Snippet } from 'svelte';
-  import type { Coords3D } from '../primitives/types.js';
+  import type { Coords3D } from './primitives.js';
 
   interface Props {
     /** Position in 3D space */

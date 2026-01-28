@@ -281,14 +281,14 @@ describe('Slide30 IK Debugging', () => {
    * the 3-DOF Agile Eye inverse kinematics in slide30.
    */
 
-  const e12 = e1.op(e2);
-  const e13 = e1.op(e3);
-  const e23 = e2.op(e3);
+  const _e12 = e1.op(e2);
+  const _e13 = e1.op(e3);
+  const _e23 = e2.op(e3);
 
   // Robot parameters from slide30
   const s0 = e1.smul(1.0);
-  const s1 = e1.smul(-0.5).add(e2.smul(Math.sqrt(3) / 2));
-  const s2 = e1.smul(-0.5).add(e2.smul(-Math.sqrt(3) / 2));
+  const _s1 = e1.smul(-0.5).add(e2.smul(Math.sqrt(3) / 2));
+  const _s2 = e1.smul(-0.5).add(e2.smul(-Math.sqrt(3) / 2));
   const r_b = 0.5;
   const r_e = 0.4;
 

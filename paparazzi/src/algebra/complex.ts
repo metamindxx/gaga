@@ -7,7 +7,7 @@
  * Also provides SU(2) matrix types and operations for doublet visualization.
  */
 
-import { createBasisSet, type MultiVector as MV } from '../basisSet';
+import { createBasisSet, type MultiVector as MV } from './basisSet';
 
 // === Create the basis set for Cl(0,1) ===
 const bs = createBasisSet();

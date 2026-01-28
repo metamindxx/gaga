@@ -9,7 +9,7 @@
   import { T } from '@threlte/core';
   import { Text } from '@threlte/extras';
   import * as THREE from 'three';
-  import type { Coords3D } from '../primitives/types.js';
+  import type { Coords3D } from './primitives.js';
 
   interface Props {
     /** Center position */
