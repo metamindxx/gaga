@@ -184,7 +184,9 @@
 <!-- ========================================================================== -->
 
 <Dialog.Root bind:open={showCayleyTable}>
-  <Dialog.Content class="max-w-[100vw] max-h-[100vh] bg-black/95 border-2 border-sky-400 p-0 gap-0 flex flex-col overflow-hidden">
+  <Dialog.Content
+    class="max-w-[100vw] max-h-[100vh] bg-black/95 border-2 border-sky-400 p-0 gap-0 flex flex-col overflow-hidden"
+  >
     <Dialog.Header
       class="flex flex-row justify-between items-center px-4 py-3 border-b border-gray-700 bg-black/80 gap-4 shrink-0"
     >

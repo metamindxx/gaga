@@ -8,13 +8,27 @@
 <script lang="ts">
   import SpinorPoints from './SpinorPoints.svelte';
   import SpinorFlag from '../../geometry/RotorFlag.svelte';
+  import Segment from '../../geometry/Segment.svelte';
   import { e12, e13, e23, one, pga } from '../../algebra/pga';
-  import { config, setPt1, setPt2 } from './spinorState.svelte';
+  import {
+    config
+    , setPt1
+    , setPt2
+    , axisAngle
+    , alphaColor
+    , betaColor
+    , lockRadius
+    , lockAngle
+  } from './spinorState.svelte';
 
   interface Props {
     color?: number;
   }
   let { color = 0x4c9aff }: Props = $props();
+
+  // Complex phase colors for alpha and beta
+  const poleColor = $derived(alphaColor.value);
+  const fabricColor = $derived(betaColor.value);
 
   // Convert spinor (pt1, pt2) to PGA rotor
   // pt1 = (ar, 0, ai) represents alpha = ar + i*ai
@@ -68,5 +82,25 @@
   });
 </script>
 
-<SpinorPoints pt1={config.pt1} pt2={config.pt2} onPt1Change={setPt1} onPt2Change={setPt2} {color} />
-<SpinorFlag {rotor} {color} />
+<SpinorPoints
+  pt1={config.pt1}
+  pt2={config.pt2}
+  onPt1Change={setPt1}
+  onPt2Change={setPt2}
+  pt1Color={poleColor}
+  pt2Color={fabricColor}
+  lockPt1Radius={lockRadius.value}
+  lockPt2Radius={lockRadius.value}
+  lockPt1Angle={lockAngle.value}
+  lockPt2Angle={lockAngle.value}
+/>
+<SpinorFlag {rotor} {poleColor} {fabricColor} />
+
+<!-- Rotation axis line segment from origin -->
+<Segment
+  start={[0, 0, 0]}
+  end={axisAngle.value.axis}
+  color={0xcccccc}
+  lineWidth={0.008}
+  opacity={0.4}
+/>

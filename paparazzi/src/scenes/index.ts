@@ -90,7 +90,6 @@ registerScene({
   , component: Full
   , getSceneProps: getFullProps
   , ConfigPanel: FullConfig
-  , defaultVisible: true
 });
 
 // ============================================================================
@@ -134,6 +133,7 @@ registerScene({
   , groupId: 'pga'
   , component: SpinorSU2
   , ConfigPanel: SpinorConfig
+  , defaultVisible: true
 });
 registerScene({ id: 112, name: 'Doublets SU(2)', groupId: 'pga', component: DoubletsSU2 });
 registerScene({ id: 113, name: 'Dandelion SU(2)', groupId: 'pga', component: Dandelion });
