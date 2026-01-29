@@ -22,8 +22,9 @@
     color?: number;
     poleColor?: number;
     fabricColor?: number;
+    opacity?: number;
   };
-  let { rotor, color = 0x22aa44, poleColor, fabricColor }: Props = $props();
+  let { rotor, color = 0x22aa44, poleColor, fabricColor, opacity = 1 }: Props = $props();
 
   // Use poleColor if provided, otherwise fall back to color
   const effectivePoleColor = $derived(poleColor ?? color);
@@ -73,9 +74,14 @@
 
 {#if fabricVertices.length >= 9}
   <T.Mesh {geometry} frustumCulled={false}>
-    <T.MeshBasicMaterial color={effectiveFabricColor} opacity={0.7} side={DoubleSide} />
+    <T.MeshBasicMaterial
+      color={effectiveFabricColor}
+      {opacity}
+      transparent={opacity < 1}
+      side={DoubleSide}
+    />
   </T.Mesh>
 {/if}
 
 <!-- Flag pole and outline -->
-<RenderMv mv={rotatedFlag} color={effectivePoleColor} lineWidth={0.02} />
+<RenderMv mv={rotatedFlag} color={effectivePoleColor} lineWidth={0.02} {opacity} />

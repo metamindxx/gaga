@@ -42,6 +42,10 @@
     , lockAngle
     , toggleLockRadius
     , toggleLockAngle
+    , ghostEnabled
+    , ghostDuration
+    , toggleGhost
+    , setGhostDuration
   } from './spinorState.svelte';
 
   const PI = Math.PI;
@@ -174,6 +178,32 @@
         {lockAngle.value ? '🔒' : '🔓'} Angle
       </button>
     </div>
+  </div>
+
+  <!-- Ghost animation controls -->
+  <div class="flex items-center gap-2">
+    <button
+      onclick={toggleGhost}
+      class="px-2 py-1 text-xs rounded transition-colors {ghostEnabled.value
+        ? 'bg-sky-600 text-white'
+        : 'bg-gray-700 text-gray-400'}"
+      title="Toggle ghost animation"
+    >
+      {ghostEnabled.value ? '👻' : '👁️‍🗨️'}
+    </button>
+    <div class="flex-1">
+      <Slider
+        value={ghostDuration.value}
+        onValueChange={setGhostDuration}
+        min={100}
+        max={5000}
+        step={100}
+        disabled={!ghostEnabled.value}
+      />
+    </div>
+    <span class="text-xs text-gray-400 w-10 text-right"
+      >{(ghostDuration.value / 1000).toFixed(1)}s</span
+    >
   </div>
 
   <!-- Spinor point display -->

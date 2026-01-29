@@ -58,7 +58,7 @@ export interface RotorComponents {
 // Internal normalized state (quaternion is the canonical form)
 // ============================================================================
 
-let _quat = $state<Quaternion>({ w: 1, x: 0, y: 0, z: 0 });
+let _quat = $state<Quaternion>({ w: 0, x: 0, y: 1, z: 0 });
 
 // Guard against re-entrant updates (prevents infinite loops from slider callbacks)
 let _updating = false;
@@ -172,7 +172,8 @@ function quatToAxisAngle(q: Quaternion): AxisAngle {
   }
 
   // Valid axis - update preserved axis
-  const axis: [number, number, number] = [q.x / s, q.y / s, q.z / s];
+  // Note: q.y maps to e31 = -e13 in the rotor, so negate Y for correct axis
+  const axis: [number, number, number] = [q.x / s, -q.y / s, q.z / s];
   preservedAxis = axis;
 
   return { axis, angle };
@@ -192,7 +193,8 @@ function axisAngleToQuat(aa: AxisAngle): Quaternion {
   const ay = aa.axis[1] / mag;
   const az = aa.axis[2] / mag;
 
-  return { w: c, x: ax * s, y: ay * s, z: az * s };
+  // Note: negate ay because axis[1] maps to e31 = -e13, so q.y = -axis[1]
+  return { w: c, x: ax * s, y: -ay * s, z: az * s };
 }
 
 /** Quaternion → Rotor Components */
@@ -420,6 +422,28 @@ export const toggleLockRadius = () => {
 };
 export const toggleLockAngle = () => {
   _lockState.angle = !_lockState.angle;
+};
+
+// Ghost animation settings
+const _ghostState = $state({ enabled: false, durationMs: 1000 });
+export const ghostEnabled = {
+  get value() {
+    return _ghostState.enabled;
+  }
+};
+export const ghostDuration = {
+  get value() {
+    return _ghostState.durationMs;
+  }
+  , set value(ms: number) {
+    _ghostState.durationMs = ms;
+  }
+};
+export const toggleGhost = () => {
+  _ghostState.enabled = !_ghostState.enabled;
+};
+export const setGhostDuration = (ms: number) => {
+  _ghostState.durationMs = ms;
 };
 
 // ============================================================================

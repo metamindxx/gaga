@@ -9,7 +9,10 @@
   import SpinorPoints from './SpinorPoints.svelte';
   import SpinorFlag from '../../geometry/RotorFlag.svelte';
   import Segment from '../../geometry/Segment.svelte';
+  import { T } from '@threlte/core';
   import { e12, e13, e23, one, pga } from '../../algebra/pga';
+  import { onDestroy } from 'svelte';
+  import { linear } from 'svelte/easing';
   import {
     config
     , setPt1
@@ -19,12 +22,29 @@
     , betaColor
     , lockRadius
     , lockAngle
+    , complexToColor
+    , ghostEnabled
+    , ghostDuration
   } from './spinorState.svelte';
 
-  interface Props {
-    color?: number;
+  // Ghost animation: slerp from identity to current rotor, looping
+  let animT = $state(0); // 0 to 1
+
+  let startTime: number | null = null;
+  let frameId: number | null = null;
+
+  function animate(now: number) {
+    if (startTime === null) startTime = now;
+    const cycleMs = ghostDuration.value;
+    const elapsed = (now - startTime) % cycleMs;
+    animT = linear(elapsed / cycleMs);
+    frameId = requestAnimationFrame(animate);
   }
-  let { color = 0x4c9aff }: Props = $props();
+
+  frameId = requestAnimationFrame(animate);
+  onDestroy(() => {
+    if (frameId !== null) cancelAnimationFrame(frameId);
+  });
 
   // Complex phase colors for alpha and beta
   const poleColor = $derived(alphaColor.value);
@@ -80,6 +100,75 @@
       .add(e13.smul(br)) // Y-axis rotation component
       .add(e12.smul(ai)); // Z-axis rotation component
   });
+
+  // Ghost rotor: interpolate from identity via exp(t·log(R))
+  // For rotor R = cos(θ/2) + sin(θ/2)·B̂, log(R) = (θ/2)·B̂
+  // So R^t = exp(t·θ/2·B̂) = cos(tθ/2) + sin(tθ/2)·B̂
+  const ghostRotor = $derived.by(() => {
+    // Extract scalar and bivector parts from rotor
+    const w = rotor.basisSVal('e_') || 0; // cos(θ/2)
+    const b12 = rotor.basisSVal('e_12') || 0;
+    const b13 = rotor.basisSVal('e_13') || 0;
+    const b23 = rotor.basisSVal('e_23') || 0;
+
+    // Bivector magnitude = sin(θ/2)
+    const bMag = Math.sqrt(b12 * b12 + b13 * b13 + b23 * b23);
+
+    // Half-angle from rotor components
+    const halfAngle = Math.atan2(bMag, w);
+
+    // Handle identity rotor (no rotation)
+    if (bMag < 1e-10) {
+      return one; // identity
+    }
+
+    // Unit bivector
+    const b12Hat = b12 / bMag;
+    const b13Hat = b13 / bMag;
+    const b23Hat = b23 / bMag;
+
+    // Scaled half-angle for interpolation
+    const tHalfAngle = animT * halfAngle;
+    const c = Math.cos(tHalfAngle);
+    const s = Math.sin(tHalfAngle);
+
+    // exp(t·log(R)) = cos(tθ/2) + sin(tθ/2)·B̂
+    return one
+      .smul(c)
+      .add(e12.smul(b12Hat * s))
+      .add(e13.smul(b13Hat * s))
+      .add(e23.smul(b23Hat * s));
+  });
+
+  // Bloch sphere point: position along axis proportional to rotation angle
+  // At angle θ, distance = θ / 2π (full rotation = 1, half rotation = 0.5)
+  const ghostBlochPoint = $derived.by((): [number, number, number] => {
+    const { axis, angle } = axisAngle.value;
+    const fraction = (angle / (2 * Math.PI)) * animT;
+    return [axis[0] * fraction, axis[1] * fraction, axis[2] * fraction];
+  });
+
+  // Endpoint: final position on axis (where the solid ball sits)
+  const blochPoint = $derived.by((): [number, number, number] => {
+    const { axis, angle } = axisAngle.value;
+    const fraction = angle / (2 * Math.PI);
+    return [axis[0] * fraction, axis[1] * fraction, axis[2] * fraction];
+  });
+
+  // Ghost spinor points: interpolate from identity (α=1, β=0) to current
+  // Identity: pt1 = [1, 0, 0], pt2 = [0, 0, 0]
+  const ghostPt1 = $derived.by((): [number, number, number] => {
+    const [x, , z] = pga.pointCoords(config.pt1)!;
+    return [1 + (x - 1) * animT, 0, z * animT];
+  });
+  const ghostPt2 = $derived.by((): [number, number, number] => {
+    const [x, , z] = pga.pointCoords(config.pt2)!;
+    return [x * animT, 0, z * animT];
+  });
+
+  // Ghost colors: domain coloring from interpolated positions
+  const ghostPoleColor = $derived(complexToColor(ghostPt1[0], ghostPt1[2]));
+  const ghostFabricColor = $derived(complexToColor(ghostPt2[0], ghostPt2[2]));
 </script>
 
 <SpinorPoints
@@ -94,7 +183,28 @@
   lockPt1Angle={lockAngle.value}
   lockPt2Angle={lockAngle.value}
 />
+
 <SpinorFlag {rotor} {poleColor} {fabricColor} />
+
+{#if ghostEnabled.value}
+  <!-- Ghost spinor points: animate from identity to current -->
+  <T.Mesh position={ghostPt1}>
+    <T.SphereGeometry args={[0.04, 8, 8]} />
+    <T.MeshBasicMaterial color={ghostPoleColor} opacity={0.3} transparent wireframe />
+  </T.Mesh>
+  <T.Mesh position={ghostPt2}>
+    <T.SphereGeometry args={[0.04, 8, 8]} />
+    <T.MeshBasicMaterial color={ghostFabricColor} opacity={0.3} transparent wireframe />
+  </T.Mesh>
+
+  <!-- Ghost flag: animates from identity to current rotation -->
+  <SpinorFlag
+    rotor={ghostRotor}
+    poleColor={ghostPoleColor}
+    fabricColor={ghostFabricColor}
+    opacity={0.1}
+  />
+{/if}
 
 <!-- Rotation axis line segment from origin -->
 <Segment
@@ -104,3 +214,17 @@
   lineWidth={0.008}
   opacity={0.4}
 />
+
+{#if ghostEnabled.value}
+  <!-- Animated ghost point along axis (wireframe, translucent) -->
+  <T.Mesh position={ghostBlochPoint}>
+    <T.SphereGeometry args={[0.04, 8, 8]} />
+    <T.MeshBasicMaterial color={0x777777} opacity={0.1} transparent wireframe />
+  </T.Mesh>
+{/if}
+
+<!-- Solid endpoint sphere at full rotation position -->
+<T.Mesh position={blochPoint}>
+  <T.SphereGeometry args={[0.04, 16, 16]} />
+  <T.MeshBasicMaterial color={0x777777} opacity={0.4} transparent />
+</T.Mesh>
