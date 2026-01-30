@@ -1,9 +1,26 @@
+import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
+/** @type {import('@sveltejs/kit').Config} */
 export default {
   preprocess: vitePreprocess()
   , compilerOptions: {
-    // Enable runes mode for Svelte 5
     runes: true
+  }
+  , kit: {
+    adapter: adapter({
+      pages: 'build'
+      , assets: 'build'
+      , fallback: 'index.html'
+      , precompress: false
+      , strict: false
+    })
+    , alias: {
+      $lib: 'src/lib'
+      , $algebra: 'src/algebra'
+      , $geometry: 'src/geometry'
+      , $scenes: 'src/scenes'
+      , $stores: 'src/stores'
+    }
   }
 };
