@@ -11,6 +11,7 @@ import { registerGroup, registerScene } from '../stores/sceneRegistry.svelte';
 registerGroup({ id: 'robot', name: 'CGA Robot Demos', icon: '🤖', order: 1 });
 registerGroup({ id: 'spidor', name: 'Spidor Demos', icon: '🕷️', order: 2 });
 registerGroup({ id: 'pga', name: 'PGA Demos', icon: '📐', order: 3 });
+registerGroup({ id: 'cga', name: 'CGA Demos', icon: '🪞', order: 4 });
 
 // ============================================================================
 // Robot Demos
@@ -137,3 +138,20 @@ registerScene({
 });
 registerScene({ id: 112, name: 'Doublets SU(2)', groupId: 'pga', component: DoubletsSU2 });
 registerScene({ id: 113, name: 'Dandelion SU(2)', groupId: 'pga', component: Dandelion });
+
+// ============================================================================
+// CGA Demos
+// ============================================================================
+
+import MirrorDemo from './cga/MirrorDemo.svelte';
+import MirrorConfig from './cga/MirrorConfig.svelte';
+import { getSceneProps as getMirrorProps } from './cga/mirrorState.svelte';
+
+registerScene({
+  id: 200
+  , name: 'CGA Mirrors'
+  , groupId: 'cga'
+  , component: MirrorDemo
+  , getSceneProps: getMirrorProps
+  , ConfigPanel: MirrorConfig
+});

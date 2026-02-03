@@ -63,8 +63,10 @@
     lineWidth?: number;
     /** If true and mv is an array, close the polygon by connecting last to first */
     closed?: boolean;
-    /** Optional label text */
+    /** Optional label text rendered in 3D space */
     label?: string;
+    /** Label shown only in hover box (not in 3D) - if set, overrides label for hover */
+    hoverLabel?: string;
     /** Editable fields to show in the infobox when pinned */
     editableFields?: EditableField[];
     /** Action buttons to show in the infobox when pinned */
@@ -81,6 +83,8 @@
     ondragend?: () => void;
     /** Called during drag with new coordinates - handle state update yourself */
     ondrag?: (coords: Coords3D) => void;
+    /** Disable hover/click interactions (no hover info box) */
+    disableHover?: boolean;
   }
 
   let {
@@ -91,6 +95,7 @@
     , lineWidth = 0.02
     , closed = false
     , label
+    , hoverLabel
     , editableFields
     , actions
     , onpointerdown
@@ -99,6 +104,7 @@
     , ondragstart
     , ondragend
     , ondrag
+    , disableHover = false
   }: Props = $props();
 
   // Unique ID for this RenderMv instance
@@ -185,7 +191,7 @@
   // Generate hover info from the multivector
   function getHoverInfo(): HoverInfo {
     const info: HoverInfo = {
-      label
+      label: hoverLabel ?? label
       , type: primitive?.type ?? (isArray ? 'polyline' : 'unknown')
       , properties: {}
     };
@@ -301,9 +307,9 @@
         {color}
         {lineWidth}
         {opacity}
-        onclick={handleClick}
-        onpointerenter={handlePointerEnter}
-        onpointerleave={handlePointerLeave}
+        onclick={disableHover ? undefined : handleClick}
+        onpointerenter={disableHover ? undefined : handlePointerEnter}
+        onpointerleave={disableHover ? undefined : handlePointerLeave}
       />
     {/if}
   {/each}
@@ -315,9 +321,9 @@
       {color}
       {lineWidth}
       {opacity}
-      onclick={handleClick}
-      onpointerenter={handlePointerEnter}
-      onpointerleave={handlePointerLeave}
+      onclick={disableHover ? undefined : handleClick}
+      onpointerenter={disableHover ? undefined : handlePointerEnter}
+      onpointerleave={disableHover ? undefined : handlePointerLeave}
     />
   {/if}
 {:else if primitive}
@@ -329,9 +335,9 @@
       {opacity}
       {label}
       onpointerdown={draggable ? handlePointerDown : onpointerdown}
-      onclick={handleClick}
-      onpointerenter={handlePointerEnter}
-      onpointerleave={handlePointerLeave}
+      onclick={disableHover ? undefined : handleClick}
+      onpointerenter={disableHover ? undefined : handlePointerEnter}
+      onpointerleave={disableHover ? undefined : handlePointerLeave}
     />
   {:else if primitive.type === 'direction'}
     <!-- Direction: render as a line from origin -->
@@ -342,9 +348,9 @@
       {lineWidth}
       {opacity}
       {label}
-      onclick={handleClick}
-      onpointerenter={handlePointerEnter}
-      onpointerleave={handlePointerLeave}
+      onclick={disableHover ? undefined : handleClick}
+      onpointerenter={disableHover ? undefined : handlePointerEnter}
+      onpointerleave={disableHover ? undefined : handlePointerLeave}
     />
   {:else if primitive.type === 'pointPair'}
     <!-- Point pair: render both points -->
@@ -354,18 +360,18 @@
       {color}
       opacity={primitive.isReal ? opacity : opacity * 0.5}
       {label}
-      onclick={handleClick}
-      onpointerenter={handlePointerEnter}
-      onpointerleave={handlePointerLeave}
+      onclick={disableHover ? undefined : handleClick}
+      onpointerenter={disableHover ? undefined : handlePointerEnter}
+      onpointerleave={disableHover ? undefined : handlePointerLeave}
     />
     <Point
       position={primitive.point2}
       radius={radius ?? 0.05}
       {color}
       opacity={primitive.isReal ? opacity : opacity * 0.5}
-      onclick={handleClick}
-      onpointerenter={handlePointerEnter}
-      onpointerleave={handlePointerLeave}
+      onclick={disableHover ? undefined : handleClick}
+      onpointerenter={disableHover ? undefined : handlePointerEnter}
+      onpointerleave={disableHover ? undefined : handlePointerLeave}
     />
     <!-- Connect with a segment if distinct -->
     {#if primitive.point1[0] !== primitive.point2[0] || primitive.point1[1] !== primitive.point2[1] || primitive.point1[2] !== primitive.point2[2]}
@@ -375,9 +381,9 @@
         {color}
         {lineWidth}
         opacity={opacity * 0.5}
-        onclick={handleClick}
-        onpointerenter={handlePointerEnter}
-        onpointerleave={handlePointerLeave}
+        onclick={disableHover ? undefined : handleClick}
+        onpointerenter={disableHover ? undefined : handlePointerEnter}
+        onpointerleave={disableHover ? undefined : handlePointerLeave}
       />
     {/if}
   {:else if primitive.type === 'circle'}
@@ -389,9 +395,9 @@
       {lineWidth}
       {opacity}
       {label}
-      onclick={handleClick}
-      onpointerenter={handlePointerEnter}
-      onpointerleave={handlePointerLeave}
+      onclick={disableHover ? undefined : handleClick}
+      onpointerenter={disableHover ? undefined : handlePointerEnter}
+      onpointerleave={disableHover ? undefined : handlePointerLeave}
     />
   {:else if primitive.type === 'line'}
     <Line
@@ -402,9 +408,9 @@
       {lineWidth}
       {opacity}
       {label}
-      onclick={handleClick}
-      onpointerenter={handlePointerEnter}
-      onpointerleave={handlePointerLeave}
+      onclick={disableHover ? undefined : handleClick}
+      onpointerenter={disableHover ? undefined : handlePointerEnter}
+      onpointerleave={disableHover ? undefined : handlePointerLeave}
     />
   {:else if primitive.type === 'sphere'}
     <Sphere
@@ -413,9 +419,9 @@
       {color}
       {opacity}
       {label}
-      onclick={handleClick}
-      onpointerenter={handlePointerEnter}
-      onpointerleave={handlePointerLeave}
+      onclick={disableHover ? undefined : handleClick}
+      onpointerenter={disableHover ? undefined : handlePointerEnter}
+      onpointerleave={disableHover ? undefined : handlePointerLeave}
     />
   {:else if primitive.type === 'plane'}
     <Plane
@@ -424,9 +430,9 @@
       size={5}
       {color}
       {opacity}
-      onclick={handleClick}
-      onpointerenter={handlePointerEnter}
-      onpointerleave={handlePointerLeave}
+      onclick={disableHover ? undefined : handleClick}
+      onpointerenter={disableHover ? undefined : handlePointerEnter}
+      onpointerleave={disableHover ? undefined : handlePointerLeave}
     />
   {/if}
 {/if}
