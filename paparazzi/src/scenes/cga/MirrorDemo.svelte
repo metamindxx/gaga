@@ -4,7 +4,7 @@
    * MirrorDemo - CGA Mirror/Inversion Explorer
    *
    * Demonstrates inversion/reflection through multiple spheres/circles in CGA.
-   * Based on GeoGebra demo: https://www.geogebra.org/classic/hyabh2kz
+   * Based on GeoGebra demo: https://www.geogebra.org/classic/pntgu3fm
    */
 
   import * as cga from './cgaMirrors';
@@ -19,6 +19,7 @@
     objectType = 'sphere' as ObjectType
     , objectPosition = [0.5, 0.5, 0] as Coords3D
     , objectRadius = 0.15
+    , objectNormal = [0, 0, 1] as Coords3D
     , mirrors = [] as MirrorConfig[]
     , reflectionCount = 1
     , allowBacktracking = false
@@ -33,6 +34,7 @@
     objectType?: ObjectType;
     objectPosition?: Coords3D;
     objectRadius?: number;
+    objectNormal?: Coords3D;
     mirrors?: MirrorConfig[];
     reflectionCount?: number;
     allowBacktracking?: boolean;
@@ -66,8 +68,13 @@
   // Real object: either a point or a sphere (IPNS)
   const realObject = $derived.by(() => {
     if (objectType === 'point') return cga.point(objectPosition);
+    if (objectType === 'circle') return cga.circle(objectPosition, objectRadius, objectNormal);
     return cga.sphere(objectPosition, objectRadius);
   });
+
+  const isPoint = $derived(objectType === 'point');
+  const isSphere = $derived(objectType === 'sphere');
+  const isCircle = $derived(objectType === 'circle');
 
   // === Computed: All mirror MVs and chained inversions ===
   interface ImageStep {
@@ -223,8 +230,9 @@
   }
 
   // === Rendering helpers ===
-  function renderObject(mv: MV, isPoint: boolean) {
-    return isPoint ? mv : mv.dual();
+  function renderObject(mv: MV, type: ObjectType) {
+    if (type === 'sphere') return mv.dual();
+    return mv;
   }
 </script>
 
@@ -268,10 +276,11 @@
 <!-- REAL OBJECT (blue) - the original circle/sphere/point              -->
 <!-- ================================================================== -->
 <RenderMv
-  mv={renderObject(realObject, objectType === 'point')}
+  mv={renderObject(realObject, objectType)}
   color={getDepthColor(0)}
-  radius={objectType === 'point' ? 0.08 : undefined}
-  opacity={objectType === 'sphere' ? 0.7 : (highlightPath && !isHighlighted('P') ? 0.2 : 1)}
+  radius={isPoint ? 0.08 : undefined}
+  lineWidth={isCircle ? 0.03 : undefined}
+  opacity={isSphere ? 0.7 : (highlightPath && !isHighlighted('P') ? 0.2 : 1)}
   hoverLabel="P"
 />
 
@@ -284,10 +293,11 @@
     {@const dimmed = highlightPath && !highlighted}
     <!-- Intermediate image -->
     <RenderMv
-      mv={renderObject(step.imagedObject, objectType === 'point')}
+      mv={renderObject(step.imagedObject, objectType)}
       color={getStepColor(step)}
-      radius={objectType === 'point' ? getDepthRadius(0.06, step.depth) : undefined}
-      opacity={dimmed ? 0.15 : (objectType === 'sphere' ? 0.5 : 0.7)}
+      radius={isPoint ? getDepthRadius(0.06, step.depth) : undefined}
+      lineWidth={isCircle ? 0.02 : undefined}
+      opacity={dimmed ? 0.15 : (isSphere ? 0.5 : 0.7)}
       hoverLabel={step.label}
     />
   {/each}
@@ -300,10 +310,11 @@
   {@const highlighted = isHighlighted(step.label)}
   {@const dimmed = highlightPath && !highlighted}
   <RenderMv
-    mv={renderObject(step.imagedObject, objectType === 'point')}
+    mv={renderObject(step.imagedObject, objectType)}
     color={getStepColor(step)}
-    radius={objectType === 'point' ? getDepthRadius(0.07, step.depth) : undefined}
-    opacity={dimmed ? 0.15 : (objectType === 'sphere' ? 0.7 : 1)}
+    radius={isPoint ? getDepthRadius(0.07, step.depth) : undefined}
+    lineWidth={isCircle ? 0.025 : undefined}
+    opacity={dimmed ? 0.15 : (isSphere ? 0.7 : 1)}
     hoverLabel={step.label}
   />
 {/each}

@@ -13,7 +13,7 @@
 import type { Coords3D } from '../../geometry/primitives';
 
 export type MirrorType = 'sphere' | 'circle' | 'plane';
-export type ObjectType = 'point' | 'sphere';
+export type ObjectType = 'point' | 'sphere' | 'circle';
 
 export interface MirrorConfig {
   id: number;
@@ -52,24 +52,24 @@ export function createMirror(overrides: Partial<MirrorConfig> = {}): MirrorConfi
 }
 
 export const config = $state({
-  // Real object configuration - point P at (0.5, 0.5) from GeoGebra
-  objectType: 'sphere' as ObjectType
-  , objectPosition: [0.5, 0.5, 0] as Coords3D
-  , objectRadius: 0.05
+  // Real object configuration - small circle at (1, 0.5) from GeoGebra https://www.geogebra.org/classic/pntgu3fm
+  objectType: 'circle' as ObjectType
+  , objectPosition: [1, 0.5, 0] as Coords3D
+  , objectRadius: 0.5
+  , objectNormal: [0, 0, 1] as Coords3D
 
-  // Multiple mirrors - start with something similiar to the GeoGebra demo setup
+  // Multiple mirrors - three tangent circles forming Apollonian gasket
   , mirrors: [
-    createMirror({ center: [0, 0, 0], radius: 1.005, color: 0x669900 })          // green - large circle at origin
-    , createMirror({ center: [0.5, 0.75, 0], radius: 0.245, color: 0xff7f00 })   // orange
-    , createMirror({ center: [0.67, 1, 0], radius: 0.332, color: 0x0000ff })     // blue
-    , createMirror({ type: 'plane', center: [0.5, 0, 0], circleNormal: [1, 0, 0], color: 0xffd700 }) // gold - vertical line at x=0.5
+    createMirror({ type: 'sphere', center: [0, 0, 0], radius: 1.0, color: 0xff6622 })     // orange - circle at origin
+    , createMirror({ type: 'plane', center: [0.5, 0, 0], circleNormal: [1, 0, 0], color: 0x44cc44 })  // green - vertical plane at x=0.5
+    , createMirror({ type: 'sphere', center: [1, 0, 0], radius: 1.0, color: 0xcc44cc })    // magenta - circle on right
   ]
 
   // Currently selected mirror for editing
   , selectedMirrorId: 1
 
   // Bounce count (how many times to reflect through each mirror)
-  , reflectionCount: 3
+  , reflectionCount: 1
 
   // Exploration controls
   , allowBacktracking: false  // Allow reflecting back through same mirror
@@ -121,6 +121,7 @@ export function getSceneProps() {
     , allowBacktracking: config.allowBacktracking
     , colorByDepth: config.colorByDepth
     , sizeDecay: config.sizeDecay
+    , objectNormal: config.objectNormal
     , highlightPath: config.highlightPath
     , showMirror: config.showMirror
     , showConnector: config.showConnector

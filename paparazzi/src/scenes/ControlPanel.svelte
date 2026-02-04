@@ -26,6 +26,7 @@
   } from '../stores/sceneRegistry.svelte';
   import { cgaBasisSet } from '../algebra/cga';
   import { pgaBasisSet } from '../algebra/pga';
+  import { coordSystem } from '../stores/coordinateSystem.svelte';
 
   // ============================================================================
   // PROPS
@@ -49,6 +50,7 @@
   let accordionValue = $state<string[]>(['pga']);
   let showCayleyTable = $state(false);
   let cayleyTableAlgebra = $state<string>('cga');
+  const coordLabel = $derived(coordSystem.current === 'physics' ? 'Z-up' : 'Y-up');
 
   const cayleyTableAlgebras = [
     { id: 'cga', name: 'CGA (4,1)', basisSet: cgaBasisSet }
@@ -88,6 +90,14 @@
       <Button variant="secondary" size="sm" class="flex-1 min-w-12" onclick={onReset}>Reset</Button>
       <Button variant="secondary" size="sm" class="flex-1 min-w-12" onclick={onToggleTheme}>
         {theme}
+      </Button>
+      <Button
+        variant="secondary"
+        size="sm"
+        class="flex-1 min-w-12"
+        onclick={coordSystem.toggle}
+      >
+        {coordLabel}
       </Button>
       <Button
         variant="secondary"

@@ -13,6 +13,13 @@
   import { orbitEnabled } from '$stores/orbitControl.svelte';
   import { getScene } from '$stores/sceneRegistry.svelte';
   import { theme, paused, resetKey } from '$stores/sceneControls.svelte';
+  import {
+    cameraUp
+    , cameraPosition
+    , gridRotation
+    , groundPlane
+    , orbitTarget
+  } from '$stores/coordinateSystem.svelte';
 
   // One-time reset after mount to ensure scene initializes correctly
   import { onMount } from 'svelte';
@@ -26,6 +33,13 @@
   const backgroundColor = $derived(theme.current === 'light' ? '#f0f0f5' : '#1a1a2e');
   const gridCellColor = $derived(theme.current === 'light' ? '#ccccdd' : '#444466');
   const gridSectionColor = $derived(theme.current === 'light' ? '#aaaacc' : '#333344');
+  const cameraUpVector = $derived(cameraUp());
+  const cameraPos = $derived(cameraPosition());
+  const orbitTargetPoint = $derived(orbitTarget());
+  const gridRotationEuler = $derived(gridRotation());
+  const ground = $derived(groundPlane());
+  const axisLength = 1;
+  const axisThickness = 0.02;
 </script>
 
 <svelte:head>
@@ -40,8 +54,8 @@
 
         <T.Color args={[backgroundColor]} attach="background" />
 
-        <T.PerspectiveCamera makeDefault position={[3, 2, 4]} fov={60}>
-          <OrbitControls target={[0, 0.5, 0]} enabled={orbitEnabled.current}>
+        <T.PerspectiveCamera makeDefault position={cameraPos} fov={60} up={cameraUpVector}>
+          <OrbitControls target={orbitTargetPoint} enabled={orbitEnabled.current}>
             <Gizmo
               type="cube"
               placement="top-right"
@@ -59,17 +73,31 @@
         <T.AmbientLight intensity={0.4} />
         <T.DirectionalLight position={[5, 10, 5]} intensity={0.8} />
 
-        <Grid cellColor={gridCellColor} sectionColor={gridSectionColor} fadeDistance={10} />
+        <T.Group rotation={gridRotationEuler}>
+          <Grid
+            cellColor={gridCellColor}
+            sectionColor={gridSectionColor}
+            fadeDistance={10}
+          />
+        </T.Group>
 
-        <T.AxesHelper
-          args={[1]}
-          oncreate={(helper) => {
-            helper.setColors('#ff0000', '#00ff00', '#0000ff');
-          }}
-        />
+        <T.Group>
+          <T.Mesh position={[axisLength / 2, 0, 0]}>
+            <T.BoxGeometry args={[axisLength, axisThickness, axisThickness]} />
+            <T.MeshBasicMaterial color="#ff0000" />
+          </T.Mesh>
+          <T.Mesh position={[0, axisLength / 2, 0]}>
+            <T.BoxGeometry args={[axisThickness, axisLength, axisThickness]} />
+            <T.MeshBasicMaterial color="#00ff00" />
+          </T.Mesh>
+          <T.Mesh position={[0, 0, axisLength / 2]}>
+            <T.BoxGeometry args={[axisThickness, axisThickness, axisLength]} />
+            <T.MeshBasicMaterial color="#0000ff" />
+          </T.Mesh>
+        </T.Group>
 
         <!-- Click plane to unpin hover info -->
-        <T.Mesh position={[0, 0, -10]} onclick={unpinHoverInfo}>
+        <T.Mesh position={ground.position} rotation={ground.rotation} onclick={unpinHoverInfo}>
           <T.PlaneGeometry args={[100, 100]} />
           <T.MeshBasicMaterial visible={false} />
         </T.Mesh>

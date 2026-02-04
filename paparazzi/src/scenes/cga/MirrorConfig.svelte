@@ -40,6 +40,14 @@
     >
       Sphere
     </button>
+    <button
+      class="px-2 py-0.5 rounded text-xs {config.objectType === 'circle'
+        ? 'bg-blue-500 text-white'
+        : 'bg-gray-700 text-gray-300'}"
+      onclick={() => (config.objectType = 'circle')}
+    >
+      Circle
+    </button>
   </div>
 
   <!-- Object Position -->
@@ -82,7 +90,7 @@
   </div>
 
   <!-- Object Radius (only for sphere object) -->
-  {#if config.objectType === 'sphere'}
+  {#if config.objectType !== 'point'}
     <div class="flex items-center gap-2 text-xs mb-1">
       <span class="min-w-16 text-gray-400">Obj radius:</span>
       <Slider
@@ -94,6 +102,46 @@
         class="flex-1"
       />
       <span class="min-w-10 text-right font-mono text-green-300">{config.objectRadius.toFixed(2)}</span>
+    </div>
+  {/if}
+
+  {#if config.objectType === 'circle'}
+    <div class="text-xs text-gray-500 mb-1">Object normal</div>
+    <div class="flex items-center gap-2 text-xs mb-1">
+      <span class="min-w-8 text-gray-400">X:</span>
+      <Slider
+        value={config.objectNormal[0]}
+        onValueChange={(v) => (config.objectNormal = [v, config.objectNormal[1], config.objectNormal[2]])}
+        min={-1}
+        max={1}
+        step={0.05}
+        class="flex-1"
+      />
+      <span class="min-w-10 text-right font-mono text-green-300">{config.objectNormal[0].toFixed(2)}</span>
+    </div>
+    <div class="flex items-center gap-2 text-xs mb-1">
+      <span class="min-w-8 text-gray-400">Y:</span>
+      <Slider
+        value={config.objectNormal[1]}
+        onValueChange={(v) => (config.objectNormal = [config.objectNormal[0], v, config.objectNormal[2]])}
+        min={-1}
+        max={1}
+        step={0.05}
+        class="flex-1"
+      />
+      <span class="min-w-10 text-right font-mono text-green-300">{config.objectNormal[1].toFixed(2)}</span>
+    </div>
+    <div class="flex items-center gap-2 text-xs mb-1">
+      <span class="min-w-8 text-gray-400">Z:</span>
+      <Slider
+        value={config.objectNormal[2]}
+        onValueChange={(v) => (config.objectNormal = [config.objectNormal[0], config.objectNormal[1], v])}
+        min={-1}
+        max={1}
+        step={0.05}
+        class="flex-1"
+      />
+      <span class="min-w-10 text-right font-mono text-green-300">{config.objectNormal[2].toFixed(2)}</span>
     </div>
   {/if}
 

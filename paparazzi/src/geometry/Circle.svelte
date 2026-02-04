@@ -69,12 +69,37 @@
     const centerVec = new Vector3(...center);
     return points.map((p) => p.applyQuaternion(quaternion).add(centerVec));
   });
+
+  // Calculate rotation for the torus collision mesh
+  const torusRotation = $derived.by(() => {
+    const up = new Vector3(0, 0, 1);
+    const targetNormal = new Vector3(...normal).normalize();
+    const quaternion = new Quaternion().setFromUnitVectors(up, targetNormal);
+    return [quaternion.x, quaternion.y, quaternion.z, quaternion.w] as [number, number, number, number];
+  });
+
+  // Tube radius for collision (make it easier to click)
+  const tubeRadius = $derived(Math.max(lineWidth * 2, radius * 0.05));
 </script>
 
 <T.Mesh {onclick} {onpointerenter} {onpointerleave}>
   <MeshLineGeometry points={circlePoints} />
   <MeshLineMaterial {color} width={lineWidth} {opacity} transparent={opacity < 1} />
 </T.Mesh>
+
+<!-- Invisible collision mesh for better interaction -->
+{#if onclick || onpointerenter}
+  <T.Mesh 
+    position={center} 
+    quaternion={torusRotation}
+    {onclick} 
+    {onpointerenter} 
+    {onpointerleave}
+  >
+    <T.TorusGeometry args={[radius, tubeRadius, 16, 64]} />
+    <T.MeshBasicMaterial transparent opacity={0} depthWrite={false} />
+  </T.Mesh>
+{/if}
 
 {#if label}
   <Text

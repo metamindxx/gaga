@@ -10,6 +10,9 @@
   import '$scenes/index';
   import { getScene } from '$stores/sceneRegistry.svelte';
   import { theme, paused, resetKey } from '$stores/sceneControls.svelte';
+  import { coordSystem } from '$stores/coordinateSystem.svelte';
+
+  const coordLabel = $derived(coordSystem.current === 'physics' ? 'Z-up' : 'Y-up');
 
   interface Props {
     children: import('svelte').Snippet;
@@ -80,6 +83,9 @@
           </Button>
           <Button variant="secondary" size="sm" class="flex-1 min-w-12" onclick={() => theme.toggle()}>
             {theme.current}
+          </Button>
+          <Button variant="secondary" size="sm" class="flex-1 min-w-12" onclick={() => coordSystem.toggle()}>
+            {coordLabel}
           </Button>
         </div>
 
