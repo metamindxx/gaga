@@ -20,7 +20,8 @@ export const coordSystem = {
   }
   , toggle() {
     _coordSystem = _coordSystem === 'physics' ? 'three' : 'physics';
-    resetKey.increment();
+    // Delay reset to let state settle before re-mounting canvas
+    setTimeout(() => resetKey.increment(), 0);
   }
 };
 

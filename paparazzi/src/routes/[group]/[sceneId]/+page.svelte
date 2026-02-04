@@ -22,8 +22,16 @@
   } from '$stores/coordinateSystem.svelte';
 
   // One-time reset after mount to ensure scene initializes correctly
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   onMount(resetKey.increment);
+
+  let gridReady = $state(true);
+  $effect(() => {
+    void resetKey.current;
+    gridReady = false;
+    // Delay grid rendering after reset to avoid shader race
+    tick().then(() => { gridReady = true; });
+  });
 
   // Get scene from route params
   const sceneId = $derived(parseInt(page.params.sceneId));
@@ -38,8 +46,6 @@
   const orbitTargetPoint = $derived(orbitTarget());
   const gridRotationEuler = $derived(gridRotation());
   const ground = $derived(groundPlane());
-  const axisLength = 1;
-  const axisThickness = 0.02;
 </script>
 
 <svelte:head>
@@ -74,27 +80,21 @@
         <T.DirectionalLight position={[5, 10, 5]} intensity={0.8} />
 
         <T.Group rotation={gridRotationEuler}>
-          <Grid
-            cellColor={gridCellColor}
-            sectionColor={gridSectionColor}
-            fadeDistance={10}
-          />
+          {#if gridReady}
+            <Grid
+              cellColor={gridCellColor}
+              sectionColor={gridSectionColor}
+              fadeDistance={10}
+            />
+          {/if}
         </T.Group>
 
-        <T.Group>
-          <T.Mesh position={[axisLength / 2, 0, 0]}>
-            <T.BoxGeometry args={[axisLength, axisThickness, axisThickness]} />
-            <T.MeshBasicMaterial color="#ff0000" />
-          </T.Mesh>
-          <T.Mesh position={[0, axisLength / 2, 0]}>
-            <T.BoxGeometry args={[axisThickness, axisLength, axisThickness]} />
-            <T.MeshBasicMaterial color="#00ff00" />
-          </T.Mesh>
-          <T.Mesh position={[0, 0, axisLength / 2]}>
-            <T.BoxGeometry args={[axisThickness, axisThickness, axisLength]} />
-            <T.MeshBasicMaterial color="#0000ff" />
-          </T.Mesh>
-        </T.Group>
+        <T.AxesHelper
+          args={[1]}
+          oncreate={(helper) => {
+            helper.setColors('#ff0000', '#00ff00', '#0000ff');
+          }}
+        />
 
         <!-- Click plane to unpin hover info -->
         <T.Mesh position={ground.position} rotation={ground.rotation} onclick={unpinHoverInfo}>

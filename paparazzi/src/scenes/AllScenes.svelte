@@ -19,6 +19,7 @@
   // Threlte - Svelte wrapper for Three.js
   import { Canvas, T } from '@threlte/core';
   import { Grid, OrbitControls, Gizmo } from '@threlte/extras';
+  import { tick } from 'svelte';
 
   // Scene registry (import triggers all registrations)
   import './index';
@@ -48,6 +49,14 @@
   let resetKey = $state(0);
   // Trigger a reset after initial load to ensure all scenes initialize correctly
   setTimeout(() => resetKey++, 0);
+
+  let gridReady = $state(true);
+  $effect(() => {
+    void resetKey;
+    gridReady = false;
+    // Delay grid rendering after reset to avoid shader race
+    tick().then(() => { gridReady = true; });
+  });
 
   // ============================================================================
   // DERIVED VALUES (Theme Colors)
@@ -95,11 +104,13 @@
       <T.DirectionalLight position={[5, 10, 5]} intensity={0.8} />
 
       <T.Group rotation={gridRotationEuler}>
-        <Grid
-          cellColor={gridCellColor}
-          sectionColor={gridSectionColor}
-          fadeDistance={10}
-        />
+        {#if gridReady}
+          <Grid
+            cellColor={gridCellColor}
+            sectionColor={gridSectionColor}
+            fadeDistance={10}
+          />
+        {/if}
       </T.Group>
 
       <T.AxesHelper
