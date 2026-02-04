@@ -315,28 +315,45 @@ export function createCgaHelpers(basis: CgaBasis) {
 
   /**
    * Extract line geometry from grade-3 MV (flat)
+   *
+  * A CGA line L = P1 ∧ P2 ∧ n∞ is a grade-3 blade.
+  * Its dual L* is a grade-2 bivector encoding:
+  *   - Direction: from pure Euclidean bivector (e_23, e_31, e_12)
+  *   - Moment: from conformal-Euclidean bivector (e_ip, e_im components)
+  * See: A. Lasenby, J. Lasenby, R. Wareham, "A Covariant Approach to Geometry using Geometric Algebra"
+  * 
+  * (https://bivector.net/Lasenby%20et%20al.%20-%20A%20Covariant%20Approach%20to%20Geometry%20using%20Geometric%20A.pdf)
+   *
+   * The moment m = d × r where r is any point on line, d is direction.
+   * We recover r_perp = m × d (closest point to origin on the line).
    */
   function extractLine(mv: MV): Line3D | null {
-    // For a flat (line), we need a point on the line and direction
-    // Line dual: L* = I₅L gives a bivector containing direction info
-    const Ld = I5.gp(mv);
+    // Dual of the line gives a bivector
+    const Ld = mv.dual();
 
-    // Direction from the e₁₂₃ part
-    // TODO: Proper line extraction - this is simplified
-    const dx = Ld.basisSVal?.('e_23') ?? 0;
-    const dy = (Ld.basisSVal?.('e_31') ?? Ld.basisSVal?.('e_13')) ? -Ld.basisSVal('e_13') : 0;
-    const dz = Ld.basisSVal?.('e_12') ?? 0;
+    // Direction from Euclidean bivector part
+    const dx = Ld.basisSVal?.('e_23');
+    const dy = -Ld.basisSVal?.('e_13'); // e_31 = -e_13
+    const dz = Ld.basisSVal?.('e_12');
 
-    const mag = Math.sqrt(dx * dx + dy * dy + dz * dz);
-    if (mag < EPSILON) return null;
+    const magSq = dx * dx + dy * dy + dz * dz;
+    if (magSq < EPSILON) return null;
+    const mag = Math.sqrt(magSq);
 
-    const direction: Coords3D = [dx / mag, dy / mag, dz / mag];
+    // Moment extraction from conformal-Euclidean bivectors
+    // The components e_ip, e_im encode the moment: m = d × r
+    // Sum of p and m components gives twice the moment coefficient
+    const mx = (Ld.basisSVal?.('e_1p') + Ld.basisSVal?.('e_1m')) / 2;
+    const my = (Ld.basisSVal?.('e_2p') + Ld.basisSVal?.('e_2m')) / 2;
+    const mz = (Ld.basisSVal?.('e_3p') + Ld.basisSVal?.('e_3m')) / 2;
 
-    // Point on line - use moment extraction
-    // Simplified: use origin projection
-    const point: Coords3D = [0, 0, 0]; // TODO: Proper point extraction
+    // Recover closest point to origin: r_perp = -(m × d) / |d|²
+    // (negative because of CGA sign conventions)
+    const rx = (mz * dy - my * dz) / magSq;
+    const ry = (mx * dz - mz * dx) / magSq;
+    const rz = (my * dx - mx * dy) / magSq;
 
-    return { type: 'line', point, direction };
+    return { type: 'line', point: [rx, ry, rz], direction: [dx / mag, dy / mag, dz / mag] };
   }
 
   /**
@@ -393,8 +410,8 @@ export function createCgaHelpers(basis: CgaBasis) {
     if (mag < EPSILON) return null;
     const normal: Coords3D = [nx / mag, ny / mag, nz / mag];
 
-    // Point on plane
-    const d = distance / mag;
+    // Point on plane: d * normal (d is signed distance from origin)
+    const d = -distance / mag;
     const point: Coords3D = [normal[0] * d, normal[1] * d, normal[2] * d];
 
     return { type: 'plane', point, normal, distance: d };

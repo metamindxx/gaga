@@ -465,3 +465,165 @@ describe('Translators', () => {
     expect(coords![2]).toBeCloseTo(0, 5);
   });
 });
+
+describe('Reflections', () => {
+  it('reflects a circle across plane x=0.5', () => {
+    const radius = 0.25;
+    const P1 = cga.up([1 + radius, 0, 0]);
+    const P2 = cga.up([1, radius, 0]);
+    const P3 = cga.up([1 - radius, 0, 0]);
+    const circle = P1.op(P2).op(P3);
+
+    // Plane x = 0.5 in IPNS: Π = n̂ + d·n∞
+    // For plane at x=0.5 with normal [1,0,0]: d = n·p = 0.5
+    const plane = e1.add(ni.smul(0.5));
+
+    const planeSq = plane.gp(plane).basisSVal('e_') ?? 1;
+    const reflected = plane.gp(circle).gp(plane).smul(1 / planeSq);
+
+    const prim = cga.classify(reflected);
+    expect(prim).not.toBeNull();
+    expect(prim?.type).toBe('circle');
+    if (prim?.type === 'circle') {
+      // Expect center at x = 0 (mirror of x=1 across x=0.5)
+      expect(prim.center[0]).toBeCloseTo(0, 3);
+      expect(prim.center[1]).toBeCloseTo(0, 3);
+      expect(prim.center[2]).toBeCloseTo(0, 3);
+    }
+  });
+
+  it('classifies a line from two planes correctly', () => {
+    // z=0 plane (through origin, normal in z direction)
+    const plane1 = cga
+      .up([1, 0, 0])
+      .op(cga.up([0, 1, 0]))
+      .op(cga.up([0, 0, 0]))
+      .op(ni);
+    // y=0 plane (through origin, normal in y direction)
+    const plane2 = cga
+      .up([1, 0, 0])
+      .op(cga.up([0, 0, 1]))
+      .op(cga.up([0, 0, 0]))
+      .op(ni);
+
+    const line = cga.meet(plane1, plane2);
+
+    // The line should be the x-axis (through origin, direction [1,0,0])
+    const classified = cga.classify(line);
+
+    expect(classified).not.toBeNull();
+    expect(classified?.type).toBe('line');
+    if (classified?.type === 'line') {
+      // The direction should be [±1, 0, 0]
+      expect(Math.abs(classified.direction[0])).toBeCloseTo(1, 2);
+      expect(classified.direction[1]).toBeCloseTo(0, 2);
+      expect(classified.direction[2]).toBeCloseTo(0, 2);
+    }
+  });
+
+  it('classifies a line through two points correctly', () => {
+    // Line through (0,0,0) and (1,0,0) - the x-axis
+    const P1 = cga.up([0, 0, 0]);
+    const P2 = cga.up([1, 0, 0]);
+    // Line OPNS = P1 ∧ P2 ∧ ni (grade 3, contains ni)
+    const line = P1.op(P2).op(ni);
+
+    const classified = cga.classify(line);
+
+    expect(classified).not.toBeNull();
+    expect(classified?.type).toBe('line');
+    if (classified?.type === 'line') {
+      // Direction should be along x-axis
+      expect(Math.abs(classified.direction[0])).toBeCloseTo(1, 2);
+      expect(classified.direction[1]).toBeCloseTo(0, 2);
+      expect(classified.direction[2]).toBeCloseTo(0, 2);
+    }
+  });
+
+  it('classifies a line NOT through origin - y=1, z=2 (parallel to x)', () => {
+    // Line through (0,1,2) and (1,1,2) - parallel to x-axis at y=1, z=2
+    const P1 = cga.up([0, 1, 2]);
+    const P2 = cga.up([1, 1, 2]);
+    const line = P1.op(P2).op(ni);
+
+    const classified = cga.classify(line);
+
+    expect(classified).not.toBeNull();
+    expect(classified?.type).toBe('line');
+    if (classified?.type === 'line') {
+      // Direction should be along x-axis
+      expect(Math.abs(classified.direction[0])).toBeCloseTo(1, 2);
+      expect(classified.direction[1]).toBeCloseTo(0, 2);
+      expect(classified.direction[2]).toBeCloseTo(0, 2);
+      // Point should be on the line at y=1, z=2
+      expect(classified.point[1]).toBeCloseTo(1, 2);
+      expect(classified.point[2]).toBeCloseTo(2, 2);
+    }
+  });
+
+  it('classifies a diagonal line - from (0,0,0) to (1,1,1)', () => {
+    const P1 = cga.up([0, 0, 0]);
+    const P2 = cga.up([1, 1, 1]);
+    const line = P1.op(P2).op(ni);
+
+    const classified = cga.classify(line);
+
+    expect(classified).not.toBeNull();
+    expect(classified?.type).toBe('line');
+    if (classified?.type === 'line') {
+      const norm = Math.sqrt(1/3);
+      // Direction should be along [1,1,1] normalized
+      expect(Math.abs(classified.direction[0])).toBeCloseTo(norm, 2);
+      expect(Math.abs(classified.direction[1])).toBeCloseTo(norm, 2);
+      expect(Math.abs(classified.direction[2])).toBeCloseTo(norm, 2);
+    }
+  });
+
+  it('classifies a plane OPNS correctly', () => {
+    // z=0 plane OPNS: three points in z=0 wedged with ni
+    // Points [1,0,0], [0,1,0], [0,0,0] are counterclockwise from +z
+    // So by right-hand rule, normal points in +z direction
+    const plane = cga
+      .up([1, 0, 0])
+      .op(cga.up([0, 1, 0]))
+      .op(cga.up([0, 0, 0]))
+      .op(ni);
+
+    const classified = cga.classify(plane);
+
+    expect(classified).not.toBeNull();
+    expect(classified?.type).toBe('plane');
+    if (classified?.type === 'plane') {
+      // Normal should be [0, 0, +1] (determined by point ordering)
+      expect(classified.normal[0]).toBeCloseTo(0, 2);
+      expect(classified.normal[1]).toBeCloseTo(0, 2);
+      expect(classified.normal[2]).toBeCloseTo(1, 2);
+      // Distance from origin should be 0
+      expect(classified.distance).toBeCloseTo(0, 2);
+    }
+  });
+
+  it('classifies a plane NOT through origin - z=2', () => {
+    // z=2 plane OPNS: three points in z=2 wedged with ni
+    const plane = cga
+      .up([1, 0, 2])
+      .op(cga.up([0, 1, 2]))
+      .op(cga.up([0, 0, 2]))
+      .op(ni);
+
+    const classified = cga.classify(plane);
+
+    expect(classified).not.toBeNull();
+    expect(classified?.type).toBe('plane');
+    if (classified?.type === 'plane') {
+      // Normal should be [0, 0, +1]
+      expect(classified.normal[0]).toBeCloseTo(0, 2);
+      expect(classified.normal[1]).toBeCloseTo(0, 2);
+      expect(classified.normal[2]).toBeCloseTo(1, 2);
+      // Distance from origin should be +2
+      expect(classified.distance).toBeCloseTo(2, 1);
+      // Point should be at [0, 0, 2]
+      expect(classified.point[2]).toBeCloseTo(2, 1);
+    }
+  });
+});

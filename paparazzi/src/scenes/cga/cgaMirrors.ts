@@ -60,8 +60,9 @@ export function planeThroughPoint(normal: Coords3D, pointOnPlane: Coords3D): MV 
   const mag = Math.sqrt(nx * nx + ny * ny + nz * nz);
   if (mag < 1e-10) throw new Error('Normal vector too small');
 
-  // d = -n·p (signed distance when n is unit)
-  const d = -(nx * px + ny * py + nz * pz) / mag;
+  // d = n·p (signed distance from origin when n is unit)
+  // IPNS plane: Π = n̂ + d·n∞
+  const d = (nx * px + ny * py + nz * pz) / mag;
   return plane(normal, d);
 }
 
