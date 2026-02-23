@@ -20,3 +20,6 @@ export { default as Polyline } from './Polyline.svelte';
 export { default as PointCloud } from './PointCloud.svelte';
 export { default as Trail } from './Trail.svelte';
 export { default as PointPair } from './PointPair.svelte';
+
+// Motor transform
+export { default as MotorGroup } from './MotorGroup.svelte';

@@ -105,6 +105,9 @@ import { getSceneProps as getJimmyProps } from './pga/jimmyState.svelte';
 import Skinning from './pga/Skinning.svelte';
 import SkinningConfig from './pga/SkinningConfig.svelte';
 import { getSceneProps as getSkinningProps } from './pga/skinningState.svelte';
+import Wagon from './pga/Wagon.svelte';
+import WagonConfig from './pga/WagonConfig.svelte';
+import { getSceneProps as getWagonProps } from './pga/wagonState.svelte';
 import Dandelion from './su2/Dandelion.svelte';
 import DoubletsSU2 from './su2/DoubletsSU2.svelte';
 import SpinorSU2 from './su2/SpinorSU2.svelte';
@@ -138,6 +141,14 @@ registerScene({
 });
 registerScene({ id: 112, name: 'Doublets SU(2)', groupId: 'pga', component: DoubletsSU2 });
 registerScene({ id: 113, name: 'Dandelion SU(2)', groupId: 'pga', component: Dandelion });
+registerScene({
+  id: 120
+  , name: 'Wagon'
+  , groupId: 'pga'
+  , component: Wagon
+  , getSceneProps: getWagonProps
+  , ConfigPanel: WagonConfig
+});
 
 // ============================================================================
 // CGA Demos
