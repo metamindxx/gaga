@@ -108,6 +108,9 @@ import { getSceneProps as getSkinningProps } from './pga/skinningState.svelte';
 import Wagon from './pga/Wagon.svelte';
 import WagonConfig from './pga/WagonConfig.svelte';
 import { getSceneProps as getWagonProps } from './pga/wagonState.svelte';
+import OverheadRail from './pga/OverheadRail.svelte';
+import OverheadRailConfig from './pga/OverheadRailConfig.svelte';
+import { getSceneProps as getOverheadRailProps } from './pga/overheadRailState.svelte';
 import Dandelion from './su2/Dandelion.svelte';
 import DoubletsSU2 from './su2/DoubletsSU2.svelte';
 import SpinorSU2 from './su2/SpinorSU2.svelte';
@@ -148,6 +151,14 @@ registerScene({
   , component: Wagon
   , getSceneProps: getWagonProps
   , ConfigPanel: WagonConfig
+});
+registerScene({
+  id: 121
+  , name: 'Overhead Rail'
+  , groupId: 'pga'
+  , component: OverheadRail
+  , getSceneProps: getOverheadRailProps
+  , ConfigPanel: OverheadRailConfig
 });
 
 // ============================================================================
