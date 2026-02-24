@@ -14,22 +14,22 @@
   import { e01, e02, e03, e13, e23, one } from '../../algebra/pga';
   import type { Multivector as MV } from '../../algebra/types.js';
   import MotorGroup from '../../geometry/MotorGroup.svelte';
+  import { config } from './overheadRailState.svelte';
 
   // Props
   interface Props {
     speed?: number;
     animate?: boolean;
     cartPosition?: number;
-    latches?: boolean[];          // 6 booleans: true = open, false = closed
-    tripBarPushed?: boolean;
   }
   let {
     speed = 1.0
     , animate = true
     , cartPosition = 0
-    , latches = $bindable([false, false, false, false, false, false])
-    , tripBarPushed = $bindable(false)
   }: Props = $props();
+
+  let latches = config.latches;
+  let tripBarPushed = $state(false);
 
   // Dimensions 
 
@@ -233,9 +233,9 @@
       const pushAmount = Math.max(0, tripEngageDistance - distToStriker);
       tripBarOffset = Math.min(pushAmount, tripBarTravel);  // offset pushes bar toward +Z
 
-      // All latches open
+      // All latches open (swing down to angle 0)
       for (let i = 0; i < 6; i++) {
-        latchAngles[i] = Math.min(latchAngles[i] + dt * 8, latchOpenAngle);
+        latchAngles[i] = Math.max(latchAngles[i] - dt * 8, 0);
         latches[i] = true;
       }
     } else {
