@@ -21,16 +21,15 @@
     , orbitTarget
   } from '$stores/coordinateSystem.svelte';
 
-  // One-time reset after mount to ensure scene initializes correctly
-  import { onMount, tick } from 'svelte';
-  onMount(resetKey.increment);
-
-  let gridReady = $state(true);
-  $effect(() => {
+  let gridReady = $state(false);
+  $effect.pre(() => {
     void resetKey.current;
     gridReady = false;
-    // Delay grid rendering after reset to avoid shader race
-    tick().then(() => { gridReady = true; });
+    // Delay grid rendering after reset to avoid shader race.
+    // $effect.pre runs BEFORE the DOM update, so gridReady is false
+    // when the {#key} block re-renders the Canvas. rAF then defers
+    // Grid mounting until the next frame when ShaderMaterial can attach.
+    requestAnimationFrame(() => gridReady = true);
   });
 
   // Get scene from route params
@@ -81,11 +80,7 @@
 
         <T.Group rotation={gridRotationEuler}>
           {#if gridReady}
-            <Grid
-              cellColor={gridCellColor}
-              sectionColor={gridSectionColor}
-              fadeDistance={10}
-            />
+            <Grid cellColor={gridCellColor} sectionColor={gridSectionColor} fadeDistance={10} />
           {/if}
         </T.Group>
 
@@ -113,7 +108,9 @@
   <div class="h-screen w-full flex items-center justify-center bg-slate-900">
     <div class="text-center">
       <h1 class="text-2xl text-gray-200 mb-4">Scene Not Found</h1>
-      <p class="text-gray-400 mb-4">Scene #{page.params.sceneId} doesn't exist in the {page.params.group} group.</p>
+      <p class="text-gray-400 mb-4">
+        Scene #{page.params.sceneId} doesn't exist in the {page.params.group} group.
+      </p>
       <a href="/" class="text-sky-400 hover:text-sky-300">← Back to Home</a>
     </div>
   </div>
