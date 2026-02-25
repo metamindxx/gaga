@@ -111,6 +111,9 @@ import { getSceneProps as getWagonProps } from './pga/wagonState.svelte';
 import OverheadRail from './pga/OverheadRail.svelte';
 import OverheadRailConfig from './pga/OverheadRailConfig.svelte';
 import { getSceneProps as getOverheadRailProps } from './pga/overheadRailState.svelte';
+import JsonScene from './pga/JsonScene.svelte';
+import JsonSceneConfig from './pga/JsonSceneConfig.svelte';
+import { getSceneProps as getJsonSceneProps } from './pga/jsonSceneState.svelte';
 import Dandelion from './su2/Dandelion.svelte';
 import DoubletsSU2 from './su2/DoubletsSU2.svelte';
 import SpinorSU2 from './su2/SpinorSU2.svelte';
@@ -159,6 +162,14 @@ registerScene({
   , component: OverheadRail
   , getSceneProps: getOverheadRailProps
   , ConfigPanel: OverheadRailConfig
+});
+registerScene({
+  id: 122
+  , name: 'Scene V4 (JSON)'
+  , groupId: 'pga'
+  , component: JsonScene
+  , getSceneProps: getJsonSceneProps
+  , ConfigPanel: JsonSceneConfig
 });
 
 // ============================================================================

@@ -1,0 +1,259 @@
+{
+  "asset": {
+    "version": "0.1",
+    "description": "Overhead rail system with cart"
+  },
+
+  "materials": {
+    "rail":     { "color": [0.533, 0.533, 0.533], "metallic": 0.6, "roughness": 0.3 },
+    "support":  { "color": [0.4, 0.4, 0.4] },
+    "wheel":    { "color": [0.2, 0.2, 0.2] },
+    "cart":     { "color": [0.267, 0.467, 0.667] },
+    "hook":     { "color": [0.667, 0.467, 0.267] },
+    "trip_bar": { "color": [0.8, 0.267, 0.267] },
+    "latch":    { "color": [0.267, 0.667, 0.267] },
+    "striker":  { "color": [0.867, 0.867, 0.267] },
+    "linkage":  { "color": [0.8, 0.267, 0.267] }
+  },
+
+  "meshes": {
+    "rail_bar":        { "primitives": [{ "type": "cylinder", "dimensions": { "diameter": 0.08,  "length": 12   }, "axis": "z", "material": "rail"    }] },
+    "support_column":  { "primitives": [{ "type": "cylinder", "dimensions": { "diameter": 0.12,  "length": 5    },              "material": "support" }] },
+    "striker_bracket": { "primitives": [{ "type": "box",      "dimensions": { "width": 0.04,  "height": 0.3,   "length": 0.04 }, "material": "striker" }] },
+    "striker_plate":   { "primitives": [{ "type": "box",      "dimensions": { "width": 0.51,  "height": 0.12,  "length": 0.04 }, "material": "striker" }] },
+    "cart_side_bar":   { "primitives": [{ "type": "box",      "dimensions": { "width": 0.06,  "height": 0.1,   "length": 0.7  }, "material": "cart"    }] },
+    "cart_cross_bar":  { "primitives": [{ "type": "box",      "dimensions": { "width": 0.6,   "height": 0.06,  "length": 0.06 }, "material": "cart"    }] },
+    "guide_rod":       { "primitives": [{ "type": "cylinder", "dimensions": { "diameter": 0.02,  "length": 0.2  }, "axis": "z", "material": "cart"    }] },
+    "trip_bar_mesh":   { "primitives": [{ "type": "box",      "dimensions": { "width": 0.51,  "height": 0.04,  "length": 0.04 }, "material": "trip_bar"}] },
+    "release_bar":     { "primitives": [{ "type": "box",      "dimensions": { "width": 0.025, "height": 0.025, "length": 0.49 }, "material": "linkage" }] },
+    "cam_finger":      { "primitives": [{ "type": "box",      "dimensions": { "width": 0.015, "height": 0.05,  "length": 0.015}, "material": "linkage" }] },
+    "hook_bar":        { "primitives": [{ "type": "box",      "dimensions": { "width": 0.048, "height": 0.048, "length": 0.49 }, "material": "hook"    }] },
+    "latch_arm":       { "primitives": [{ "type": "box",      "dimensions": { "width": 0.02,  "height": 0.14,  "length": 0.02 }, "material": "latch"   }] },
+    "hook_tip":        { "primitives": [{ "type": "sphere",   "dimensions": { "radius": 0.016 },                                  "material": "latch"   }] },
+    "wheel_disc":      { "primitives": [{ "type": "cylinder", "dimensions": { "diameter": 0.12,  "length": 0.03 }, "axis": "x", "material": "wheel"   }] }
+  },
+
+  "nodes": {
+    "left_rail":   { "translation": [-0.4, 5, 0] },
+    "right_rail":  { "translation": [ 0.4, 5, 0] },
+    "striker_node":{ "translation": [0, 0, -5.5] },
+
+    "cart":        { "translation": [0, 5, -5] },
+    "trip_bar_n":  { "parent": "cart", "translation": [0, -0.14, -0.39] },
+
+    "latch_0":     { "parent": "cart", "translation": [-0.15, -0.18, -0.21] },
+    "latch_1":     { "parent": "cart", "translation": [-0.15, -0.18,  0.0 ] },
+    "latch_2":     { "parent": "cart", "translation": [-0.15, -0.18,  0.21] },
+    "latch_3":     { "parent": "cart", "translation": [ 0.15, -0.18, -0.21] },
+    "latch_4":     { "parent": "cart", "translation": [ 0.15, -0.18,  0.0 ] },
+    "latch_5":     { "parent": "cart", "translation": [ 0.15, -0.18,  0.21] },
+
+    "wheel_0":     { "parent": "cart", "translation": [-0.4,  0.1,  0.25] },
+    "wheel_1":     { "parent": "cart", "translation": [-0.4,  0.1, -0.25] },
+    "wheel_2":     { "parent": "cart", "translation": [ 0.4,  0.1,  0.25] },
+    "wheel_3":     { "parent": "cart", "translation": [ 0.4,  0.1, -0.25] }
+  },
+
+  "parts": {
+    "rail_left":       { "mesh": "rail_bar",       "node": "left_rail"  },
+    "rail_right":      { "mesh": "rail_bar",       "node": "right_rail" },
+
+    "support_l0":      { "mesh": "support_column", "node": "left_rail",  "offset": { "translation": [0, -2.5, -6] } },
+    "support_l1":      { "mesh": "support_column", "node": "left_rail",  "offset": { "translation": [0, -2.5, -2] } },
+    "support_l2":      { "mesh": "support_column", "node": "left_rail",  "offset": { "translation": [0, -2.5,  2] } },
+    "support_l3":      { "mesh": "support_column", "node": "left_rail",  "offset": { "translation": [0, -2.5,  6] } },
+    "support_r0":      { "mesh": "support_column", "node": "right_rail", "offset": { "translation": [0, -2.5, -6] } },
+    "support_r1":      { "mesh": "support_column", "node": "right_rail", "offset": { "translation": [0, -2.5, -2] } },
+    "support_r2":      { "mesh": "support_column", "node": "right_rail", "offset": { "translation": [0, -2.5,  2] } },
+    "support_r3":      { "mesh": "support_column", "node": "right_rail", "offset": { "translation": [0, -2.5,  6] } },
+
+    "striker_bracket": { "mesh": "striker_bracket","node": "striker_node","offset": { "translation": [0, 4.85, 0] } },
+    "striker_plate":   { "mesh": "striker_plate",  "node": "striker_node","offset": { "translation": [0, 4.86, 0] } },
+
+    "cart_side_left":  { "mesh": "cart_side_bar",  "node": "cart", "offset": { "translation": [-0.3, -0.05, 0] } },
+    "cart_side_right": { "mesh": "cart_side_bar",  "node": "cart", "offset": { "translation": [ 0.3, -0.05, 0] } },
+    "cart_cross_front":{ "mesh": "cart_cross_bar", "node": "cart", "offset": { "translation": [0, -0.1,  0.35] } },
+    "cart_cross_back": { "mesh": "cart_cross_bar", "node": "cart", "offset": { "translation": [0, -0.1, -0.35] } },
+
+    "guide_rod_left":  { "mesh": "guide_rod",     "node": "cart", "offset": { "translation": [-0.204, -0.14, -0.33] } },
+    "guide_rod_right": { "mesh": "guide_rod",     "node": "cart", "offset": { "translation": [ 0.204, -0.14, -0.33] } },
+
+    "hook_bar_left":   { "mesh": "hook_bar",      "node": "cart", "offset": { "translation": [-0.15, -0.16, 0] } },
+    "hook_bar_right":  { "mesh": "hook_bar",      "node": "cart", "offset": { "translation": [ 0.15, -0.16, 0] } },
+
+    "cam_finger_0":    { "mesh": "cam_finger",    "node": "cart", "offset": { "translation": [-0.15, -0.185, -0.21] } },
+    "cam_finger_1":    { "mesh": "cam_finger",    "node": "cart", "offset": { "translation": [-0.15, -0.185,  0.0 ] } },
+    "cam_finger_2":    { "mesh": "cam_finger",    "node": "cart", "offset": { "translation": [-0.15, -0.185,  0.21] } },
+    "cam_finger_3":    { "mesh": "cam_finger",    "node": "cart", "offset": { "translation": [ 0.15, -0.185, -0.21] } },
+    "cam_finger_4":    { "mesh": "cam_finger",    "node": "cart", "offset": { "translation": [ 0.15, -0.185,  0.0 ] } },
+    "cam_finger_5":    { "mesh": "cam_finger",    "node": "cart", "offset": { "translation": [ 0.15, -0.185,  0.21] } },
+
+    "trip_bar":        { "mesh": "trip_bar_mesh",  "node": "trip_bar_n" },
+    "release_bar_l":   { "mesh": "release_bar",   "node": "trip_bar_n", "offset": { "translation": [-0.15, -0.02, 0] } },
+    "release_bar_r":   { "mesh": "release_bar",   "node": "trip_bar_n", "offset": { "translation": [ 0.15, -0.02, 0] } },
+
+    "latch_arm_0":     { "mesh": "latch_arm",     "node": "latch_0", "offset": { "translation": [0, -0.07, 0] } },
+    "latch_arm_1":     { "mesh": "latch_arm",     "node": "latch_1", "offset": { "translation": [0, -0.07, 0] } },
+    "latch_arm_2":     { "mesh": "latch_arm",     "node": "latch_2", "offset": { "translation": [0, -0.07, 0] } },
+    "latch_arm_3":     { "mesh": "latch_arm",     "node": "latch_3", "offset": { "translation": [0, -0.07, 0] } },
+    "latch_arm_4":     { "mesh": "latch_arm",     "node": "latch_4", "offset": { "translation": [0, -0.07, 0] } },
+    "latch_arm_5":     { "mesh": "latch_arm",     "node": "latch_5", "offset": { "translation": [0, -0.07, 0] } },
+
+    "hook_tip_0":      { "mesh": "hook_tip",      "node": "latch_0", "offset": { "translation": [0, -0.14, 0] } },
+    "hook_tip_1":      { "mesh": "hook_tip",      "node": "latch_1", "offset": { "translation": [0, -0.14, 0] } },
+    "hook_tip_2":      { "mesh": "hook_tip",      "node": "latch_2", "offset": { "translation": [0, -0.14, 0] } },
+    "hook_tip_3":      { "mesh": "hook_tip",      "node": "latch_3", "offset": { "translation": [0, -0.14, 0] } },
+    "hook_tip_4":      { "mesh": "hook_tip",      "node": "latch_4", "offset": { "translation": [0, -0.14, 0] } },
+    "hook_tip_5":      { "mesh": "hook_tip",      "node": "latch_5", "offset": { "translation": [0, -0.14, 0] } },
+
+    "wheel_0_inner":   { "mesh": "wheel_disc",    "node": "wheel_0", "offset": { "translation": [-0.06, 0, 0] } },
+    "wheel_0_outer":   { "mesh": "wheel_disc",    "node": "wheel_0", "offset": { "translation": [ 0.06, 0, 0] } },
+    "wheel_1_inner":   { "mesh": "wheel_disc",    "node": "wheel_1", "offset": { "translation": [-0.06, 0, 0] } },
+    "wheel_1_outer":   { "mesh": "wheel_disc",    "node": "wheel_1", "offset": { "translation": [ 0.06, 0, 0] } },
+    "wheel_2_inner":   { "mesh": "wheel_disc",    "node": "wheel_2", "offset": { "translation": [-0.06, 0, 0] } },
+    "wheel_2_outer":   { "mesh": "wheel_disc",    "node": "wheel_2", "offset": { "translation": [ 0.06, 0, 0] } },
+    "wheel_3_inner":   { "mesh": "wheel_disc",    "node": "wheel_3", "offset": { "translation": [-0.06, 0, 0] } },
+    "wheel_3_outer":   { "mesh": "wheel_disc",    "node": "wheel_3", "offset": { "translation": [ 0.06, 0, 0] } }
+  },
+
+  "animations": {
+    "cart_travel": {
+      "loop": true,
+      "channels": [
+        {
+          "node": "cart", "path": "translation", "interpolation": "LINEAR",
+          "keyframes": [
+            { "value": [0, 5, -5] },
+            { "duration": 5.0, "value": [0, 5, 5] },
+            { "duration": 5.0, "value": [0, 5, -5] }
+          ]
+        }
+      ]
+    },
+
+    "spin_wheels": {
+      "loop": true,
+      "channels": [
+        {
+          "node": "wheel_0", "path": "rotation", "interpolation": "LINEAR",
+          "keyframes": [
+            { "value": [0, 0, 0, 1] },
+            { "duration": 0.25, "value": [0.7071, 0, 0, 0.7071] },
+            { "duration": 0.25, "value": [1, 0, 0, 0] },
+            { "duration": 0.25, "value": [0.7071, 0, 0, -0.7071] },
+            { "duration": 0.25, "value": [0, 0, 0, -1] }
+          ]
+        },
+        {
+          "node": "wheel_1", "path": "rotation", "interpolation": "LINEAR",
+          "keyframes": [
+            { "value": [0, 0, 0, 1] },
+            { "duration": 0.25, "value": [0.7071, 0, 0, 0.7071] },
+            { "duration": 0.25, "value": [1, 0, 0, 0] },
+            { "duration": 0.25, "value": [0.7071, 0, 0, -0.7071] },
+            { "duration": 0.25, "value": [0, 0, 0, -1] }
+          ]
+        },
+        {
+          "node": "wheel_2", "path": "rotation", "interpolation": "LINEAR",
+          "keyframes": [
+            { "value": [0, 0, 0, 1] },
+            { "duration": 0.25, "value": [0.7071, 0, 0, 0.7071] },
+            { "duration": 0.25, "value": [1, 0, 0, 0] },
+            { "duration": 0.25, "value": [0.7071, 0, 0, -0.7071] },
+            { "duration": 0.25, "value": [0, 0, 0, -1] }
+          ]
+        },
+        {
+          "node": "wheel_3", "path": "rotation", "interpolation": "LINEAR",
+          "keyframes": [
+            { "value": [0, 0, 0, 1] },
+            { "duration": 0.25, "value": [0.7071, 0, 0, 0.7071] },
+            { "duration": 0.25, "value": [1, 0, 0, 0] },
+            { "duration": 0.25, "value": [0.7071, 0, 0, -0.7071] },
+            { "duration": 0.25, "value": [0, 0, 0, -1] }
+          ]
+        }
+      ]
+    },
+
+    "open_latches": {
+      "loop": false,
+      "channels": [
+        { "node": "latch_0", "path": "rotation", "keyframes": [
+            { "value": [0.7071, 0, 0, 0.7071] },
+            { "duration": 0.3, "value": [0, 0, 0, 1] }
+        ]},
+        { "node": "latch_1", "path": "rotation", "keyframes": [
+            { "value": [0.7071, 0, 0, 0.7071] },
+            { "duration": 0.3, "value": [0, 0, 0, 1] }
+        ]},
+        { "node": "latch_2", "path": "rotation", "keyframes": [
+            { "value": [0.7071, 0, 0, 0.7071] },
+            { "duration": 0.3, "value": [0, 0, 0, 1] }
+        ]},
+        { "node": "latch_3", "path": "rotation", "keyframes": [
+            { "value": [0.7071, 0, 0, 0.7071] },
+            { "duration": 0.3, "value": [0, 0, 0, 1] }
+        ]},
+        { "node": "latch_4", "path": "rotation", "keyframes": [
+            { "value": [0.7071, 0, 0, 0.7071] },
+            { "duration": 0.3, "value": [0, 0, 0, 1] }
+        ]},
+        { "node": "latch_5", "path": "rotation", "keyframes": [
+            { "value": [0.7071, 0, 0, 0.7071] },
+            { "duration": 0.3, "value": [0, 0, 0, 1] }
+        ]}
+      ]
+    },
+
+    "close_latches": {
+      "loop": false,
+      "channels": [
+        { "node": "latch_0", "path": "rotation", "keyframes": [
+            { "value": [0, 0, 0, 1] },
+            { "duration": 0.3, "value": [0.7071, 0, 0, 0.7071] }
+        ]},
+        { "node": "latch_1", "path": "rotation", "keyframes": [
+            { "duration": 0.4, "value": [0, 0, 0, 1] },
+            { "duration": 0.3, "value": [0.7071, 0, 0, 0.7071] }
+        ]},
+        { "node": "latch_2", "path": "rotation", "keyframes": [
+            { "duration": 0.8, "value": [0, 0, 0, 1] },
+            { "duration": 0.3, "value": [0.7071, 0, 0, 0.7071] }
+        ]},
+        { "node": "latch_3", "path": "rotation", "keyframes": [
+            { "duration": 1.2, "value": [0, 0, 0, 1] },
+            { "duration": 0.3, "value": [0.7071, 0, 0, 0.7071] }
+        ]},
+        { "node": "latch_4", "path": "rotation", "keyframes": [
+            { "duration": 1.6, "value": [0, 0, 0, 1] },
+            { "duration": 0.3, "value": [0.7071, 0, 0, 0.7071] }
+        ]},
+        { "node": "latch_5", "path": "rotation", "keyframes": [
+            { "duration": 2.0, "value": [0, 0, 0, 1] },
+            { "duration": 0.3, "value": [0.7071, 0, 0, 0.7071] }
+        ]}
+      ]
+    },
+
+    "push_trip_bar": {
+      "loop": false,
+      "channels": [
+        {
+          "node": "trip_bar_n", "path": "translation", "interpolation": "LINEAR",
+          "keyframes": [
+            { "value": [0, -0.14, -0.39] },
+            { "duration": 0.2, "value": [0, -0.14, -0.27] },
+            { "value": [0, -0.14, -0.39] }
+          ]
+        }
+      ]
+    }
+  },
+
+  "scenes": {
+    "default": { "nodes": ["left_rail", "right_rail", "striker_node", "cart"] }
+  },
+  "scene": "default"
+}
