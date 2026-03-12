@@ -85,6 +85,7 @@ export function springCollisionForque(
         + (V.basisSVal('e_03') - Vj.basisSVal('e_03')) * nz;
 
       const contactForce = stiffness * overlap - contactDamping * vRel;
+      if (contactForce <= 0) continue;
       const pushBivector = e01.smul(nx).add(e02.smul(ny)).add(e03.smul(nz))
         .smul(contactForce);
       total = total.add(Mrev.sandwich(pushBivector).dual());

@@ -109,7 +109,7 @@
   // Physics loop
   const stepsPerFrame = 10;
   useTask((delta) => {
-    const dt = delta / stepsPerFrame;
+    const dt = Math.min(delta, 1/20) / stepsPerFrame;
     for (let step = 0; step < stepsPerFrame; step++) {
       S = S.map(([M, B], i) => {
         const [dM, dB] = stateDeriv(M, B, forque(i, M, B));
