@@ -99,6 +99,9 @@ registerScene({
 
 import PgaDemo from './pga/PgaDemo.svelte';
 import PgaDynamics from './pga/PgaDynamics.svelte';
+import NewtonsCradle from './pga/NewtonsCradle.svelte';
+import NewtonsCradleConfig from './pga/NewtonsCradleConfig.svelte';
+import { getSceneProps as getNewtonsCradleProps } from './pga/newtonsCradleState.svelte';
 import JimmyAnimation from './pga/JimmyAnimation.svelte';
 import JimmyConfig from './pga/JimmyConfig.svelte';
 import { getSceneProps as getJimmyProps } from './pga/jimmyState.svelte';
@@ -121,6 +124,14 @@ import SpinorConfig from './su2/SpinorConfig.svelte';
 
 registerScene({ id: 99, name: 'PGA Demo', groupId: 'pga', component: PgaDemo });
 registerScene({ id: 110, name: 'PGA Dynamics', groupId: 'pga', component: PgaDynamics });
+registerScene({
+  id: 116
+  , name: "Newton's Cradle"
+  , groupId: 'pga'
+  , component: NewtonsCradle
+  , getSceneProps: getNewtonsCradleProps
+  , ConfigPanel: NewtonsCradleConfig
+});
 registerScene({
   id: 50
   , name: 'Jimmy Animation'
