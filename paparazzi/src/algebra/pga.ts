@@ -94,6 +94,7 @@ export const I4: MV = e0123; // Alias for full pseudoscalar
 /** Scalar unit */
 export const one: MV = bs.multiVector({ e_: 1 });
 export const e = one; // Alias for scalar unit
+export const zero = bs.multiVector({});
 
 // === Derived basis bivectors ===
 /** Bivector e₀₁ */

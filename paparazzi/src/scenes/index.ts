@@ -119,6 +119,9 @@ import JsonSceneConfig from './pga/JsonSceneConfig.svelte';
 import { getSceneProps as getJsonSceneProps } from './pga/jsonSceneState.svelte';
 import RollingHill from './pga/RollingHill.svelte';
 import RollingBall from './pga/RollingBall.svelte';
+import SpinLab from './pga/SpinLab.svelte';
+import SpinLabConfig from './pga/SpinLabConfig.svelte';
+import { getSceneProps as getSpinLabProps } from './pga/spinLabState.svelte';
 import Dandelion from './su2/Dandelion.svelte';
 import DoubletsSU2 from './su2/DoubletsSU2.svelte';
 import SpinorSU2 from './su2/SpinorSU2.svelte';
@@ -128,6 +131,14 @@ registerScene({ id: 99, name: 'PGA Demo', groupId: 'pga', component: PgaDemo });
 registerScene({ id: 110, name: 'PGA Dynamics', groupId: 'pga', component: PgaDynamics });
 registerScene({ id: 117, name: 'Rolling Hill', groupId: 'pga', component: RollingHill });
 registerScene({ id: 118, name: 'Rolling Ball (no GA)', groupId: 'pga', component: RollingBall });
+registerScene({
+  id: 114
+  , name: 'Spin Lab'
+  , groupId: 'pga'
+  , component: SpinLab
+  , getSceneProps: getSpinLabProps
+  , ConfigPanel: SpinLabConfig
+});
 registerScene({
   id: 116
   , name: "Newton's Cradle"
