@@ -23,3 +23,7 @@ export { default as PointPair } from './PointPair.svelte';
 
 // Motor transform
 export { default as MotorGroup } from './MotorGroup.svelte';
+
+// Types and helpers
+export { toCoords3D } from './primitives.js';
+export type { Coords3D, Coords3DInput } from './primitives.js';

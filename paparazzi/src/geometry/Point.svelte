@@ -12,11 +12,12 @@
   import { T } from '@threlte/core';
   import { Text } from '@threlte/extras';
   import type { Snippet } from 'svelte';
-  import type { Coords3D } from './primitives.js';
+  import type { Coords3D, Coords3DInput } from './primitives.js';
+  import { toCoords3D } from './primitives.js';
 
   interface Props {
     /** Position in 3D space */
-    position: Coords3D;
+    position: Coords3DInput;
     /** Sphere radius */
     radius?: number;
     /** Color (hex number or string) */
@@ -38,7 +39,7 @@
   }
 
   let {
-    position
+    position: positionInput
     , radius = 0.05
     , color = 0x000000
     , opacity = 1
@@ -49,6 +50,8 @@
     , onpointerleave
     , children
   }: Props = $props();
+
+  const position: Coords3D = $derived(toCoords3D(positionInput));
 
   // Offset label slightly above and to the right of the point
   const labelOffset: Coords3D = $derived([

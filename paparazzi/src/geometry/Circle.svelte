@@ -9,15 +9,16 @@
   import { T } from '@threlte/core';
   import { MeshLineGeometry, MeshLineMaterial, Text } from '@threlte/extras';
   import { Vector3, Quaternion } from 'three';
-  import type { Coords3D } from './primitives.js';
+  import type { Coords3D, Coords3DInput } from './primitives.js';
+  import { toCoords3D } from './primitives.js';
 
   interface Props {
     /** Center position */
-    center: Coords3D;
+    center: Coords3DInput;
     /** Circle radius */
     radius: number;
     /** Normal vector (perpendicular to circle plane) */
-    normal: Coords3D;
+    normal: Coords3DInput;
     /** Line color */
     color?: number | string;
     /** Line width */
@@ -37,9 +38,9 @@
   }
 
   let {
-    center
+    center: centerInput
     , radius
-    , normal
+    , normal: normalInput
     , color = 0x0000ff
     , lineWidth = 0.02
     , segments = 64
@@ -49,6 +50,9 @@
     , onpointerenter
     , onpointerleave
   }: Props = $props();
+
+  const center: Coords3D = $derived(toCoords3D(centerInput));
+  const normal: Coords3D = $derived(toCoords3D(normalInput));
 
   // Generate circle points in XY plane, then rotate to match normal
   const circlePoints = $derived.by(() => {
@@ -75,7 +79,12 @@
     const up = new Vector3(0, 0, 1);
     const targetNormal = new Vector3(...normal).normalize();
     const quaternion = new Quaternion().setFromUnitVectors(up, targetNormal);
-    return [quaternion.x, quaternion.y, quaternion.z, quaternion.w] as [number, number, number, number];
+    return [quaternion.x, quaternion.y, quaternion.z, quaternion.w] as [
+      number
+      , number
+      , number
+      , number
+    ,];
   });
 
   // Tube radius for collision (make it easier to click)
@@ -89,13 +98,7 @@
 
 <!-- Invisible collision mesh for better interaction -->
 {#if onclick || onpointerenter}
-  <T.Mesh 
-    position={center} 
-    quaternion={torusRotation}
-    {onclick} 
-    {onpointerenter} 
-    {onpointerleave}
-  >
+  <T.Mesh position={center} quaternion={torusRotation} {onclick} {onpointerenter} {onpointerleave}>
     <T.TorusGeometry args={[radius, tubeRadius, 16, 64]} />
     <T.MeshBasicMaterial transparent opacity={0} depthWrite={false} />
   </T.Mesh>

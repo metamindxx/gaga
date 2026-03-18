@@ -6,14 +6,15 @@
    * Internally this is drawn as a long Segment with configurable extent.
    */
 
-  import type { Coords3D } from './primitives.js';
+  import type { Coords3D, Coords3DInput } from './primitives.js';
+  import { toCoords3D } from './primitives.js';
   import Segment from './Segment.svelte';
 
   interface Props {
     /** Any point on the line */
-    point: Coords3D;
+    point: Coords3DInput;
     /** Direction vector (does not need to be normalized) */
-    direction: Coords3D;
+    direction: Coords3DInput;
     /** Half-length to render in each direction */
     extent?: number;
 
@@ -35,8 +36,8 @@
   }
 
   let {
-    point
-    , direction
+    point: pointInput
+    , direction: directionInput
     , extent = 10
     , color = 0x000000
     , lineWidth = 0.02
@@ -46,6 +47,9 @@
     , onpointerenter
     , onpointerleave
   }: Props = $props();
+
+  const point: Coords3D = $derived(toCoords3D(pointInput));
+  const direction: Coords3D = $derived(toCoords3D(directionInput));
 
   const normalizedDir = $derived.by((): Coords3D => {
     const mag = Math.sqrt(direction[0] ** 2 + direction[1] ** 2 + direction[2] ** 2);

@@ -9,11 +9,12 @@
   import { T } from '@threlte/core';
   import { Text } from '@threlte/extras';
   import * as THREE from 'three';
-  import type { Coords3D } from './primitives.js';
+  import type { Coords3D, Coords3DInput } from './primitives.js';
+  import { toCoords3D } from './primitives.js';
 
   interface Props {
     /** Center position */
-    center: Coords3D;
+    center: Coords3DInput;
     /** Sphere radius */
     radius: number;
     /** Color */
@@ -35,7 +36,7 @@
   }
 
   let {
-    center
+    center: centerInput
     , radius
     , color = 0xff00ff
     , opacity = 0.3
@@ -46,6 +47,8 @@
     , onpointerenter
     , onpointerleave
   }: Props = $props();
+
+  const center: Coords3D = $derived(toCoords3D(centerInput));
 
   const side = $derived(doubleSide ? THREE.DoubleSide : THREE.FrontSide);
 </script>

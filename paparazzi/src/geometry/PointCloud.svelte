@@ -8,13 +8,13 @@
   import { T } from '@threlte/core';
   import type { ColorRepresentation } from 'three';
   import type { Snippet } from 'svelte';
+  import type { Coords3D, Coords3DInput } from './primitives.js';
+  import { toCoords3D } from './primitives.js';
   import Point from './Point.svelte';
 
-  type Vec3 = [number, number, number];
-
   interface Props {
-    /** Array of [x, y, z] positions */
-    points: Vec3[];
+    /** Array of positions (coordinates or multivectors) */
+    points: Coords3DInput[];
     /** Sphere radius */
     radius?: number;
     /** Point color (ignored if children provided) */
@@ -23,7 +23,9 @@
     children?: Snippet;
   }
 
-  let { points, radius = 0.05, color = '#888888', children }: Props = $props();
+  let { points: pointsInput, radius = 0.05, color = '#888888', children }: Props = $props();
+
+  const points: Coords3D[] = $derived(pointsInput.map(toCoords3D));
 </script>
 
 {#each points as pos}

@@ -25,11 +25,11 @@
   const _origin = pga.point([0, 0, 0]);
 
   const position = $derived(
-    pga.pointCoords(motor.sandwich(_origin)) as [number, number, number] ?? [0, 0, 0]
+    (pga.pointCoords(motor.sandwich(_origin)) as [number, number, number]) ?? [0, 0, 0]
   );
 
   const quaternion = $derived.by(() => {
-    const sc  = motor.bVal('e_');
+    const sc = motor.bVal('e_');
     const b12 = motor.bVal('e_12');
     const b13 = motor.bVal('e_13');
     const b23 = motor.bVal('e_23');

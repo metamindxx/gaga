@@ -3,8 +3,10 @@
   import { MeshLineGeometry, MeshLineMaterial } from '@threlte/extras';
   import { Vector3, DoubleSide, type ColorRepresentation } from 'three';
   import type { Snippet } from 'svelte';
+  import type { Coords3DInput } from './primitives.js';
+  import { toCoords3D } from './primitives.js';
 
-  type Point = [number, number, number] | { x: number; y: number; z: number };
+  type Point = Coords3DInput | { x: number; y: number; z: number };
 
   interface Props {
     /** Array of points to connect with line segments */
@@ -36,7 +38,9 @@
   // Convert point to Vector3
   function toVector3(p: Point): Vector3 {
     if (Array.isArray(p)) return new Vector3(p[0], p[1], p[2]);
-    return new Vector3(p.x, p.y, p.z);
+    if ('x' in p) return new Vector3(p.x, p.y, p.z);
+    const c = toCoords3D(p);
+    return new Vector3(c[0], c[1], c[2]);
   }
 
   // Build Vector3 array for MeshLineGeometry

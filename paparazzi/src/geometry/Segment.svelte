@@ -9,13 +9,14 @@
   import { T } from '@threlte/core';
   import { MeshLineGeometry, MeshLineMaterial, Text } from '@threlte/extras';
   import { Vector3, Quaternion, DoubleSide } from 'three';
-  import type { Coords3D } from './primitives.js';
+  import type { Coords3D, Coords3DInput } from './primitives.js';
+  import { toCoords3D } from './primitives.js';
 
   interface Props {
     /** Start position */
-    start: Coords3D;
+    start: Coords3DInput;
     /** End position */
-    end: Coords3D;
+    end: Coords3DInput;
     /** Line color */
     color?: number | string;
     /** Line width */
@@ -33,8 +34,8 @@
   }
 
   let {
-    start
-    , end
+    start: startInput
+    , end: endInput
     , color = 0x000000
     , lineWidth = 0.02
     , opacity = 1
@@ -43,6 +44,9 @@
     , onpointerenter
     , onpointerleave
   }: Props = $props();
+
+  const start: Coords3D = $derived(toCoords3D(startInput));
+  const end: Coords3D = $derived(toCoords3D(endInput));
 
   const points = $derived([new Vector3(...start), new Vector3(...end)]);
 

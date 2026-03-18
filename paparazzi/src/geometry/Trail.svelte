@@ -3,12 +3,12 @@
   import { MeshLineGeometry, MeshLineMaterial } from '@threlte/extras';
   import { Vector3, type ColorRepresentation } from 'three';
   import type { Snippet } from 'svelte';
-
-  type Vec3 = [number, number, number];
+  import type { Coords3D, Coords3DInput } from './primitives.js';
+  import { toCoords3D } from './primitives.js';
 
   interface Props {
-    /** Current [x, y, z] position to track */
-    point: Vec3;
+    /** Current position to track (coordinates or multivector) */
+    point: Coords3DInput;
     /** Maximum number of points in the trail */
     maxLength?: number;
     /** Trail color */
@@ -24,7 +24,7 @@
   }
 
   let {
-    point
+    point: pointInput
     , maxLength = 100
     , color = 0xff6666
     , width = 0.02
@@ -33,9 +33,11 @@
     , children
   }: Props = $props();
 
+  const point: Coords3D = $derived(toCoords3D(pointInput));
+
   // Trail buffer
-  let trailPoints = $state<Vec3[]>([]);
-  let lastPosition: Vec3 | null = null;
+  let trailPoints = $state<Coords3D[]>([]);
+  let lastPosition: Coords3D | null = null;
 
   useTask(() => {
     // Only add point if moved enough

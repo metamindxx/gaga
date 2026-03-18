@@ -14,6 +14,41 @@
 /** 3D coordinate tuple */
 export type Coords3D = [number, number, number];
 
+/** Object with a classify method (e.g. a multivector) */
+interface Classifiable {
+  classify(): GeoPrimitive | null;
+}
+
+/** Accepts either raw [x, y, z] coordinates or a classifiable multivector */
+export type Coords3DInput = Coords3D | Classifiable;
+
+/** Convert a Coords3DInput to Coords3D, classifying multivectors automatically */
+export function toCoords3D(input: Coords3DInput): Coords3D {
+  if (Array.isArray(input)) return input;
+  const geo = input.classify();
+  if (!geo) return [0, 0, 0];
+  switch (geo.type) {
+    case 'point':
+      return geo.coords;
+    case 'direction':
+      return geo.vector;
+    case 'circle':
+      return geo.center;
+    case 'line':
+      return geo.point;
+    case 'sphere':
+      return geo.center;
+    case 'plane':
+      return geo.normal;
+    case 'pointPair':
+      return geo.point1;
+    case 'segment':
+      return geo.start.coords;
+    case 'triangle':
+      return geo.p1.coords;
+  }
+}
+
 /** Common properties for all primitives */
 export interface BasePrimitive {
   /** Scalar weight from normalization (optional) */

@@ -3,12 +3,12 @@
   import { MeshLineGeometry, MeshLineMaterial } from '@threlte/extras';
   import { Vector3, type ColorRepresentation } from 'three';
   import type { Snippet } from 'svelte';
-
-  type Vec3 = [number, number, number];
+  import type { Coords3DInput } from './primitives.js';
+  import { toCoords3D } from './primitives.js';
 
   interface Props {
-    /** Array of [x, y, z] positions */
-    points: Vec3[];
+    /** Array of positions (coordinates or multivectors) */
+    points: Coords3DInput[];
     /** Line color */
     color?: ColorRepresentation;
     /** Line width */
@@ -31,7 +31,12 @@
   }: Props = $props();
 
   // Build Vector3 array for MeshLineGeometry
-  const vector3Points = $derived(points.map((p) => new Vector3(p[0], p[1], p[2])));
+  const vector3Points = $derived(
+    points.map((p) => {
+      const c = toCoords3D(p);
+      return new Vector3(c[0], c[1], c[2]);
+    })
+  );
 </script>
 
 {#if vector3Points.length >= 2}

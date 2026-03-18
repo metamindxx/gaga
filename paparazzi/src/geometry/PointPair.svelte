@@ -16,15 +16,16 @@
   import * as THREE from 'three';
   import type { ColorRepresentation } from 'three';
   import type { Snippet } from 'svelte';
-  import type { Vec3 } from '../algebra/types.js';
+  import type { Coords3D, Coords3DInput } from './primitives.js';
+  import { toCoords3D } from './primitives.js';
   import Point from './Point.svelte';
   import Direction from './Direction.svelte';
 
   interface Props {
     /** First point position (or direction if ideal) */
-    point1: Vec3;
+    point1: Coords3DInput;
     /** Second point position (or direction if ideal) */
-    point2: Vec3;
+    point2: Coords3DInput;
     /** True if point1 is an ideal point (direction) */
     point1Ideal?: boolean;
     /** True if point2 is an ideal point (direction) */
@@ -42,8 +43,8 @@
   }
 
   let {
-    point1
-    , point2
+    point1: point1Input
+    , point2: point2Input
     , point1Ideal = false
     , point2Ideal = false
     , radius = 0.05
@@ -52,6 +53,9 @@
     , gapSize = 0.05
     , children
   }: Props = $props();
+
+  const point1: Coords3D = $derived(toCoords3D(point1Input));
+  const point2: Coords3D = $derived(toCoords3D(point2Input));
 
   // For ideal points, we need to figure out where to draw the line
   // If both are finite: line between them
@@ -81,11 +85,11 @@
     const mag = Math.sqrt(direction[0] ** 2 + direction[1] ** 2 + direction[2] ** 2);
     if (mag < 1e-10) return null;
 
-    const dir: Vec3 = [direction[0] / mag, direction[1] / mag, direction[2] / mag];
+    const dir: Coords3D = [direction[0] / mag, direction[1] / mag, direction[2] / mag];
 
     // Extend line in direction
     const extensionLength = 2;
-    const farPoint: Vec3 = [
+    const farPoint: Coords3D = [
       finitePoint[0] + dir[0] * extensionLength
       , finitePoint[1] + dir[1] * extensionLength
       , finitePoint[2] + dir[2] * extensionLength
