@@ -12,12 +12,13 @@
   import { T } from '@threlte/core';
   import * as THREE from 'three';
   import type { ColorRepresentation } from 'three';
-  import type { Vec3 } from '../algebra/types.js';
+  import type { Coords3D, Coords3DInput } from './primitives.js';
+  import { toCoords3D } from './primitives.js';
 
   interface Props {
-    normal: Vec3;
+    normal?: Coords3DInput;
     /** Distance from origin along normal */
-    distance: number;
+    distance?: number;
     /** Radius of the visible disk */
     size?: number;
     /** Color of the plane */
@@ -33,8 +34,8 @@
   }
 
   let {
-    normal
-    , distance
+    normal: normalInput = [0, 1, 0]
+    , distance = 0
     , size = 2
     , color = 0x888888
     , opacity = 0.4
@@ -43,15 +44,17 @@
     , onpointerleave
   }: Props = $props();
 
+  const normal: Coords3D = $derived(toCoords3D(normalInput));
+
   // Normalize the normal vector
   const normalizedNormal = $derived.by(() => {
     const mag = Math.sqrt(normal[0] ** 2 + normal[1] ** 2 + normal[2] ** 2);
-    if (mag < 1e-10) return [0, 0, 1] as Vec3;
-    return [normal[0] / mag, normal[1] / mag, normal[2] / mag] as Vec3;
+    if (mag < 1e-10) return [0, 0, 1] as Coords3D;
+    return [normal[0] / mag, normal[1] / mag, normal[2] / mag] as Coords3D;
   });
 
   // Calculate position: point on plane closest to origin (normal * distance)
-  const position = $derived<Vec3>([
+  const position = $derived<Coords3D>([
     normalizedNormal[0] * distance
     , normalizedNormal[1] * distance
     , normalizedNormal[2] * distance
