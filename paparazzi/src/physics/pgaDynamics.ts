@@ -213,11 +213,70 @@ export function groundFrictionForque(
 }
 
 /**
+ * Penetration depth of a sphere into a plane (zero if not in contact).
+ *
+ * This is the pure-geometry part of the contact check, useful for computing
+ * contact spring elastic PE = ½ · stiffness · overlap².
+ */
+export function planeContactPenetration(
+  M: MV
+  , plane: MV
+  , radius: number
+): number {
+  const P = M.sandwich(origin);
+  const Preflected = plane.sandwich(P);
+  const height = dist(P, Preflected) / 2;
+  return Math.max(0, radius - height);
+}
+
+/**
+ * Penalty spring normal-force magnitude for a sphere against an arbitrary plane.
+ *
+ * This is the shared scalar kernel used by both planeContactForque (single sphere)
+ * and accumulateSpherePlaneContactForque (compound body), so the physics is not
+ * duplicated between callers.
+ *
+ * Returns 0 when the sphere is not penetrating.
+ */
+export function planeContactNormalForce(
+  M: MV
+  , B: MV
+  , plane: MV
+  , planeNormal: [number, number, number]
+  , radius: number
+  , stiffness: number
+  , contactDamping: number
+): number {
+  const P = M.sandwich(origin);
+  const Preflected = plane.sandwich(P);
+  const height = dist(P, Preflected) / 2;
+  const penalty = radius - height;
+  if (penalty <= 0) return 0;
+
+  const V = M.sandwich(B);
+  // Normal approach velocity: only the TRANSLATIONAL component along the plane normal.
+  // Using the full bivector reflection V.sub(plane.sandwich(V)) would also pick up
+  // rotational components, which when damped at contactDamping / I_rot overwhelms the
+  // Euler integrator and causes blowup.
+  const [nx, ny, nz] = planeNormal;
+  const vDotN = V.basisSVal('e_01') * nx + V.basisSVal('e_02') * ny + V.basisSVal('e_03') * nz;
+
+  // Clamp total contact force to be non-negative.  Without this clamp, when the
+  // ball is separating (vDotN > 0) the damping term can overpower the spring,
+  // making the force ATTRACTIVE — pulling the ball back into the surface.
+  // Each pull-back releases as a harder bounce, injecting energy every cycle.
+  return Math.max(0, stiffness * penalty - contactDamping * vDotN);
+}
+
+/**
  * Contact forque for a sphere against an arbitrary plane.
  *
  * Generalisation of groundContactForque to any plane orientation.
- * Returns the penalty spring + contact damping forque, plus the normal force magnitude
- * (needed for friction calculations).
+ * Returns the penalty spring + contact damping forque (for single-sphere use),
+ * plus the normal force magnitude (needed for friction calculations).
+ *
+ * For compound bodies use accumulateSpherePlaneContactForque, which applies the
+ * force at the contact point to generate the correct lever-arm torque.
  */
 export function planeContactForque(
   M: MV
@@ -228,36 +287,19 @@ export function planeContactForque(
   , stiffness: number
   , contactDamping: number
 ): { forque: MV; normalForce: number } {
+  const normalForce = planeContactNormalForce(M, B, plane, planeNormal, radius, stiffness, contactDamping);
+  if (normalForce <= 0) return { forque: e01.smul(0), normalForce: 0 };
+
   const Mrev = M.reverse();
-  const P = M.sandwich(origin);
-  const Preflected = plane.sandwich(P);
-  const height = dist(P, Preflected) / 2;
-  const penalty = radius - height;
-  if (penalty <= 0) return { forque: e01.smul(0), normalForce: 0 };
-
-  const V = M.sandwich(B);
-  // Normal approach velocity: only the TRANSLATIONAL component along the plane normal.
-  // Using the full bivector reflection V.sub(plane.sandwich(V)) would also pick up
-  // rotational components, which when damped at contactDamping / I_rot overwhelms the
-  // Euler integrator and causes blowup.
-  const nx = planeNormal[0]
-    , ny = planeNormal[1]
-    , nz = planeNormal[2];
-  const vDotN = V.basisSVal('e_01') * nx + V.basisSVal('e_02') * ny + V.basisSVal('e_03') * nz;
-
-  // Clamp total contact force to be non-negative.  Without this clamp, when the
-  // ball is separating (vDotN > 0) the damping term can overpower the spring,
-  // making the force ATTRACTIVE — pulling the ball back into the surface.
-  // Each pull-back releases as a harder bounce, injecting energy every cycle.
-  const totalNormalForce = Math.max(0, stiffness * penalty - contactDamping * vDotN);
+  const [nx, ny, nz] = planeNormal;
   const worldForque = e01
-    .smul(nx * totalNormalForce)
-    .add(e02.smul(ny * totalNormalForce))
-    .add(e03.smul(nz * totalNormalForce));
+    .smul(nx * normalForce)
+    .add(e02.smul(ny * normalForce))
+    .add(e03.smul(nz * normalForce));
 
   return {
     forque: Mrev.sandwich(worldForque).dual()
-    , normalForce: totalNormalForce
+    , normalForce
   };
 }
 

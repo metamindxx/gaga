@@ -122,6 +122,9 @@ import RollingBall from './pga/RollingBall.svelte';
 import SpinLab from './pga/SpinLab.svelte';
 import SpinLabConfig from './pga/SpinLabConfig.svelte';
 import { getSceneProps as getSpinLabProps } from './pga/spinLabState.svelte';
+import InertiaLab from './pga/InertiaLab.svelte';
+import InertiaLabConfig from './pga/InertiaLabConfig.svelte';
+import { getSceneProps as getInertiaLabProps } from './pga/inertiaLabState.svelte';
 import Dandelion from './su2/Dandelion.svelte';
 import DoubletsSU2 from './su2/DoubletsSU2.svelte';
 import SpinorSU2 from './su2/SpinorSU2.svelte';
@@ -131,6 +134,14 @@ registerScene({ id: 99, name: 'PGA Demo', groupId: 'pga', component: PgaDemo });
 registerScene({ id: 110, name: 'PGA Dynamics', groupId: 'pga', component: PgaDynamics });
 registerScene({ id: 117, name: 'Rolling Hill', groupId: 'pga', component: RollingHill });
 registerScene({ id: 118, name: 'Rolling Ball (no GA)', groupId: 'pga', component: RollingBall });
+registerScene({
+  id: 125
+  , name: 'Inertia Lab'
+  , groupId: 'pga'
+  , component: InertiaLab
+  , getSceneProps: getInertiaLabProps
+  , ConfigPanel: InertiaLabConfig
+});
 registerScene({
   id: 114
   , name: 'Spin Lab'
