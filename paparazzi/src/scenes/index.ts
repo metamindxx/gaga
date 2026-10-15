@@ -215,6 +215,8 @@ registerScene({
 
 import MirrorDemo from './cga/MirrorDemo.svelte';
 import MirrorConfig from './cga/MirrorConfig.svelte';
+import MeshCgaDemo from './cga/MeshCgaDemo.svelte';
+import MeshCgaConfig from './cga/MeshCgaConfig.svelte';
 import { getSceneProps as getMirrorProps } from './cga/mirrorState.svelte';
 
 registerScene({
@@ -224,4 +226,12 @@ registerScene({
   , component: MirrorDemo
   , getSceneProps: getMirrorProps
   , ConfigPanel: MirrorConfig
+});
+
+registerScene({
+  id: 203
+  , name: 'Mesh to CGA Points'
+  , groupId: 'cga'
+  , component: MeshCgaDemo
+  , ConfigPanel: MeshCgaConfig
 });
